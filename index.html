@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="paper_pricing_settings.css">
     <link rel="stylesheet" href="paper_history.css">
+    <link rel="stylesheet" href="modern_theme.css"> <!-- Modern Theme Override -->
 </head>
 
 <body>
@@ -124,19 +125,22 @@
             <div class="sidebar-section">
                 <h3 class="section-title">TÍNH GIÁ</h3>
                 <div class="menu-grid">
-                    <div class="menu-item" onclick="goToHome(); showSubTab('paper','calc', null)" title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy">
+                    <div class="menu-item" onclick="goToHome(); showSubTab('paper','calc', null)"
+                        title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy">
                         <div class="menu-icon" style="background: #e3f2fd; color: #2196f3;">
                             <span style="font-size: 24px;">🧮</span>
                         </div>
                         <span class="menu-label">In Nhanh</span>
                     </div>
-                    <div class="menu-item" onclick="goToHome(); showSubTab('catalogue','calc', null)" title="In Catalogue (In nhanh)">
+                    <div class="menu-item" onclick="goToHome(); showSubTab('catalogue','calc', null)"
+                        title="In Catalogue (In nhanh)">
                         <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
                             <span style="font-size: 24px;">📚</span>
                         </div>
                         <span class="menu-label">In Catalogue</span>
                     </div>
-                    <div class="menu-item" onclick="goToHome(); showToast('🧾 Tính giá đơn hàng đang phát triển')" title="Tính giá đơn hàng">
+                    <div class="menu-item" onclick="goToHome(); showToast('🧾 Tính giá đơn hàng đang phát triển')"
+                        title="Tính giá đơn hàng">
                         <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
                             <span style="font-size: 24px;">🧾</span>
                         </div>
@@ -343,10 +347,10 @@
                         <div class="section-title-with-field">
                             <div class="section-title-content">
                                 <span class="section-title-text">📄 QUY CÁCH GIẤY IN</span>
-                            <div class="form-group paper-size-in-header">
-                                <label>📐 Khổ in (Khổ giấy)</label>
-                                <select id="paperSize" onchange="onPaperSizeChange()"></select>
-                            </div>
+                                <div class="form-group paper-size-in-header">
+                                    <label>📐 Khổ in (Khổ giấy)</label>
+                                    <select id="paperSize" onchange="onPaperSizeChange()"></select>
+                                </div>
                             </div>
                         </div>
 
@@ -466,7 +470,8 @@
                             </div>
                             <div id="paperResPaperDetails" class="cost-sub-items"></div>
                             <div class="cost-row">
-                                <span>🖨️ <span id="paperResPrintName">In 1 mặt</span>: <span id="paperResPrintSheets">0</span> tờ × <span
+                                <span>🖨️ <span id="paperResPrintName">In 1 mặt</span>: <span
+                                        id="paperResPrintSheets">0</span> tờ × <span
                                         id="paperResPrintPrice">0</span>đ</span>
                                 <span class="cost-val" id="paperResPrintCost">0đ</span>
                             </div>
@@ -524,7 +529,8 @@
         <section id="catalogue-calculator" class="tab-content" style="display:none;">
             <!-- Sub-tabs -->
             <div class="sub-tabs">
-                <button class="sub-tab active" onclick="showSubTab('catalogue', 'calc', this)">📚 Tính Giá Catalogue</button>
+                <button class="sub-tab active" onclick="showSubTab('catalogue', 'calc', this)">📚 Tính Giá
+                    Catalogue</button>
                 <button class="sub-tab" onclick="showSubTab('catalogue', 'history', this)">📋 Lịch Sử Tính Giá</button>
             </div>
 
@@ -540,9 +546,11 @@
                                 <div class="form-group paper-size-in-header">
                                     <label>
                                         📐 Khổ giấy in
-                                        <span class="tooltip-icon" title="Khổ giấy in sẽ được tự động chọn phù hợp với kích thước Catalogue">ℹ️</span>
+                                        <span class="tooltip-icon"
+                                            title="Khổ giấy in sẽ được tự động chọn phù hợp với kích thước Catalogue">ℹ️</span>
                                     </label>
-                                    <select id="cataloguePaperSize" onchange="onCataloguePaperSizeChange()" title="Chọn khổ giấy in"></select>
+                                    <select id="cataloguePaperSize" onchange="onCataloguePaperSizeChange()"
+                                        title="Chọn khổ giấy in"></select>
                                 </div>
                             </div>
                         </div>
@@ -551,9 +559,11 @@
                             <div class="form-group">
                                 <label>
                                     📐 Kích thước Catalogue
-                                    <span class="tooltip-icon" title="Kích thước thành phẩm cuối cùng của Catalogue">ℹ️</span>
+                                    <span class="tooltip-icon"
+                                        title="Kích thước thành phẩm cuối cùng của Catalogue">ℹ️</span>
                                 </label>
-                                <select id="catalogueSize" onchange="onCatalogueSizeChange()" title="Chọn kích thước Catalogue">
+                                <select id="catalogueSize" onchange="onCatalogueSizeChange()"
+                                    title="Chọn kích thước Catalogue">
                                     <option value="A4">A4 (210×297mm)</option>
                                     <option value="A5">A5 (148×210mm)</option>
                                     <option value="A3">A3 (297×420mm)</option>
@@ -561,42 +571,44 @@
                                 </select>
                                 <!-- Input fields cho kích thước tự chọn (ẩn mặc định) -->
                                 <div id="catalogueCustomFields" style="display: none; margin-top: 10px;">
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
+                                    <div
+                                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
                                         <div style="display: flex; flex-direction: column;">
-                                            <label style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                            <label
+                                                style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
                                                 <span>↔️</span>
                                                 <span>Rộng (mm)</span>
                                             </label>
-                                            <input type="number" id="catalogueCustomWidth" value="210" min="1" step="1" 
-                                                   placeholder="Rộng" 
-                                                   oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
-                                                   class="catalogue-input"
-                                                   title="Nhập chiều rộng Catalogue (mm)">
+                                            <input type="number" id="catalogueCustomWidth" value="210" min="1" step="1"
+                                                placeholder="Rộng"
+                                                oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
+                                                class="catalogue-input" title="Nhập chiều rộng Catalogue (mm)">
                                         </div>
                                         <div style="display: flex; flex-direction: column;">
-                                            <label style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                            <label
+                                                style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
                                                 <span>↕️</span>
                                                 <span>Cao (mm)</span>
                                             </label>
-                                            <input type="number" id="catalogueCustomHeight" value="297" min="1" step="1" 
-                                                   placeholder="Cao" 
-                                                   oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
-                                                   class="catalogue-input"
-                                                   title="Nhập chiều cao Catalogue (mm)">
+                                            <input type="number" id="catalogueCustomHeight" value="297" min="1" step="1"
+                                                placeholder="Cao"
+                                                oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
+                                                class="catalogue-input" title="Nhập chiều cao Catalogue (mm)">
                                         </div>
                                     </div>
-                                    <div id="catalogueCustomSizeHint" class="input-hint" style="margin-top: 6px; font-size: 0.8rem; color: #666;"></div>
+                                    <div id="catalogueCustomSizeHint" class="input-hint"
+                                        style="margin-top: 6px; font-size: 0.8rem; color: #666;"></div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label>
                                     📄 Số trang
-                                    <span class="tooltip-icon" title="Tổng số trang Catalogue (tối thiểu 4 trang, bước nhảy 4 trang)">ℹ️</span>
+                                    <span class="tooltip-icon"
+                                        title="Tổng số trang Catalogue (tối thiểu 4 trang, bước nhảy 4 trang)">ℹ️</span>
                                 </label>
-                                <input type="number" id="cataloguePages" value="8" min="4" step="4" 
-                                       oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
-                                       class="catalogue-input"
-                                       title="Nhập số trang (4, 8, 12, 16...)">
+                                <input type="number" id="cataloguePages" value="8" min="4" step="4"
+                                    oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
+                                    class="catalogue-input" title="Nhập số trang (4, 8, 12, 16...)">
                                 <small class="input-hint">Tối thiểu 4 trang, bước nhảy 4</small>
                             </div>
                             <div class="form-group">
@@ -605,9 +617,8 @@
                                     <span class="tooltip-icon" title="Số lượng Catalogue cần in">ℹ️</span>
                                 </label>
                                 <input type="number" id="catalogueQty" value="0" min="0" step="1"
-                                       oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
-                                       class="catalogue-input"
-                                       title="Nhập số lượng Catalogue">
+                                    oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
+                                    class="catalogue-input" title="Nhập số lượng Catalogue">
                                 <small class="input-hint">Nhập số lượng cần in</small>
                             </div>
                         </div>
@@ -619,22 +630,39 @@
                                 <span class="section-title-text">📑 GIẤY BÌA</span>
                                 <!-- Thông tin số tờ bìa - 2 ô gọn gàng -->
                                 <div style="display: flex; gap: 8px; align-items: center;">
-                                    <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                                        <div style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Bìa/cuốn</div>
-                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
-                                            <div id="catalogueCoverSheetsPerBook" style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">1</div>
-                                            <div style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">tờ</div>
+                                    <div
+                                        style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <div
+                                            style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            Bìa/cuốn</div>
+                                        <div
+                                            style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueCoverSheetsPerBook"
+                                                style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">
+                                                1</div>
+                                            <div
+                                                style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">
+                                                tờ</div>
                                         </div>
                                     </div>
-                                    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #90caf9; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(33, 150, 243, 0.12);">
-                                        <div style="font-size: 0.65rem; color: #1565c0; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tổng bìa</div>
-                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
-                                            <div id="catalogueTotalCoverSheets" style="font-size: 1.5rem; font-weight: 900; color: #1976d2; line-height: 1;">0</div>
-                                            <div style="font-size: 0.85rem; color: #1565c0; font-weight: 600; line-height: 1;">tờ</div>
+                                    <div
+                                        style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #90caf9; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(33, 150, 243, 0.12);">
+                                        <div
+                                            style="font-size: 0.65rem; color: #1565c0; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            Tổng bìa</div>
+                                        <div
+                                            style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueTotalCoverSheets"
+                                                style="font-size: 1.5rem; font-weight: 900; color: #1976d2; line-height: 1;">
+                                                0</div>
+                                            <div
+                                                style="font-size: 0.85rem; color: #1565c0; font-weight: 600; line-height: 1;">
+                                                tờ</div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueCoverPaper()">+ Thêm</button>
+                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueCoverPaper()">+
+                                    Thêm</button>
                             </div>
                         </div>
 
@@ -647,22 +675,39 @@
                                 <span class="section-title-text">📖 GIẤY RUỘT</span>
                                 <!-- Thông tin số tờ ruột - 2 ô gọn gàng -->
                                 <div style="display: flex; gap: 8px; align-items: center;">
-                                    <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                                        <div style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ruột/cuốn</div>
-                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
-                                            <div id="catalogueInnerSheetsPerBook" style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">1</div>
-                                            <div style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">tờ</div>
+                                    <div
+                                        style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <div
+                                            style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            Ruột/cuốn</div>
+                                        <div
+                                            style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueInnerSheetsPerBook"
+                                                style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">
+                                                1</div>
+                                            <div
+                                                style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">
+                                                tờ</div>
                                         </div>
                                     </div>
-                                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(76, 175, 80, 0.12);">
-                                        <div style="font-size: 0.65rem; color: #2e7d32; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tổng ruột</div>
-                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
-                                            <div id="catalogueTotalInnerSheets" style="font-size: 1.5rem; font-weight: 900; color: #4caf50; line-height: 1;">0</div>
-                                            <div style="font-size: 0.85rem; color: #2e7d32; font-weight: 600; line-height: 1;">tờ</div>
+                                    <div
+                                        style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(76, 175, 80, 0.12);">
+                                        <div
+                                            style="font-size: 0.65rem; color: #2e7d32; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            Tổng ruột</div>
+                                        <div
+                                            style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueTotalInnerSheets"
+                                                style="font-size: 1.5rem; font-weight: 900; color: #4caf50; line-height: 1;">
+                                                0</div>
+                                            <div
+                                                style="font-size: 0.85rem; color: #2e7d32; font-weight: 600; line-height: 1;">
+                                                tờ</div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueInnerPaper()">+ Thêm</button>
+                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueInnerPaper()">+
+                                    Thêm</button>
                             </div>
                         </div>
 
@@ -723,12 +768,13 @@
 
                     <!-- Nút tính giá gọn - căn giữa -->
                     <div class="calculate-compact center">
-                        <select id="catalogueCustomerType" class="customer-select-sm" title="Chọn loại khách hàng để tính lợi nhuận"></select>
+                        <select id="catalogueCustomerType" class="customer-select-sm"
+                            title="Chọn loại khách hàng để tính lợi nhuận"></select>
                         <button class="btn-calc-sm" onclick="calculateCatalogue()" title="Tính giá Catalogue">
                             🧮 Tính giá
                         </button>
                     </div>
-                    
+
                     <!-- Auto-calculate indicator -->
                     <div id="catalogueAutoCalcIndicator" class="auto-calculate-indicator" style="display: none;">
                         ⚡ Tự động tính giá khi đủ thông tin
@@ -745,10 +791,11 @@
 
                 <!-- Catalogue Results - CHI TIẾT ĐẦY ĐỦ -->
                 <div class="card results" id="catalogueResults" style="display: none;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <h2 style="margin: 0;">📊 KẾT QUẢ TÍNH GIÁ</h2>
-                        <button onclick="document.getElementById('catalogueResults').style.display='none'" 
-                                style="background: #f0f0f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                        <button onclick="document.getElementById('catalogueResults').style.display='none'"
+                            style="background: #f0f0f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
                             ✕ Đóng
                         </button>
                     </div>
@@ -788,7 +835,8 @@
                             </div>
                             <div id="catalogueResCoverDetails" class="cost-sub-items"></div>
                             <div class="cost-row">
-                                <span>🖨️ <span id="catalogueResCoverPrintName">In bìa</span>: <span id="catalogueResCoverPrintSheets">0</span> tờ × <span
+                                <span>🖨️ <span id="catalogueResCoverPrintName">In bìa</span>: <span
+                                        id="catalogueResCoverPrintSheets">0</span> tờ × <span
                                         id="catalogueResCoverPrintPrice">0</span>đ</span>
                                 <span class="cost-val" id="catalogueResCoverPrintCost">0đ</span>
                             </div>
@@ -808,7 +856,8 @@
                             </div>
                             <div id="catalogueResInnerDetails" class="cost-sub-items"></div>
                             <div class="cost-row">
-                                <span>🖨️ <span id="catalogueResInnerPrintName">In ruột</span>: <span id="catalogueResInnerPrintSheets">0</span> tờ × <span
+                                <span>🖨️ <span id="catalogueResInnerPrintName">In ruột</span>: <span
+                                        id="catalogueResInnerPrintSheets">0</span> tờ × <span
                                         id="catalogueResInnerPrintPrice">0</span>đ</span>
                                 <span class="cost-val" id="catalogueResInnerPrintCost">0đ</span>
                             </div>
@@ -1007,6 +1056,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Mobile Bottom Navigation (Floating Island Style) -->
+    <nav class="mobile-bottom-nav">
+        <a href="javascript:void(0)" class="nav-item active"
+            onclick="goToHome(); showSubTab('paper','calc', this); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active');">
+            <span class="nav-icon">🧮</span>
+            <span class="nav-label">In Nhanh</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item"
+            onclick="goToHome(); showSubTab('catalogue','calc', this); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active');">
+            <span class="nav-icon">📚</span>
+            <span class="nav-label">Catalogue</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item"
+            onclick="showSubTab('paper','history', this); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active');">
+            <span class="nav-icon">🕒</span>
+            <span class="nav-label">Lịch sử</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item"
+            onclick="toggleSidebar(); document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); this.classList.add('active');">
+            <span class="nav-icon">🍔</span>
+            <span class="nav-label">Menu</span>
+        </a>
+    </nav>
 
     <script src="app.js?v=20260118120000"></script>
     <script src="paper_helpers.js?v=20260118120000"></script>
