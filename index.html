@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NetPrint - Tính Giá In Nhanh</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="paper_pricing_settings.css">
+    <link rel="stylesheet" href="paper_history.css">
+</head>
+
+<body>
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <img src="LOGO NETPRINT/LOGO 3.png" alt="NetPrint" class="modal-logo">
+            <h2>Đăng Nhập</h2>
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="loginUser" placeholder="Nhập tên đăng nhập">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="loginPass" placeholder="Nhập mật khẩu">
+            </div>
+            <button class="btn-primary" onclick="login()">Đăng Nhập</button>
+        </div>
+    </div>
+
+    <!-- Register Modal (Chỉ dùng trong phần quản lý tài khoản của Admin) -->
+    <div id="registerModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <img src="LOGO NETPRINT/LOGO 3.png" alt="NetPrint" class="modal-logo">
+            <h2>Tạo Tài Khoản Mới</h2>
+            <div class="form-group">
+                <label>Tên đăng nhập</label>
+                <input type="text" id="regUser" placeholder="Nhập tên đăng nhập">
+            </div>
+            <div class="form-group">
+                <label>Mật khẩu</label>
+                <input type="password" id="regPass" placeholder="Nhập mật khẩu">
+            </div>
+            <div class="form-group">
+                <label>Xác nhận mật khẩu</label>
+                <input type="password" id="regPassConfirm" placeholder="Nhập lại mật khẩu">
+            </div>
+            <div class="form-group">
+                <label>Vai trò</label>
+                <select id="regRole">
+                    <option value="staff">Nhân viên</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+            <div class="form-group" id="adminKeyGroup" style="display:none;">
+                <label>Mã Admin</label>
+                <input type="password" id="adminKey" placeholder="Nhập mã admin">
+            </div>
+            <button class="btn-primary" onclick="register()">Tạo Tài Khoản</button>
+            <button class="btn-secondary" onclick="closeRegisterModal()"
+                style="margin-top: 10px; width: 100%; background: #6c757d; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 600;">Hủy</button>
+        </div>
+    </div>
+
+    <!-- Mobile View Modal -->
+    <div id="mobileViewModal" class="modal" style="display:none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <h2>📱 Xem trên Điện Thoại</h2>
+            <div class="mobile-view-content">
+                <div class="mobile-step">
+                    <h3>Bước 1: Khởi động Server</h3>
+                    <p>Chạy file <code>start-server.bat</code> trong thư mục dự án</p>
+                </div>
+                <div class="mobile-step">
+                    <h3>Bước 2: Địa chỉ IP của máy</h3>
+                    <div class="ip-display" id="ipDisplay">
+                        <p>Đang tìm địa chỉ IP...</p>
+                    </div>
+                </div>
+                <div class="mobile-step">
+                    <h3>Bước 3: Truy cập từ điện thoại</h3>
+                    <div class="url-display" id="urlDisplay">
+                        <p>Vui lòng chạy server trước</p>
+                    </div>
+                    <p class="mobile-note">⚠️ Đảm bảo điện thoại và máy tính cùng mạng WiFi</p>
+                </div>
+                <div class="mobile-step">
+                    <h3>📋 Hướng dẫn chi tiết</h3>
+                    <ol style="text-align: left; margin: 10px 0; padding-left: 20px;">
+                        <li>Đảm bảo điện thoại và máy tính cùng mạng WiFi</li>
+                        <li>Chạy file <code>start-server.bat</code></li>
+                        <li>Mở trình duyệt trên điện thoại</li>
+                        <li>Vào địa chỉ hiển thị ở trên</li>
+                    </ol>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="closeMobileViewModal()" style="margin-top: 20px;">Đóng</button>
+        </div>
+    </div>
+
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" title="Thu gọn/Mở rộng menu">
+        <span class="toggle-icon-grid">
+            <span class="grid-square"></span>
+            <span class="grid-square"></span>
+            <span class="grid-square"></span>
+            <span class="grid-square"></span>
+        </span>
+    </button>
+
+    <!-- Sidebar Menu -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <img src="LOGO NETPRINT/LOGO 3.png" alt="NetPrint" class="sidebar-logo">
+        </div>
+        <div class="sidebar-search">
+            <input type="text" placeholder="🔍 Tìm kiếm..." class="search-input">
+        </div>
+        <div class="sidebar-content">
+            <!-- TÍNH GIÁ Section (cụm riêng) -->
+            <div class="sidebar-section">
+                <h3 class="section-title">TÍNH GIÁ</h3>
+                <div class="menu-grid">
+                    <div class="menu-item" onclick="goToHome(); showSubTab('paper','calc', null)" title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy">
+                        <div class="menu-icon" style="background: #e3f2fd; color: #2196f3;">
+                            <span style="font-size: 24px;">🧮</span>
+                        </div>
+                        <span class="menu-label">In Nhanh</span>
+                    </div>
+                    <div class="menu-item" onclick="goToHome(); showSubTab('catalogue','calc', null)" title="In Catalogue (In nhanh)">
+                        <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
+                            <span style="font-size: 24px;">📚</span>
+                        </div>
+                        <span class="menu-label">In Catalogue</span>
+                    </div>
+                    <div class="menu-item" onclick="goToHome(); showToast('🧾 Tính giá đơn hàng đang phát triển')" title="Tính giá đơn hàng">
+                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
+                            <span style="font-size: 24px;">🧾</span>
+                        </div>
+                        <span class="menu-label">TG Đơn Hàng</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CRM Section -->
+            <div class="sidebar-section">
+                <h3 class="section-title">CRM</h3>
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
+                            <span style="font-size: 24px;">🛒</span>
+                        </div>
+                        <span class="menu-label">Bán hàng</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
+                            <span style="font-size: 24px;">💬</span>
+                        </div>
+                        <span class="menu-label">Khách hàng</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
+                            <span style="font-size: 24px;">📦</span>
+                        </div>
+                        <span class="menu-label">Kho hàng</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
+                            <span style="font-size: 24px;">🛍️</span>
+                        </div>
+                        <span class="menu-label">Mua hàng</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKPLACE Section -->
+            <div class="sidebar-section">
+                <h3 class="section-title">WORKPLACE</h3>
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
+                            <span style="font-size: 24px;">📋</span>
+                        </div>
+                        <span class="menu-label">Công việc</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
+                            <span style="font-size: 24px;">📖</span>
+                        </div>
+                        <span class="menu-label">Tài liệu</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
+                            <span style="font-size: 24px;">📅</span>
+                        </div>
+                        <span class="menu-label">Lịch biểu</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
+                            <span style="font-size: 24px;">📄</span>
+                        </div>
+                        <span class="menu-label">Văn bản</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HRM Section -->
+            <div class="sidebar-section">
+                <h3 class="section-title">HRM</h3>
+                <div class="menu-grid">
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
+                            <span style="font-size: 24px;">👥</span>
+                        </div>
+                        <span class="menu-label">Nhân sự</span>
+                    </div>
+                    <div class="menu-item">
+                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
+                            <span style="font-size: 24px;">💰</span>
+                        </div>
+                        <span class="menu-label">Bảng lương</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="container" id="mainApp" style="display:none;">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-top">
+                <img src="LOGO NETPRINT/LOGO 1.png" alt="NetPrint Logo" class="logo" onclick="goToHome()"
+                    style="cursor: pointer;" title="Về trang chủ">
+                <div class="user-info">
+                    <span id="userDisplay"></span>
+                    <button class="btn-manage-users admin-only" onclick="showTab('users')">⚙️ Cài đặt</button>
+                    <button class="btn-logout" onclick="logout()">Đăng xuất</button>
+                </div>
+            </div>
+            <h1 id="mainTitle" onclick="goToHome()" style="cursor: pointer;" title="Về trang chủ">TÍNH GIÁ IN NHANH</h1>
+        </header>
+
+        <!-- ==================== PAPER CALCULATOR ==================== -->
+        <section id="paper-calculator" class="tab-content active">
+            <!-- Sub-tabs -->
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="showSubTab('paper', 'calc', this)">🧮 Tính Giá In Nhanh</button>
+                <button class="sub-tab" onclick="showSubTab('paper', 'history', this)">📋 Lịch Sử Tính Giá</button>
+            </div>
+
+            <!-- ========== TAB: TÍNH GIÁ ========== -->
+            <div id="paper-calc" class="sub-content active">
+                <div class="card compact-card">
+                    <!-- Imposition Preview -->
+                    <div class="imposition-preview-top compact" id="paperImpositionPreview">
+                        <div class="imposition-sheet">
+                            <div class="sheet-grid" id="paperSheetGrid"></div>
+                        </div>
+                        <div class="imposition-info-wrapper">
+                            <div class="sheet-label"><span id="paperSheetSize">A3 (325×430)</span></div>
+                            <div class="imposition-info">
+                                <div class="info-item">
+                                    <span class="info-value" id="paperYield">0</span>
+                                    <span class="info-label">sp/tờ</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-value" id="paperSheets">0</span>
+                                    <span class="info-label">tờ in</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="imposition-settings-horizontal compact">
+                            <div class="imp-setting">
+                                <label>Khoảng cách SP</label>
+                                <input type="number" id="paperSpacingCalc" value="0" min="0" step="0.5"
+                                    oninput="updatePaperPreview()">
+                                <span>mm</span>
+                            </div>
+                            <div class="margin-lock-group">
+                                <div class="imp-setting">
+                                    <label>Lề ngang</label>
+                                    <input type="number" id="paperMarginH" value="5" min="0" step="0.5"
+                                        oninput="updatePaperPreview()">
+                                    <span>mm</span>
+                                </div>
+                                <button type="button" class="btn-margin-lock" id="btnMarginLock"
+                                    onclick="toggleMarginLock()" title="Khóa/Mở lề">
+                                    <span id="marginLockIcon">🔒</span>
+                                </button>
+                                <div class="imp-setting">
+                                    <label>Lề dọc</label>
+                                    <input type="number" id="paperMarginV" value="5" min="0" step="0.5"
+                                        oninput="updatePaperPreview()">
+                                    <span>mm</span>
+                                </div>
+                            </div>
+                            <div class="imp-setting">
+                                <label>Bù hao</label>
+                                <input type="number" id="paperWasteCalc" value="0" min="0" step="1"
+                                    oninput="updatePaperPreview()">
+                                <span>tờ</span>
+                            </div>
+                            <div class="imp-setting rotation-toggle">
+                                <button type="button" class="btn-rotation-toggle" id="btnRotationToggle"
+                                    onclick="toggleRotation()" title="Bật/Tắt xoay sản phẩm">
+                                    <span id="rotationIcon">🚫</span>
+                                    <span id="rotationLabel">Không xoay</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form -->
+                    <div class="compact-form">
+                        <h3 class="section-title">📋 QUY CÁCH SẢN PHẨM</h3>
+                        <!-- Hàng 1: Rộng, Cao, Số lượng -->
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label>↔️ Rộng (mm)</label>
+                                <input type="number" id="paperProdW" value="0" min="0" oninput="updatePaperPreview()">
+                            </div>
+                            <div class="form-group">
+                                <label>↕️ Cao (mm)</label>
+                                <input type="number" id="paperProdH" value="0" min="0" oninput="updatePaperPreview()">
+                            </div>
+                            <div class="form-group">
+                                <label>📦 Số lượng</label>
+                                <input type="number" id="paperQty" value="0" min="0" oninput="updatePaperPreview()">
+                            </div>
+                        </div>
+                        <!-- Nút chọn nhanh khổ giấy -->
+                        <div class="quick-size-buttons">
+                            <button type="button" class="btn-quick-size" onclick="setQuickSize('A3')">A3</button>
+                            <button type="button" class="btn-quick-size" onclick="setQuickSize('A4')">A4</button>
+                            <button type="button" class="btn-quick-size" onclick="setQuickSize('A5')">A5</button>
+                            <button type="button" class="btn-quick-size" onclick="setQuickSize('A6')">A6</button>
+                        </div>
+                        <!-- SECTION: GIẤY IN -->
+                        <div class="section-title-with-field">
+                            <div class="section-title-content">
+                                <span class="section-title-text">📄 QUY CÁCH GIẤY IN</span>
+                            <div class="form-group paper-size-in-header">
+                                <label>📐 Khổ in (Khổ giấy)</label>
+                                <select id="paperSize" onchange="onPaperSizeChange()"></select>
+                            </div>
+                            </div>
+                        </div>
+
+                        <!-- 3 ô dàn đều: Loại giấy, Số mặt in, Cán màng -->
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label>📄 Loại giấy</label>
+                                <div class="select-with-search">
+                                    <input type="text" id="paperTypeSearch" class="select-search-input"
+                                        placeholder="🔍 Tìm kiếm loại giấy..." oninput="filterPaperTypes()"
+                                        onfocus="showPaperTypeDropdown()">
+                                    <select id="paperType" size="8" class="select-search-dropdown"></select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>🖨️ Số mặt in</label>
+                                <select id="paperPrintSides"></select>
+                            </div>
+                            <div class="form-group">
+                                <label>✨ Cán màng</label>
+                                <select id="paperLamination"></select>
+                            </div>
+                        </div>
+                        <!-- Hàng 3: Gia công thành phẩm -->
+                        <div class="form-group full-width">
+                            <label>✂️ Gia công thành phẩm</label>
+                            <div class="processing-grid" id="paperProcessingGroup"></div>
+                        </div>
+                    </div>
+
+                    <!-- Chi phí khác -->
+                    <div class="extra-costs-compact">
+                        <div class="extra-costs-header">
+                            <span>💰 Chi phí khác</span>
+                            <div class="extra-costs-actions">
+                                <select id="deliverySuggestions" onchange="addDeliverySuggestion()"
+                                    class="delivery-select">
+                                    <option value="">💡 Gợi ý chi phí</option>
+                                    <option value="Phí Giao hàng|50000">🚚 Phí Giao hàng - 50,000đ</option>
+                                    <option value="Phí Giao hàng|80000">🚚 Phí Giao hàng - 80,000đ</option>
+                                    <option value="Phí Giao hàng|100000">🚚 Phí Giao hàng - 100,000đ</option>
+                                    <option value="Phí Giao hàng|150000">🚚 Phí Giao hàng - 150,000đ</option>
+                                    <option value="Phí Giao hàng|200000">🚚 Phí Giao hàng - 200,000đ</option>
+                                    <option value="Phí khuôn bế|300000">🔧 Phí khuôn bế - 300,000đ</option>
+                                    <option value="Phí khuôn bế|500000">🔧 Phí khuôn bế - 500,000đ</option>
+                                    <option value="Phí gia công ngoài|500000">⚙️ Phí gia công ngoài - 500,000đ</option>
+                                </select>
+                                <button type="button" class="btn-add-extra-sm" onclick="addPaperExtraCost()">+
+                                    Thêm</button>
+                            </div>
+                        </div>
+                        <div id="paperExtraCosts" class="extra-costs-list"></div>
+                    </div>
+
+                    <!-- Datalist cho gợi ý tên chi phí -->
+                    <datalist id="costNameSuggestions">
+                        <option value="Phí Giao hàng" data-amount="50000">Phí Giao hàng - 50,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="80000">Phí Giao hàng - 80,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="100000">Phí Giao hàng - 100,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="150000">Phí Giao hàng - 150,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="200000">Phí Giao hàng - 200,000đ</option>
+                        <option value="Phí khuôn bế" data-amount="300000">Phí khuôn bế - 300,000đ</option>
+                        <option value="Phí khuôn bế" data-amount="500000">Phí khuôn bế - 500,000đ</option>
+                        <option value="Phí gia công ngoài" data-amount="500000">Phí gia công ngoài - 500,000đ</option>
+                    </datalist>
+
+                    <!-- Nút tính giá gọn - căn giữa -->
+                    <div class="calculate-compact center">
+                        <select id="paperCustomerType" class="customer-select-sm"></select>
+                        <button class="btn-calc-sm" onclick="calculatePaper()">🧮 Tính giá</button>
+                    </div>
+
+                    <!-- Thông báo tính giá -->
+                    <div id="paperCalcNotification" class="calc-notification" style="display: none;">
+                        ✅ Đã tính giá thành công!
+                    </div>
+
+                    <!-- Input tên báo giá ẩn để lưu history -->
+                    <input type="hidden" id="paperNote" value="">
+                </div>
+
+                <!-- Paper Results - CHI TIẾT ĐẦY ĐỦ -->
+                <div class="card results" id="paperResults">
+                    <h2>📊 KẾT QUẢ TÍNH GIÁ</h2>
+                    <!-- Tổng quan -->
+                    <div class="summary-row">
+                        <div class="summary-card summary-yellow">
+                            <span class="summary-label">Số lượng</span>
+                            <span class="summary-value" id="paperResQty">0</span>
+                        </div>
+                        <div class="summary-card summary-green">
+                            <span class="summary-label">Giá bán/SP</span>
+                            <span class="summary-value" id="paperResSellPrice">0đ</span>
+                        </div>
+                        <div class="summary-card summary-blue">
+                            <span class="summary-label">Tổng tiền</span>
+                            <span class="summary-value" id="paperResTotalSell">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Nút toggle chi tiết -->
+                    <div class="cost-detail-toggle" style="display: block;">
+                        <button class="btn-toggle-cost" onclick="toggleCostDetail()">
+                            <span id="costDetailToggleIcon">👁️</span>
+                            <span id="costDetailToggleText">Ẩn chi tiết</span>
+                        </button>
+                    </div>
+
+                    <!-- Chi tiết gọn - 2 cột -->
+                    <div class="cost-detail-compact" id="costDetailSection">
+                        <!-- Cột trái: Giấy + In + Cán màng -->
+                        <div class="cost-col">
+                            <div class="cost-row">
+                                <span>📄 Giấy: <span id="paperResSheets">0</span> tờ × <span
+                                        id="paperResPaperPrice">0</span>đ</span>
+                                <span class="cost-val" id="paperResPaperCost">0đ</span>
+                            </div>
+                            <div id="paperResPaperDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>🖨️ <span id="paperResPrintName">In 1 mặt</span>: <span id="paperResPrintSheets">0</span> tờ × <span
+                                        id="paperResPrintPrice">0</span>đ</span>
+                                <span class="cost-val" id="paperResPrintCost">0đ</span>
+                            </div>
+                            <div id="paperResPrintDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>✨ <span id="paperResLamName">Cán màng</span>: <span
+                                        id="paperResLamSheets">0</span> tờ × <span
+                                        id="paperResLamPrice">0</span>đ</span>
+                                <span class="cost-val" id="paperResLamCost">0đ</span>
+                            </div>
+                            <div id="paperResLamDetails" class="cost-sub-items"></div>
+                        </div>
+                        <!-- Cột phải: Gia công + Chi phí khác -->
+                        <div class="cost-col">
+                            <div class="cost-row"><span>✂️ Gia công</span><span class="cost-val"
+                                    id="paperResProcCost">0đ</span></div>
+                            <div id="paperResProcDetails" class="cost-sub-items"></div>
+                            <div class="cost-row"><span>💰 Chi phí khác</span><span class="cost-val"
+                                    id="paperResExtraCost">0đ</span></div>
+                            <div id="paperResExtraDetails" class="cost-sub-items"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tổng vốn và Lợi nhuận -->
+                    <div class="cost-summary-bar" id="costSummarySection">
+                        <div class="summary-bar-item">
+                            <span class="summary-bar-label">💵 Tổng vốn</span>
+                            <span class="summary-bar-value" id="paperResTotalCost">0đ</span>
+                        </div>
+                        <div class="summary-bar-item profit-bar">
+                            <span class="summary-bar-label">📈 Lợi nhuận</span>
+                            <span class="summary-bar-value profit-text" id="paperResProfit">0đ</span>
+                        </div>
+                    </div>
+                    <div id="paperResSummaryDetails" class="cost-sub-items"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: LỊCH SỬ ========== -->
+            <div id="paper-history" class="sub-content">
+                <div class="card">
+                    <h2>📋 Lịch Sử Tính Giá</h2>
+                    <div class="history-controls">
+                        <input type="text" id="paperHistorySearch" placeholder="🔍 Tìm kiếm theo ghi chú..."
+                            oninput="filterPaperHistory()">
+                        <button class="btn-danger" onclick="clearPaperHistory()">🗑️ Xóa Tất Cả</button>
+                    </div>
+                    <div id="paperHistoryList" class="history-list"></div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ==================== CATALOGUE CALCULATOR ==================== -->
+        <section id="catalogue-calculator" class="tab-content" style="display:none;">
+            <!-- Sub-tabs -->
+            <div class="sub-tabs">
+                <button class="sub-tab active" onclick="showSubTab('catalogue', 'calc', this)">📚 Tính Giá Catalogue</button>
+                <button class="sub-tab" onclick="showSubTab('catalogue', 'history', this)">📋 Lịch Sử Tính Giá</button>
+            </div>
+
+            <!-- ========== TAB: TÍNH GIÁ ========== -->
+            <div id="catalogue-calc" class="sub-content active">
+                <div class="card compact-card">
+                    <!-- Form -->
+                    <div class="compact-form">
+                        <!-- SECTION: QUY CÁCH CATALOGUE -->
+                        <div class="section-title-with-field">
+                            <div class="section-title-content">
+                                <span class="section-title-text">📚 QUY CÁCH CATALOGUE</span>
+                                <div class="form-group paper-size-in-header">
+                                    <label>
+                                        📐 Khổ giấy in
+                                        <span class="tooltip-icon" title="Khổ giấy in sẽ được tự động chọn phù hợp với kích thước Catalogue">ℹ️</span>
+                                    </label>
+                                    <select id="cataloguePaperSize" onchange="onCataloguePaperSizeChange()" title="Chọn khổ giấy in"></select>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Hàng 1: Kích thước Catalogue, Số trang, Số lượng -->
+                        <div class="form-row three-cols">
+                            <div class="form-group">
+                                <label>
+                                    📐 Kích thước Catalogue
+                                    <span class="tooltip-icon" title="Kích thước thành phẩm cuối cùng của Catalogue">ℹ️</span>
+                                </label>
+                                <select id="catalogueSize" onchange="onCatalogueSizeChange()" title="Chọn kích thước Catalogue">
+                                    <option value="A4">A4 (210×297mm)</option>
+                                    <option value="A5">A5 (148×210mm)</option>
+                                    <option value="A3">A3 (297×420mm)</option>
+                                    <option value="custom">✏️ Tự chọn</option>
+                                </select>
+                                <!-- Input fields cho kích thước tự chọn (ẩn mặc định) -->
+                                <div id="catalogueCustomFields" style="display: none; margin-top: 10px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: end;">
+                                        <div style="display: flex; flex-direction: column;">
+                                            <label style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                                <span>↔️</span>
+                                                <span>Rộng (mm)</span>
+                                            </label>
+                                            <input type="number" id="catalogueCustomWidth" value="210" min="1" step="1" 
+                                                   placeholder="Rộng" 
+                                                   oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
+                                                   class="catalogue-input"
+                                                   title="Nhập chiều rộng Catalogue (mm)">
+                                        </div>
+                                        <div style="display: flex; flex-direction: column;">
+                                            <label style="font-size: 0.85rem; margin-bottom: 6px; font-weight: 700; color: #1d1d1f; display: flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                                <span>↕️</span>
+                                                <span>Cao (mm)</span>
+                                            </label>
+                                            <input type="number" id="catalogueCustomHeight" value="297" min="1" step="1" 
+                                                   placeholder="Cao" 
+                                                   oninput="onCatalogueCustomSizeChange(); validateCatalogueInputs()"
+                                                   class="catalogue-input"
+                                                   title="Nhập chiều cao Catalogue (mm)">
+                                        </div>
+                                    </div>
+                                    <div id="catalogueCustomSizeHint" class="input-hint" style="margin-top: 6px; font-size: 0.8rem; color: #666;"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    📄 Số trang
+                                    <span class="tooltip-icon" title="Tổng số trang Catalogue (tối thiểu 4 trang, bước nhảy 4 trang)">ℹ️</span>
+                                </label>
+                                <input type="number" id="cataloguePages" value="8" min="4" step="4" 
+                                       oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
+                                       class="catalogue-input"
+                                       title="Nhập số trang (4, 8, 12, 16...)">
+                                <small class="input-hint">Tối thiểu 4 trang, bước nhảy 4</small>
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    📦 Số lượng
+                                    <span class="tooltip-icon" title="Số lượng Catalogue cần in">ℹ️</span>
+                                </label>
+                                <input type="number" id="catalogueQty" value="0" min="0" step="1"
+                                       oninput="updateCatalogueSheets(); validateCatalogueInputs(); autoCalculateIfReady()"
+                                       class="catalogue-input"
+                                       title="Nhập số lượng Catalogue">
+                                <small class="input-hint">Nhập số lượng cần in</small>
+                            </div>
+                        </div>
+                        <!-- Thông báo validation -->
+                        <div id="catalogueValidationMsg" class="validation-message" style="display: none;"></div>
+                        <!-- SECTION: GIẤY BÌA -->
+                        <div class="section-title-with-field">
+                            <div class="section-title-content">
+                                <span class="section-title-text">📑 GIẤY BÌA</span>
+                                <!-- Thông tin số tờ bìa - 2 ô gọn gàng -->
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <div style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Bìa/cuốn</div>
+                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueCoverSheetsPerBook" style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">1</div>
+                                            <div style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">tờ</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 1px solid #90caf9; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(33, 150, 243, 0.12);">
+                                        <div style="font-size: 0.65rem; color: #1565c0; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tổng bìa</div>
+                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueTotalCoverSheets" style="font-size: 1.5rem; font-weight: 900; color: #1976d2; line-height: 1;">0</div>
+                                            <div style="font-size: 0.85rem; color: #1565c0; font-weight: 600; line-height: 1;">tờ</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueCoverPaper()">+ Thêm</button>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách giấy bìa -->
+                        <div id="catalogueCoverPapersList" class="extra-costs-list"></div>
+
+                        <!-- SECTION: GIẤY RUỘT -->
+                        <div class="section-title-with-field" style="margin-top: 8px;">
+                            <div class="section-title-content">
+                                <span class="section-title-text">📖 GIẤY RUỘT</span>
+                                <!-- Thông tin số tờ ruột - 2 ô gọn gàng -->
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <div style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border: 1px solid #e0e0e0; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                                        <div style="font-size: 0.65rem; color: #666; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Ruột/cuốn</div>
+                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueInnerSheetsPerBook" style="font-size: 1.5rem; font-weight: 900; color: #1d1d1f; line-height: 1;">1</div>
+                                            <div style="font-size: 0.85rem; color: #666; font-weight: 600; line-height: 1;">tờ</div>
+                                        </div>
+                                    </div>
+                                    <div style="background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border: 1px solid #81c784; border-radius: 8px; padding: 8px 12px; text-align: center; display: flex; flex-direction: column; justify-content: center; height: 50px; min-width: 100px; max-width: 120px; box-sizing: border-box; box-shadow: 0 1px 3px rgba(76, 175, 80, 0.12);">
+                                        <div style="font-size: 0.65rem; color: #2e7d32; margin-bottom: 4px; font-weight: 700; line-height: 1.1; text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Tổng ruột</div>
+                                        <div style="display: flex; align-items: baseline; justify-content: center; gap: 4px;">
+                                            <div id="catalogueTotalInnerSheets" style="font-size: 1.5rem; font-weight: 900; color: #4caf50; line-height: 1;">0</div>
+                                            <div style="font-size: 0.85rem; color: #2e7d32; font-weight: 600; line-height: 1;">tờ</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueInnerPaper()">+ Thêm</button>
+                            </div>
+                        </div>
+
+                        <!-- Danh sách giấy ruột -->
+                        <div id="catalogueInnerPapersList" class="extra-costs-list"></div>
+
+                        <!-- SECTION: GIA CÔNG ĐÓNG CUỐN -->
+                        <div class="section-title-with-field" style="margin-top: 8px;">
+                            <div class="section-title-content">
+                                <span class="section-title-text">📌 GIA CÔNG ĐÓNG CUỐN</span>
+                            </div>
+                        </div>
+
+                        <!-- Gia công đóng cuốn -->
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>📌 Gia công đóng cuốn</label>
+                                <select id="catalogueBinding"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chi phí khác -->
+                    <div class="extra-costs-compact">
+                        <div class="extra-costs-header">
+                            <span>💰 Chi phí khác</span>
+                            <div class="extra-costs-actions">
+                                <select id="catalogueDeliverySuggestions" onchange="addCatalogueDeliverySuggestion()"
+                                    class="delivery-select">
+                                    <option value="">💡 Gợi ý chi phí</option>
+                                    <option value="Phí Giao hàng|50000">🚚 Phí Giao hàng - 50,000đ</option>
+                                    <option value="Phí Giao hàng|80000">🚚 Phí Giao hàng - 80,000đ</option>
+                                    <option value="Phí Giao hàng|100000">🚚 Phí Giao hàng - 100,000đ</option>
+                                    <option value="Phí Giao hàng|150000">🚚 Phí Giao hàng - 150,000đ</option>
+                                    <option value="Phí Giao hàng|200000">🚚 Phí Giao hàng - 200,000đ</option>
+                                    <option value="Phí khuôn bế|300000">🔧 Phí khuôn bế - 300,000đ</option>
+                                    <option value="Phí khuôn bế|500000">🔧 Phí khuôn bế - 500,000đ</option>
+                                    <option value="Phí gia công ngoài|500000">⚙️ Phí gia công ngoài - 500,000đ</option>
+                                </select>
+                                <button type="button" class="btn-add-extra-sm" onclick="addCatalogueExtraCost()">+
+                                    Thêm</button>
+                            </div>
+                        </div>
+                        <div id="catalogueExtraCosts" class="extra-costs-list"></div>
+                    </div>
+
+                    <!-- Datalist cho gợi ý tên chi phí -->
+                    <datalist id="costNameSuggestions">
+                        <option value="Phí Giao hàng" data-amount="50000">Phí Giao hàng - 50,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="80000">Phí Giao hàng - 80,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="100000">Phí Giao hàng - 100,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="150000">Phí Giao hàng - 150,000đ</option>
+                        <option value="Phí Giao hàng" data-amount="200000">Phí Giao hàng - 200,000đ</option>
+                        <option value="Phí khuôn bế" data-amount="300000">Phí khuôn bế - 300,000đ</option>
+                        <option value="Phí khuôn bế" data-amount="500000">Phí khuôn bế - 500,000đ</option>
+                        <option value="Phí gia công ngoài" data-amount="500000">Phí gia công ngoài - 500,000đ</option>
+                    </datalist>
+
+                    <!-- Nút tính giá gọn - căn giữa -->
+                    <div class="calculate-compact center">
+                        <select id="catalogueCustomerType" class="customer-select-sm" title="Chọn loại khách hàng để tính lợi nhuận"></select>
+                        <button class="btn-calc-sm" onclick="calculateCatalogue()" title="Tính giá Catalogue">
+                            🧮 Tính giá
+                        </button>
+                    </div>
+                    
+                    <!-- Auto-calculate indicator -->
+                    <div id="catalogueAutoCalcIndicator" class="auto-calculate-indicator" style="display: none;">
+                        ⚡ Tự động tính giá khi đủ thông tin
+                    </div>
+
+                    <!-- Thông báo tính giá -->
+                    <div id="catalogueCalcNotification" class="calc-notification" style="display: none;">
+                        ✅ Đã tính giá thành công!
+                    </div>
+
+                    <!-- Input tên báo giá ẩn để lưu history -->
+                    <input type="hidden" id="catalogueNote" value="">
+                </div>
+
+                <!-- Catalogue Results - CHI TIẾT ĐẦY ĐỦ -->
+                <div class="card results" id="catalogueResults" style="display: none;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <h2 style="margin: 0;">📊 KẾT QUẢ TÍNH GIÁ</h2>
+                        <button onclick="document.getElementById('catalogueResults').style.display='none'" 
+                                style="background: #f0f0f0; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.2s;">
+                            ✕ Đóng
+                        </button>
+                    </div>
+                    <!-- Tổng quan -->
+                    <div class="summary-row">
+                        <div class="summary-card summary-yellow">
+                            <span class="summary-label">📦 Số lượng</span>
+                            <span class="summary-value" id="catalogueResQty">0</span>
+                            <span class="summary-unit">cuốn</span>
+                        </div>
+                        <div class="summary-card summary-green">
+                            <span class="summary-label">💰 Giá bán/Cuốn</span>
+                            <span class="summary-value" id="catalogueResSellPrice">0đ</span>
+                        </div>
+                        <div class="summary-card summary-blue">
+                            <span class="summary-label">💵 Tổng tiền</span>
+                            <span class="summary-value" id="catalogueResTotalSell">0đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Nút toggle chi tiết -->
+                    <div class="cost-detail-toggle" style="display: block;">
+                        <button class="btn-toggle-cost" onclick="toggleCatalogueCostDetail()">
+                            <span id="catalogueCostDetailToggleIcon">👁️</span>
+                            <span id="catalogueCostDetailToggleText">Ẩn chi tiết</span>
+                        </button>
+                    </div>
+
+                    <!-- Chi tiết gọn - 2 cột -->
+                    <div class="cost-detail-compact" id="catalogueCostDetailSection">
+                        <!-- Cột trái: Giấy bìa + In bìa + Cán màng bìa -->
+                        <div class="cost-col">
+                            <div class="cost-row">
+                                <span>📑 Giấy bìa: <span id="catalogueResCoverSheets">0</span> tờ × <span
+                                        id="catalogueResCoverPrice">0</span>đ</span>
+                                <span class="cost-val" id="catalogueResCoverCost">0đ</span>
+                            </div>
+                            <div id="catalogueResCoverDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>🖨️ <span id="catalogueResCoverPrintName">In bìa</span>: <span id="catalogueResCoverPrintSheets">0</span> tờ × <span
+                                        id="catalogueResCoverPrintPrice">0</span>đ</span>
+                                <span class="cost-val" id="catalogueResCoverPrintCost">0đ</span>
+                            </div>
+                            <div id="catalogueResCoverPrintDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>✨ <span id="catalogueResCoverLamName">Cán màng bìa</span></span>
+                                <span class="cost-val" id="catalogueResCoverLamCost">0đ</span>
+                            </div>
+                            <div id="catalogueResCoverLamDetails" class="cost-sub-items"></div>
+                        </div>
+                        <!-- Cột phải: Giấy ruột + In ruột + Cán màng ruột + Gia công đóng cuốn + Chi phí khác -->
+                        <div class="cost-col">
+                            <div class="cost-row">
+                                <span>📖 Giấy ruột: <span id="catalogueResInnerSheets">0</span> tờ × <span
+                                        id="catalogueResInnerPrice">0</span>đ</span>
+                                <span class="cost-val" id="catalogueResInnerCost">0đ</span>
+                            </div>
+                            <div id="catalogueResInnerDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>🖨️ <span id="catalogueResInnerPrintName">In ruột</span>: <span id="catalogueResInnerPrintSheets">0</span> tờ × <span
+                                        id="catalogueResInnerPrintPrice">0</span>đ</span>
+                                <span class="cost-val" id="catalogueResInnerPrintCost">0đ</span>
+                            </div>
+                            <div id="catalogueResInnerPrintDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>✨ <span id="catalogueResInnerLamName">Cán màng ruột</span></span>
+                                <span class="cost-val" id="catalogueResInnerLamCost">0đ</span>
+                            </div>
+                            <div id="catalogueResInnerLamDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>📌 <span id="catalogueResBindName">Gia công đóng cuốn</span></span>
+                                <span class="cost-val" id="catalogueResBindCost">0đ</span>
+                            </div>
+                            <div id="catalogueResBindDetails" class="cost-sub-items"></div>
+                            <div class="cost-row"><span>💰 Chi phí khác</span><span class="cost-val"
+                                    id="catalogueResExtraCost">0đ</span></div>
+                            <div id="catalogueResExtraDetails" class="cost-sub-items"></div>
+                        </div>
+                    </div>
+
+                    <!-- Tổng vốn và Lợi nhuận -->
+                    <div class="cost-summary-bar" id="catalogueCostSummarySection">
+                        <div class="summary-bar-item">
+                            <span class="summary-bar-label">💵 Tổng vốn</span>
+                            <span class="summary-bar-value" id="catalogueResTotalCost">0đ</span>
+                        </div>
+                        <div class="summary-bar-item profit-bar">
+                            <span class="summary-bar-label">📈 Lợi nhuận</span>
+                            <span class="summary-bar-value profit-text" id="catalogueResProfit">0đ</span>
+                        </div>
+                    </div>
+                    <div id="catalogueResSummaryDetails" class="cost-sub-items"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: LỊCH SỬ ========== -->
+            <div id="catalogue-history" class="sub-content">
+                <div class="card">
+                    <h2>📋 Lịch Sử Tính Giá Catalogue</h2>
+                    <div class="history-controls">
+                        <input type="text" id="catalogueHistorySearch" placeholder="🔍 Tìm kiếm theo ghi chú..."
+                            oninput="filterCatalogueHistory()">
+                        <button class="btn-danger" onclick="clearCatalogueHistory()">🗑️ Xóa Tất Cả</button>
+                    </div>
+                    <div id="catalogueHistoryList" class="history-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- USER MANAGEMENT -->
+        <section id="users" class="tab-content" style="display:none;">
+            <!-- Menu Tabs -->
+            <div class="settings-menu-tabs">
+                <button class="settings-menu-tab active" onclick="showSettingsTab('price')">💰 Cài đặt giá</button>
+                <button class="settings-menu-tab" onclick="showSettingsTab('account')">👥 Cài đặt tài khoản</button>
+            </div>
+
+            <!-- Tab: Cài đặt giá -->
+            <div id="settingsPriceTab" class="settings-tab-content active">
+                <div class="card">
+                    <div class="settings-container">
+                        <h2 class="settings-title">⚙️ CÀI ĐẶT GIÁ</h2>
+
+                        <div class="settings-grid">
+                            <!-- Loại Giấy + Khổ In -->
+                            <div class="setting-card" onclick="openSettingModal('paperTypes')">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>📄 Loại Giấy + Khổ In</span>
+                                    </div>
+                                    <span class="setting-edit-icon">✏️</span>
+                                </div>
+                            </div>
+
+                            <!-- Giá In -->
+                            <div class="setting-card" onclick="openSettingModal('paperPrint')">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>🖨️ Giá In</span>
+                                    </div>
+                                    <span class="setting-edit-icon">✏️</span>
+                                </div>
+                            </div>
+
+                            <!-- Cán Màng -->
+                            <div class="setting-card" onclick="openSettingModal('paperLam')">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>✨ Cán Màng</span>
+                                    </div>
+                                    <span class="setting-edit-icon">✏️</span>
+                                </div>
+                            </div>
+
+                            <!-- Gia Công Thành Phẩm -->
+                            <div class="setting-card" onclick="openSettingModal('paperProc')">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>✂️ Gia Công Thành Phẩm</span>
+                                    </div>
+                                    <span class="setting-edit-icon">✏️</span>
+                                </div>
+                            </div>
+
+                            <!-- Loại Khách Hàng -->
+                            <div class="setting-card" onclick="openSettingModal('paperCustomer')">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>👥 Loại Khách (% lợi nhuận)</span>
+                                    </div>
+                                    <span class="setting-edit-icon">✏️</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-save-settings" onclick="savePaperSettings()">💾 LƯU TẤT CẢ CÀI ĐẶT</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h2>⚠️ Reset Hệ Thống</h2>
+                    <p class="hint">Xóa toàn bộ cài đặt và quay về mặc định ban đầu</p>
+                    <button class="btn-danger" onclick="hardReset()">🔄 RESET TẤT CẢ</button>
+                </div>
+            </div>
+
+            <!-- Tab: Cài đặt tài khoản -->
+            <div id="settingsAccountTab" class="settings-tab-content">
+                <div class="card">
+                    <div class="user-management-header">
+                        <h2>👥 Cài đặt tài khoản</h2>
+                        <button class="btn-create-user" onclick="showRegister()">
+                            <span class="btn-icon">➕</span>
+                            <span>Tạo Tài Khoản Mới</span>
+                        </button>
+                    </div>
+                    <div class="table-wrapper user-table-wrapper">
+                        <table class="user-management-table">
+                            <thead>
+                                <tr>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Vai trò</th>
+                                    <th>Xem giá vốn</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Setting Edit Modal -->
+    <div id="settingEditModal" class="modal" style="display: none;">
+        <div class="modal-content setting-modal-content">
+            <div class="modal-header">
+                <h2 id="settingModalTitle">⚙️ Chỉnh sửa cài đặt</h2>
+                <span class="close" onclick="closeSettingModal()">&times;</span>
+            </div>
+            <div class="modal-body setting-modal-body">
+                <div id="settingModalContent"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeSettingModal()">Đóng</button>
+                <button class="btn-primary" onclick="saveSettingModal()">💾 Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔑 Thay Đổi Mật Khẩu</h2>
+                <span class="close" onclick="closeChangePasswordModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="changePasswordUsername">Tài khoản:</label>
+                    <input type="text" id="changePasswordUsername" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới:</label>
+                    <input type="password" id="newPassword" placeholder="Nhập mật khẩu mới">
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu:</label>
+                    <input type="password" id="confirmPassword" placeholder="Nhập lại mật khẩu mới">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-primary" onclick="changePassword()">🔄 Thay Đổi</button>
+                    <button class="btn-secondary" onclick="closeChangePasswordModal()">❌ Hủy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js?v=20260118120000"></script>
+    <script src="paper_helpers.js?v=20260118120000"></script>
+    <script src="lamination_helpers.js?v=20260118120000"></script>
+    <script src="lamination_populate.js?v=20260118120000"></script>
+    <script src="paper_pricing_settings.js?v=20260118120000"></script>
+    <script src="lamination_settings.js?v=20250120000000"></script>
+    <script src="print_pricing_settings.js?v=20260118130000"></script>
+    <script src="processing_settings.js?v=20260118140000"></script>
+    <script src="paper_history.js?v=20260118120000"></script>
+    <script src="paper_history_integration.js?v=20260118120000"></script>
+</body>
+
+</html>
