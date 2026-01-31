@@ -1,5 +1,5 @@
 // ===== CẬP NHẬT GIÁ CÁN MÀNG - Khổ 32.5x43 và 33x43 =====
-// Chạy file này trong Console (F12 → Console) hoặc tích hợp vào app.js
+// Script này sẽ TỰ ĐỘNG cập nhật bảng giá cán màng khi load trang
 
 /**
  * Bảng giá cán màng 1 mặt theo mốc số lượng (Giá vốn cán / tờ A3)
@@ -16,25 +16,32 @@
  * | > 1,000      | 700đ      | 1,400đ         |
  */
 
-function updateLaminationPricesForA3() {
-    // Định nghĩa bảng giá cán màng 1 mặt (giá gốc)
-    const LAMINATION_TIERS_ONE_SIDED = [
-        { min: 1, max: 20, price: 2000, unit: 'per_sheet' },
-        { min: 21, max: 50, price: 1500, unit: 'per_sheet' },
-        { min: 51, max: 100, price: 1200, unit: 'per_sheet' },
-        { min: 101, max: 300, price: 1000, unit: 'per_sheet' },
-        { min: 301, max: 500, price: 850, unit: 'per_sheet' },
-        { min: 501, max: 1000, price: 750, unit: 'per_sheet' },
-        { min: 1001, max: 999999, price: 700, unit: 'per_sheet' }  // > 1000
-    ];
+// Định nghĩa bảng giá cán màng 1 mặt (giá gốc)
+const LAMINATION_TIERS_ONE_SIDED = [
+    { min: 1, max: 20, price: 2000, unit: 'per_sheet' },
+    { min: 21, max: 50, price: 1500, unit: 'per_sheet' },
+    { min: 51, max: 100, price: 1200, unit: 'per_sheet' },
+    { min: 101, max: 300, price: 1000, unit: 'per_sheet' },
+    { min: 301, max: 500, price: 850, unit: 'per_sheet' },
+    { min: 501, max: 1000, price: 750, unit: 'per_sheet' },
+    { min: 1001, max: 999999, price: 700, unit: 'per_sheet' }  // > 1000
+];
 
-    // Tự động tính giá 2 mặt = 1 mặt x 2
-    const LAMINATION_TIERS_TWO_SIDED = LAMINATION_TIERS_ONE_SIDED.map(tier => ({
-        min: tier.min,
-        max: tier.max,
-        price: tier.price * 2,  // ✨ CÔNG THỨC: 2 mặt = 1 mặt x 2
-        unit: tier.unit
-    }));
+// Tự động tính giá 2 mặt = 1 mặt x 2
+const LAMINATION_TIERS_TWO_SIDED = LAMINATION_TIERS_ONE_SIDED.map(tier => ({
+    min: tier.min,
+    max: tier.max,
+    price: tier.price * 2,  // ✨ CÔNG THỨC: 2 mặt = 1 mặt x 2
+    unit: tier.unit
+}));
+
+function updateLaminationPricesForA3(forceUpdate = false) {
+    // Kiểm tra xem đã cập nhật chưa (chỉ cập nhật 1 lần)
+    const updateKey = 'netprint_lamination_updated_v2';
+    if (!forceUpdate && localStorage.getItem(updateKey) === 'true') {
+        console.log('📋 Bảng giá cán màng đã được cập nhật trước đó.');
+        return;
+    }
 
     // Tìm khổ giấy 32.5x43 (325x430mm) và 33x43 (330x430mm)
     const targetSizes = PAPER_SETTINGS.printSizes.filter(size =>
@@ -108,6 +115,9 @@ function updateLaminationPricesForA3() {
     // Lưu lại
     savePaperSettings();
 
+    // Đánh dấu đã cập nhật
+    localStorage.setItem(updateKey, 'true');
+
     // Re-render nếu đang mở tab cán màng
     if (typeof renderLaminationSettings === 'function') {
         renderLaminationSettings();
@@ -129,5 +139,6 @@ function updateLaminationPricesForA3() {
     }
 }
 
-// Tự động chạy khi load
-updateLaminationPricesForA3();
+// Tự động chạy khi load - FORCE UPDATE lần này
+updateLaminationPricesForA3(true);
+
