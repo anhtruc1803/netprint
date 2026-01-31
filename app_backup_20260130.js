@@ -727,11 +727,6 @@ function savePaperSettings() {
         return;
     }
 
-    // AUTO BACKUP trước khi lưu mới
-    if (typeof autoBackup === 'function') {
-        autoBackup();
-    }
-
     // Lưu vào localStorage
     localStorage.setItem('netprint_paper_settings', JSON.stringify(PAPER_SETTINGS));
 
