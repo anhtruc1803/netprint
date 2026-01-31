@@ -181,30 +181,12 @@ function updateLamTier(sizeId, lamId, tierIdx, field, value) {
         lam.tiers[tierIdx][field] = priceVal;
 
         // ✨ TỰ ĐỘNG TÍNH: Cán màng 2 mặt = 1 mặt x 2
-        if (lam.name.includes('1 mặt') || lam.name.toLowerCase().includes('1 mặt')) {
-            const twoSidedName = lam.name.replace('1 mặt', '2 mặt').replace('1 mặt', '2 mặt');
-            const twoSided = pricing.laminations.find(l => l.name === twoSidedName);
-
-            if (twoSided && twoSided.tiers && twoSided.tiers[tierIdx]) {
-                // Tự động cập nhật giá 2 mặt = 1 mặt x 2
-                twoSided.tiers[tierIdx].price = priceVal * 2;
-                twoSided.tiers[tierIdx].unit = lam.tiers[tierIdx].unit; // Đồng bộ đơn vị
-            }
-        }
+        autoSyncTwoSidedFromOneSided(pricing, lam, tierIdx);
     } else if (field === 'unit') {
         lam.tiers[tierIdx][field] = value;
 
         // ✨ ĐỒNG BỘ ĐƠN VỊ: Nếu là cán màng 1 mặt, đồng bộ với 2 mặt
-        if (lam.name.includes('1 mặt') || lam.name.toLowerCase().includes('1 mặt')) {
-            const twoSidedName = lam.name.replace('1 mặt', '2 mặt').replace('1 mặt', '2 mặt');
-            const twoSided = pricing.laminations.find(l => l.name === twoSidedName);
-
-            if (twoSided && twoSided.tiers && twoSided.tiers[tierIdx]) {
-                twoSided.tiers[tierIdx].unit = value;
-                // Cập nhật lại giá 2 mặt = 1 mặt x 2
-                twoSided.tiers[tierIdx].price = lam.tiers[tierIdx].price * 2;
-            }
-        }
+        autoSyncTwoSidedFromOneSided(pricing, lam, tierIdx);
     }
 
     savePaperSettings();
@@ -381,32 +363,74 @@ function addLamTier(sizeId, lamId) {
 
 // ===== AUTO CALCULATE: Cán màng 2 mặt = 1 mặt x 2 =====
 
+/**
+ * Tự động tính giá cán màng 2 mặt từ giá 1 mặt
+ * CÔNG THỨC: Cán màng 2 mặt = Cán màng 1 mặt × 2
+ * @param {Object} pricing - Object chứa laminations của 1 khổ giấy
+ * @param {Object} oneSidedLam - Lamination 1 mặt đang được chỉnh sửa
+ * @param {number} tierIdx - Index của tier đang được chỉnh sửa (optional, -1 = all tiers)
+ */
+function autoSyncTwoSidedFromOneSided(pricing, oneSidedLam, tierIdx = -1) {
+    if (!pricing || !oneSidedLam) return;
+    
+    // Kiểm tra nếu đây là loại cán màng 1 mặt
+    const isOneSided = oneSidedLam.name.includes('1 mặt');
+    if (!isOneSided) return;
+    
+    // Tìm tên loại cán màng 2 mặt tương ứng
+    const twoSidedName = oneSidedLam.name.replace('1 mặt', '2 mặt');
+    const twoSidedLam = pricing.laminations.find(l => l.name === twoSidedName);
+    
+    if (!twoSidedLam) {
+        console.log(`⚠️ Không tìm thấy loại cán màng "${twoSidedName}" để đồng bộ`);
+        return;
+    }
+    
+    // Đồng bộ số lượng tier nếu khác nhau
+    while (twoSidedLam.tiers.length < oneSidedLam.tiers.length) {
+        twoSidedLam.tiers.push({ min: 1, max: 999999, price: 0, unit: 'per_sheet' });
+    }
+    
+    // Cập nhật giá và các thuộc tính
+    if (tierIdx >= 0 && tierIdx < oneSidedLam.tiers.length) {
+        // Chỉ cập nhật 1 tier cụ thể
+        const oneTier = oneSidedLam.tiers[tierIdx];
+        if (twoSidedLam.tiers[tierIdx]) {
+            twoSidedLam.tiers[tierIdx].price = oneTier.price * 2; // ✨ CÔNG THỨC: x2
+            twoSidedLam.tiers[tierIdx].unit = oneTier.unit;
+            twoSidedLam.tiers[tierIdx].min = oneTier.min;
+            twoSidedLam.tiers[tierIdx].max = oneTier.max;
+        }
+    } else {
+        // Cập nhật tất cả tiers
+        oneSidedLam.tiers.forEach((oneTier, idx) => {
+            if (twoSidedLam.tiers[idx]) {
+                twoSidedLam.tiers[idx].price = oneTier.price * 2; // ✨ CÔNG THỨC: x2
+                twoSidedLam.tiers[idx].unit = oneTier.unit;
+                twoSidedLam.tiers[idx].min = oneTier.min;
+                twoSidedLam.tiers[idx].max = oneTier.max;
+            }
+        });
+    }
+    
+    console.log(`✅ Đã tự động cập nhật giá "${twoSidedName}" = "${oneSidedLam.name}" × 2`);
+}
+
 function autoCalculateTwoSidedLamination(sizeId) {
     const pricing = PAPER_SETTINGS.laminationPricing.find(p => p.printSizeId === sizeId);
     if (!pricing) return;
 
     // Tìm tất cả loại cán màng 1 mặt
     const oneSidedLams = pricing.laminations.filter(lam =>
-        lam.name.includes('1 mặt') || lam.name.toLowerCase().includes('1 mặt')
+        lam.name.includes('1 mặt')
     );
 
     oneSidedLams.forEach(oneSided => {
-        // Tìm loại cán màng 2 mặt tương ứng
-        const twoSidedName = oneSided.name.replace('1 mặt', '2 mặt').replace('1 mặt', '2 mặt');
-        const twoSided = pricing.laminations.find(lam => lam.name === twoSidedName);
-
-        if (twoSided && oneSided.tiers && oneSided.tiers.length > 0) {
-            // Copy tiers từ 1 mặt sang 2 mặt và nhân giá x 2
-            twoSided.tiers = oneSided.tiers.map(tier => ({
-                min: tier.min,
-                max: tier.max,
-                price: tier.price * 2, // ✨ CÔNG THỨC: 2 mặt = 1 mặt x 2
-                unit: tier.unit
-            }));
-
-            savePaperSettings();
-        }
+        autoSyncTwoSidedFromOneSided(pricing, oneSided, -1); // Sync all tiers
     });
+    
+    savePaperSettings();
+    renderLaminationSettings();
 }
 
 // ===== DELETE FUNCTIONS =====
