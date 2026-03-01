@@ -6715,6 +6715,10 @@ table {
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+    text-decoration: none;
+    /* Không có underline cho thẻ <a> */
+    color: inherit;
+    /* Giữ màu chữ như thẻ div */
 }
 
 .menu-item:active {
@@ -6769,6 +6773,68 @@ table {
 .menu-item:hover .menu-label {
     color: #333;
     font-weight: 700;
+}
+
+/* Custom Context Menu (menu chuột phải) */
+.custom-context-menu {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    padding: 6px;
+    z-index: 10000;
+    min-width: 180px;
+    animation: contextMenuFadeIn 0.15s ease;
+}
+
+@keyframes contextMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.context-menu-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.context-menu-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.context-menu-item:active {
+    transform: scale(0.98);
+}
+
+/* Dark theme for context menu */
+body.dark-theme .custom-context-menu {
+    background: #2d2d2d;
+    border-color: #404040;
+}
+
+body.dark-theme .context-menu-item {
+    color: #e0e0e0;
+}
+
+body.dark-theme .context-menu-item:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
 }
 
 /* Dark theme for sidebar */
@@ -7561,4 +7627,1617 @@ body:has(.sidebar.collapsed) .container,
         gap: 12px;
         text-align: center;
     }
+}
+
+/* ===== CUSTOM PRICE INPUT - Nhập giá tay ===== */
+.custom-price-input {
+    margin-top: 12px;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border: 2px solid #ff9800;
+    border-radius: 12px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-price-input label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #e65100;
+    margin-bottom: 8px;
+}
+
+.custom-price-input input {
+    width: 100%;
+    padding: 12px 15px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: 2px solid #ffb74d;
+    border-radius: 8px;
+    background: #fff;
+    color: #e65100;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.custom-price-input input:focus {
+    outline: none;
+    border-color: #ff9800;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+.custom-price-input input::placeholder {
+    color: #ffb74d;
+    font-weight: 500;
+}
+
+/* Dark mode */
+body.dark-theme .custom-price-input {
+    background: linear-gradient(135deg, #4a3a2a 0%, #5a4a3a 100%);
+    border-color: #ff9800;
+}
+
+body.dark-theme .custom-price-input label {
+    color: #ffb74d;
+}
+
+body.dark-theme .custom-price-input input {
+    background: #3a3a3a;
+    border-color: #ff9800;
+    color: #ffcc80;
+}
+
+/* Toggle nhập giá tay */
+.custom-price-toggle {
+    margin-top: 10px;
+}
+
+.btn-toggle {
+    width: 100%;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: 'Nunito', sans-serif;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-toggle:hover {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border-color: #ff9800;
+    color: #e65100;
+}
+
+.btn-toggle.active {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border-color: #e65100;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+}
+
+.btn-toggle.active:hover {
+    background: linear-gradient(135deg, #f57c00 0%, #ef6c00 100%);
+}
+
+/* Dark mode */
+body.dark-theme .btn-toggle {
+    background: linear-gradient(135deg, #424242 0%, #333333 100%);
+    border-color: #555;
+    color: #aaa;
+}
+
+body.dark-theme .btn-toggle:hover {
+    background: linear-gradient(135deg, #5a4a3a 0%, #4a3a2a 100%);
+    border-color: #ff9800;
+    color: #ffb74d;
+}
+
+body.dark-theme .btn-toggle.active {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    border-color: #e65100;
+    color: white;
+}
+
+/* Custom price row - nút và input ngang hàng */
+.custom-price-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.custom-price-row .btn-toggle {
+    flex-shrink: 0;
+    width: auto;
+    padding: 10px 16px;
+}
+
+.custom-price-input-inline {
+    flex: 1;
+    animation: slideRight 0.3s ease;
+}
+
+@keyframes slideRight {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.custom-price-input-inline input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    border: 2px solid #ff9800;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #333333;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.custom-price-input-inline input:focus {
+    outline: none;
+    border-color: #e65100;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+.custom-price-input-inline input::placeholder {
+    color: #999999;
+    font-weight: 500;
+}
+
+/* Dark mode */
+body.dark-theme .custom-price-input-inline input {
+    background: #333333;
+    border-color: #ff9800;
+    color: #ffffff;
+}
+
+body.dark-theme .custom-price-input-inline input::placeholder {
+    color: #888888;
+}
+
+/* Small toggle button for Catalogue */
+.btn-toggle-sm {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+}
+
+/* Custom paper name input for Catalogue */
+.custom-paper-name-input {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid #ff9800;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    color: #333;
+    margin-top: 8px;
+    transition: all 0.3s ease;
+}
+
+.custom-paper-name-input::placeholder {
+    color: #999;
+}
+
+.custom-paper-name-input:focus {
+    outline: none;
+    border-color: #e65100;
+    box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.2);
+}
+
+body.dark-theme .custom-paper-name-input {
+    background: #333;
+    border-color: #ff9800;
+    color: #fff;
+}
+
+body.dark-theme .custom-paper-name-input::placeholder {
+    color: #888;
+}
+
+/* Calc Tabs Styles */
+.calc-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #666;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    border-radius: 8px 8px 0 0;
+    margin-right: 4px;
+}
+
+.calc-tab:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+    color: var(--primary-color);
+}
+
+.calc-tab.active {
+    color: white;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.calc-tab .close-tab {
+    margin-left: 8px;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s;
+}
+
+.calc-tab.active .close-tab:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.calc-tab:not(.active) .close-tab {
+    color: #999;
+}
+
+.calc-tab:not(.active) .close-tab:hover {
+    background-color: #eee;
+    color: #666;
+}
+
+/* Context Menu - Windows Style */
+.context-menu {
+    position: absolute;
+    background-color: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+    border-radius: 6px;
+    padding: 6px 0;
+    z-index: 9999;
+    min-width: 220px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    animation: menuFadeIn 0.1s ease-out;
+    user-select: none;
+}
+
+@keyframes menuFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.context-menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #1f1f1f;
+    transition: background 0.1s;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+.context-menu-item:hover {
+    background-color: #f0f0f0;
+    color: #000;
+}
+
+.context-menu-item i {
+    margin-right: 12px;
+    font-size: 16px;
+    color: #555;
+    width: 20px;
+    text-align: center;
+    font-style: normal;
+}
+
+/* Dark mode for Context Menu */
+body.dark-theme .context-menu {
+    background-color: #2b2b2b;
+    border-color: #454545;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .context-menu-item {
+    color: #ececec;
+}
+
+body.dark-theme .context-menu-item:hover {
+    background-color: #383838;
+    color: #fff;
+}
+
+body.dark-theme .context-menu-item i {
+    color: #bbb;
+}
+
+/* Tooltip hint */
+.menu-item[data-context]:hover::after {
+    content: "🖱️ Chuột phải để mở Tab mới";
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    margin-left: 10px;
+    opacity: 0;
+    pointer-events: none;
+    animation: fadeInTooltip 0.3s forwards;
+    animation-delay: 0.5s;
+    z-index: 1000;
+}
+
+@keyframes fadeInTooltip {
+    to {
+        opacity: 0.9;
+    }
+}
+
+/* Ẩn thanh cuộn cho tab list */
+#calc-tabs-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+#calc-tabs-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#calc-tabs-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+/* Calc Tabs Styles */
+.calc-tab {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #666;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    border-radius: 8px 8px 0 0;
+    margin-right: 4px;
+}
+
+.calc-tab:hover {
+    background-color: rgba(99, 102, 241, 0.05);
+    color: var(--primary-color);
+}
+
+.calc-tab.active {
+    color: white;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.calc-tab .close-tab {
+    margin-left: 8px;
+    font-size: 14px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    text-align: center;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, 0.7);
+    transition: all 0.2s;
+}
+
+.calc-tab.active .close-tab:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.calc-tab:not(.active) .close-tab {
+    color: #999;
+}
+
+.calc-tab:not(.active) .close-tab:hover {
+    background-color: #eee;
+    color: #666;
+}
+
+.btn-add-tab {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px dashed #ccc;
+    background: transparent;
+    color: #666;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.btn-add-tab:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: rgba(99, 102, 241, 0.05);
+}
+
+/* Ẩn thanh cuộn cho tab list */
+#calc-tabs-container::-webkit-scrollbar {
+    height: 4px;
+}
+
+#calc-tabs-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+#calc-tabs-container::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+/* ===== FIX LOGIN MODAL CENTERING ===== */
+#loginModal.modal {
+    display: none;
+    /* Mặc định ẩn, JS sẽ set display: block */
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    /* Tránh scroll */
+    background-color: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(2px);
+}
+
+#loginModal .modal-content {
+    background-color: #ffffff;
+    /* Căn giữa tuyệt đối */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    margin: 0 !important;
+    /* Xóa margin cũ */
+    padding: 40px 30px;
+    border: none;
+    width: 90%;
+    max-width: 420px;
+    /* Kích thước vừa phải */
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+/* Tùy chỉnh input trong login cho đẹp hơn */
+#loginModal input {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0 20px 0;
+    display: inline-block;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+#loginModal input:focus {
+    border-color: #ff6b6b;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+}
+
+#loginModal button.btn-primary {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    border-radius: 12px;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+    border: none;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+}
+
+#loginModal button.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 25px rgba(255, 107, 107, 0.4);
+}
+
+/* ===== PRINT PRICING MULTI-SIZE TABS ===== */
+.print-pricing-multi {
+    width: 100%;
+}
+
+.print-size-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 0;
+    border-bottom: 2px solid #e8ecef;
+    margin-bottom: 15px;
+}
+
+.print-size-tab {
+    padding: 8px 14px;
+    border: none;
+    background: #f0f2f5;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #5a6978;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.print-size-tab:hover {
+    background: #e0e4e8;
+    color: #333;
+}
+
+.print-size-tab.active {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: white;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.print-size-tab.large-format {
+    border: 2px dashed #e91e63;
+}
+
+.print-size-tab.large-format.active {
+    background: linear-gradient(135deg, #e91e63, #f06292);
+    border: none;
+    box-shadow: 0 4px 12px rgba(233, 30, 99, 0.3);
+}
+
+.btn-add-print-size {
+    padding: 8px 14px;
+    border: 2px dashed #adb5bd;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #6c757d;
+    transition: all 0.2s ease;
+}
+
+.btn-add-print-size:hover {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: #f8f9ff;
+}
+
+.print-size-content {
+    display: none;
+}
+
+.print-size-content.active {
+    display: block;
+}
+
+.size-info-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.size-dimensions {
+    font-size: 13px;
+    color: #5a6978;
+    font-weight: 500;
+}
+
+.large-format-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #e91e63, #f06292);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.large-format-block {
+    border-left: 3px solid #e91e63;
+}
+
+.btn-delete-size {
+    padding: 4px 8px;
+    border: none;
+    background: #fee2e2;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.btn-delete-size:hover {
+    background: #fca5a5;
+}
+
+/* Print pricing block styles */
+.print-pricing-block {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #e8ecef;
+}
+
+.print-pricing-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.print-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.print-icon {
+    font-size: 20px;
+}
+
+.print-name-disabled {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.auto-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.print-tiers-container {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.tier-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #e8ecef;
+}
+
+.tier-min-input,
+.tier-max-input {
+    width: 80px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.tier-max-input.tier-infinity {
+    background: #f0f2f5;
+    color: #6c757d;
+}
+
+.tier-price-input {
+    width: 100px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+    text-align: center;
+    font-weight: 600;
+    color: #e91e63;
+}
+
+.tier-separator {
+    color: #adb5bd;
+    font-weight: 600;
+}
+
+.tier-unit {
+    color: #6c757d;
+    font-size: 13px;
+    min-width: 35px;
+}
+
+.btn-tier-del {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #fee2e2;
+    border-radius: 50%;
+    color: #ef4444;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.btn-tier-del:hover {
+    background: #fca5a5;
+    transform: scale(1.1);
+}
+
+.tier-placeholder {
+    width: 28px;
+    height: 28px;
+}
+
+.btn-add-tier-full {
+    width: 100%;
+    padding: 10px;
+    border: 2px dashed #6366f1;
+    background: transparent;
+    border-radius: 8px;
+    color: #6366f1;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.btn-add-tier-full:hover {
+    background: #f0f0ff;
+}
+
+.print-hint {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: #92400e;
+}
+
+/* ===== IN 2 MẶT STYLES ===== */
+.print-2side-header {
+    background: linear-gradient(135deg, #059669, #10b981);
+    margin-top: 16px;
+}
+
+.auto-badge.two-side {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.tier-row.tier-2side {
+    background: linear-gradient(to right, #ecfdf5, #ffffff);
+    border-left: 3px solid #10b981;
+}
+
+.tier-row.tier-2side .tier-min-input,
+.tier-row.tier-2side .tier-max-input {
+    border-color: #a7f3d0;
+}
+
+.tier-row.tier-2side .tier-min-input:focus,
+.tier-row.tier-2side .tier-max-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.tier-row.tier-2side .tier-price-input {
+    border-color: #a7f3d0;
+}
+
+.tier-row.tier-2side .tier-price-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+}
+
+.btn-add-tier-full.btn-2side {
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-add-tier-full.btn-2side:hover {
+    background: #ecfdf5;
+}
+
+/* ========== CHANGE PASSWORD MODAL & SETTING EDIT MODAL ========== */
+#changePasswordModal.modal,
+#settingEditModal.modal {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+}
+
+#changePasswordModal .modal-content,
+#settingEditModal .modal-content {
+    position: relative;
+    max-width: 420px;
+}
+
+/* Modal Header */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.modal-header h2 {
+    margin: 0 !important;
+    font-size: 1.3rem;
+    color: #e94560;
+}
+
+/* Close Button */
+.modal-header .close {
+    font-size: 28px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    line-height: 1;
+    padding: 0 5px;
+}
+
+.modal-header .close:hover {
+    color: #e94560;
+    transform: scale(1.1);
+}
+
+/* Modal Body */
+.modal-body {
+    text-align: left;
+}
+
+.modal-body .form-group {
+    margin-bottom: 18px;
+}
+
+.modal-body .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.modal-body .form-group input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.modal-body .form-group input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.modal-body .form-group input[readonly] {
+    background: #f5f5f5;
+    color: #666;
+}
+
+/* Modal Actions */
+.modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 25px;
+}
+
+.modal-actions .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #e94560 0%, #d63850 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.modal-actions .btn-primary:hover {
+    background: linear-gradient(135deg, #d63850 0%, #c52840 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(233, 69, 96, 0.4);
+}
+
+.modal-actions .btn-secondary {
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    color: #666;
+    border: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.modal-actions .btn-secondary:hover {
+    color: #e94560;
+}
+
+/* ========== SETTING MODAL - TABLER STYLE ========== */
+#settingEditModal .modal-content.setting-modal-content {
+    max-width: 850px;
+    width: 95%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e6e7e9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+#settingEditModal .modal-header {
+    background: white;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e6e7e9;
+}
+
+#settingEditModal .modal-header h2 {
+    color: #1d273b;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+#settingEditModal .modal-header .close {
+    color: #6c7a91;
+    background: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+}
+
+#settingEditModal .modal-header .close:hover {
+    background: #f4f6fa;
+    color: #1d273b;
+}
+
+#settingEditModal .modal-body.setting-modal-body {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    background: #f4f6fa;
+}
+
+#settingEditModal .modal-footer {
+    padding: 16px 20px;
+    background: white;
+    border-top: 1px solid #e6e7e9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+#settingEditModal .modal-footer .btn-secondary {
+    padding: 8px 16px;
+    background: white;
+    color: #6c7a91;
+    border: 1px solid #e6e7e9;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#settingEditModal .modal-footer .btn-secondary:hover {
+    background: #f4f6fa;
+}
+
+#settingEditModal .modal-footer .btn-primary {
+    padding: 8px 20px;
+    background: #206bc4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#settingEditModal .modal-footer .btn-primary:hover {
+    background: #1a5ba8;
+}
+
+/* Settings Container with 2-column layout */
+.settings-layout-2col {
+    display: flex;
+    height: 100%;
+    min-height: 450px;
+    max-height: 55vh;
+}
+
+/* ========== SIDEBAR - Danh sách khổ giấy ========== */
+.settings-sidebar {
+    width: 200px;
+    min-width: 200px;
+    background: #f8f9fa;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: 18px 20px;
+    background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+}
+
+.sidebar-header h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: white;
+    font-weight: 700;
+}
+
+.sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+}
+
+.sidebar-item {
+    padding: 14px 16px;
+    background: white;
+    border: 2px solid #e8e8e8;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.sidebar-item:hover {
+    border-color: #667eea;
+    background: #f5f3ff;
+    transform: translateX(3px);
+}
+
+.sidebar-item.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.sidebar-add-btn {
+    margin: 12px;
+    padding: 14px;
+    background: white;
+    border: 2px dashed #667eea;
+    border-radius: 10px;
+    color: #667eea;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.sidebar-add-btn:hover {
+    background: #667eea;
+    color: white;
+    border-style: solid;
+}
+
+/* ========== MAIN CONTENT - Chi tiết loại giấy ========== */
+.settings-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-header {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #333;
+    font-weight: 700;
+}
+
+.main-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.main-header-actions button {
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.btn-edit-size {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-edit-size:hover {
+    background: #1976d2;
+    color: white;
+}
+
+.btn-delete-size-new {
+    background: #ffebee;
+    color: #e53935;
+}
+
+.btn-delete-size-new:hover {
+    background: #e53935;
+    color: white;
+}
+
+/* ========== PAPER TABLE ========== */
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+}
+
+.paper-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+}
+
+.paper-table thead {
+    background: linear-gradient(135deg, #f5f5f5 0%, #ebebeb 100%);
+}
+
+.paper-table th {
+    padding: 16px 18px;
+    text-align: left;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.paper-table th:first-child {
+    padding-left: 20px;
+}
+
+.paper-table td {
+    padding: 16px 18px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+    vertical-align: middle;
+}
+
+.paper-table td:first-child {
+    padding-left: 20px;
+}
+
+.paper-table tbody tr:hover {
+    background: linear-gradient(135deg, #f8f9ff 0%, #f5f3ff 100%);
+}
+
+.paper-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Paper Name Input */
+.paper-name-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e8e8e8;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+    transition: all 0.2s ease;
+    background: #fafafa;
+}
+
+.paper-name-input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    background: white;
+}
+
+/* Price Tiers Display */
+.price-tiers-compact {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tier-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.tier-badge .tier-qty {
+    color: #666;
+    margin-right: 6px;
+}
+
+/* Table Actions */
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.table-actions button {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+}
+
+.btn-edit-paper {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.btn-edit-paper:hover {
+    background: #1976d2;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-duplicate-paper {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.btn-duplicate-paper:hover {
+    background: #f57c00;
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-delete-paper {
+    background: #ffebee;
+    color: #e53935;
+}
+
+.btn-delete-paper:hover {
+    background: #e53935;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Add Paper Row */
+.add-paper-row {
+    margin-top: 16px;
+}
+
+.btn-add-paper-new {
+    width: 100%;
+    padding: 14px;
+    background: white;
+    border: 2px dashed #667eea;
+    border-radius: 10px;
+    color: #667eea;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-add-paper-new:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-style: solid;
+    border-color: transparent;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: #999;
+}
+
+.empty-state-icon {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+}
+
+.empty-state h4 {
+    margin: 0 0 12px 0;
+    color: #555;
+    font-size: 1.1rem;
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* Size Input Modal */
+.size-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.size-input-row input {
+    width: 80px;
+    padding: 10px 12px;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.size-input-row input:focus {
+    border-color: #667eea;
+    outline: none;
+}
+
+.size-input-row span {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+/* ========== TIER EDITOR ========== */
+.paper-tiers-editor {
+    padding: 20px;
+}
+
+.tier-row-edit {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+    padding: 15px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #f5f5f5 100%);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #e8e8e8;
+}
+
+.tier-row-edit>div {
+    display: flex;
+    flex-direction: column;
+}
+
+.tier-row-edit label {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 6px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.tier-row-edit input {
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.tier-row-edit input:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+.btn-remove-tier {
+    width: 36px;
+    height: 36px;
+    background: #ffebee;
+    color: #e53935;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-remove-tier:hover {
+    background: #e53935;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Empty message for sidebar */
+.empty-message {
+    text-align: center;
+    padding: 20px;
+    color: #999;
+    font-size: 0.9rem;
+}
+
+/* ========== PAPER PRICING SETTINGS CONTAINER - TABLER STYLE ========== */
+.paper-pricing-settings {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.paper-pricing-settings .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #f4f6fa;
+    border-bottom: 1px solid #e6e7e9;
+}
+
+.paper-pricing-settings .settings-header h3 {
+    margin: 0;
+    font-size: 13px;
+    color: #6c7a91;
+    font-weight: 500;
+}
+
+.paper-pricing-settings .btn-add-size {
+    padding: 8px 14px;
+    background: #206bc4;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.paper-pricing-settings .btn-add-size:hover {
+    background: #1a5ba8;
+}
+
+/* Lamination Settings Container - TABLER STYLE */
+.lamination-settings {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.lamination-settings .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: #f4f6fa;
+    border-bottom: 1px solid #e6e7e9;
+}
+
+.lamination-settings .settings-header h3 {
+    margin: 0;
+    font-size: 13px;
+    color: #6c7a91;
+    font-weight: 500;
 }

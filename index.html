@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
 
 <head>
@@ -10,6 +10,7 @@
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="paper_pricing_settings.css">
+    <link rel="stylesheet" href="settings_panel.css">
     <link rel="stylesheet" href="paper_history.css">
 </head>
 
@@ -17,7 +18,7 @@
     <!-- Login Modal -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
-            <img src="LOGO NETPRINT/LOGO 3.png" alt="NetPrint" class="modal-logo">
+            <img src="LOGO NETPRINT/LOGO 1.png" alt="NetPrint" class="modal-logo">
             <h2>Đăng Nhập</h2>
             <div class="form-group">
                 <label>Tên đăng nhập</label>
@@ -25,7 +26,14 @@
             </div>
             <div class="form-group">
                 <label>Mật khẩu</label>
-                <input type="password" id="loginPass" placeholder="Nhập mật khẩu">
+                <div style="position: relative;">
+                    <input type="password" id="loginPass" placeholder="Nhập mật khẩu"
+                        style="width: 100%; padding-right: 40px;">
+                    <span onclick="togglePasswordVisibility()"
+                        style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 18px; color: #666;">
+                        👁️
+                    </span>
+                </div>
             </div>
             <button class="btn-primary" onclick="login()">Đăng Nhập</button>
         </div>
@@ -117,34 +125,45 @@
             <img src="LOGO NETPRINT/LOGO 3.png" alt="NetPrint" class="sidebar-logo">
         </div>
         <div class="sidebar-search">
-            <input type="text" placeholder="🔍 Tìm kiếm..." class="search-input">
+            <input type="text" id="sidebarSearch" placeholder="🔍 Tìm kiếm..." class="search-input">
         </div>
         <div class="sidebar-content">
             <!-- TÍNH GIÁ Section (cụm riêng) -->
             <div class="sidebar-section">
                 <h3 class="section-title">TÍNH GIÁ</h3>
                 <div class="menu-grid">
-                    <div class="menu-item" onclick="goToHome(); showSubTab('paper','calc', null)"
-                        title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy">
+                    <a class="menu-item" href="?tab=paper"
+                        onclick="event.preventDefault(); goToHome(); showSubTab('paper','calc', null)"
+                        title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy" data-context="paper">
                         <div class="menu-icon" style="background: #e3f2fd; color: #2196f3;">
                             <span style="font-size: 24px;">🧮</span>
                         </div>
                         <span class="menu-label">In Nhanh</span>
-                    </div>
-                    <div class="menu-item" onclick="goToHome(); showSubTab('catalogue','calc', null)"
-                        title="In Catalogue (In nhanh)">
+                    </a>
+                    <a class="menu-item" href="?tab=catalogue"
+                        onclick="event.preventDefault(); goToHome(); showSubTab('catalogue','calc', null)"
+                        title="In Catalogue">
                         <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
                             <span style="font-size: 24px;">📚</span>
                         </div>
                         <span class="menu-label">In Catalogue</span>
-                    </div>
-                    <div class="menu-item" onclick="goToHome(); showToast('🧾 Tính giá đơn hàng đang phát triển')"
+                    </a>
+                    <a class="menu-item" href="?tab=largeformat"
+                        onclick="event.preventDefault(); goToHome(); showSubTab('largeformat','calc', null)"
+                        title="In Khổ Lớn (>48cm)" data-tags="in khổ lớn,33x65,khổ lớn">
+                        <div class="menu-icon" style="background: #fce4ec; color: #e91e63;">
+                            <span style="font-size: 24px;">📐</span>
+                        </div>
+                        <span class="menu-label">In Khổ Lớn</span>
+                    </a>
+                    <a class="menu-item" href="?tab=order"
+                        onclick="event.preventDefault(); showToast('🧾 Tính giá đơn hàng đang phát triển')"
                         title="Tính giá đơn hàng">
                         <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
                             <span style="font-size: 24px;">🧾</span>
                         </div>
                         <span class="menu-label">TG Đơn Hàng</span>
-                    </div>
+                    </a>
                 </div>
             </div>
 
@@ -152,30 +171,34 @@
             <div class="sidebar-section">
                 <h3 class="section-title">CRM</h3>
                 <div class="menu-grid">
-                    <div class="menu-item">
+                    <a class="menu-item" href="?tab=sales"
+                        onclick="event.preventDefault(); showToast('🛒 Bán hàng đang phát triển')">
                         <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
                             <span style="font-size: 24px;">🛒</span>
                         </div>
                         <span class="menu-label">Bán hàng</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=customers"
+                        onclick="event.preventDefault(); showToast('💬 Khách hàng đang phát triển')">
                         <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
                             <span style="font-size: 24px;">💬</span>
                         </div>
                         <span class="menu-label">Khách hàng</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=warehouse"
+                        onclick="event.preventDefault(); showToast('📦 Kho hàng đang phát triển')">
                         <div class="menu-icon" style="background: #ffebee; color: #f44336;">
                             <span style="font-size: 24px;">📦</span>
                         </div>
                         <span class="menu-label">Kho hàng</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=purchase"
+                        onclick="event.preventDefault(); showToast('🛍️ Mua hàng đang phát triển')">
                         <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
                             <span style="font-size: 24px;">🛍️</span>
                         </div>
                         <span class="menu-label">Mua hàng</span>
-                    </div>
+                    </a>
                 </div>
             </div>
 
@@ -183,30 +206,34 @@
             <div class="sidebar-section">
                 <h3 class="section-title">WORKPLACE</h3>
                 <div class="menu-grid">
-                    <div class="menu-item">
+                    <a class="menu-item" href="?tab=tasks"
+                        onclick="event.preventDefault(); showToast('📋 Công việc đang phát triển')">
                         <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
                             <span style="font-size: 24px;">📋</span>
                         </div>
                         <span class="menu-label">Công việc</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=documents"
+                        onclick="event.preventDefault(); showToast('📖 Tài liệu đang phát triển')">
                         <div class="menu-icon" style="background: #ffebee; color: #f44336;">
                             <span style="font-size: 24px;">📖</span>
                         </div>
                         <span class="menu-label">Tài liệu</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=calendar"
+                        onclick="event.preventDefault(); showToast('📅 Lịch biểu đang phát triển')">
                         <div class="menu-icon" style="background: #ffebee; color: #f44336;">
                             <span style="font-size: 24px;">📅</span>
                         </div>
                         <span class="menu-label">Lịch biểu</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=files"
+                        onclick="event.preventDefault(); showToast('📄 Văn bản đang phát triển')">
                         <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
                             <span style="font-size: 24px;">📄</span>
                         </div>
                         <span class="menu-label">Văn bản</span>
-                    </div>
+                    </a>
                 </div>
             </div>
 
@@ -214,18 +241,20 @@
             <div class="sidebar-section">
                 <h3 class="section-title">HRM</h3>
                 <div class="menu-grid">
-                    <div class="menu-item">
+                    <a class="menu-item" href="?tab=hr"
+                        onclick="event.preventDefault(); showToast('👥 Nhân sự đang phát triển')">
                         <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
                             <span style="font-size: 24px;">👥</span>
                         </div>
                         <span class="menu-label">Nhân sự</span>
-                    </div>
-                    <div class="menu-item">
+                    </a>
+                    <a class="menu-item" href="?tab=payroll"
+                        onclick="event.preventDefault(); showToast('💰 Bảng lương đang phát triển')">
                         <div class="menu-icon" style="background: #ffebee; color: #f44336;">
                             <span style="font-size: 24px;">💰</span>
                         </div>
                         <span class="menu-label">Bảng lương</span>
-                    </div>
+                    </a>
                 </div>
             </div>
         </div>
@@ -371,7 +400,9 @@
                                 <span class="section-title-text">📄 QUY CÁCH GIẤY IN</span>
                                 <div class="form-group paper-size-in-header">
                                     <label>📐 Khổ in (Khổ giấy)</label>
-                                    <select id="paperSize" onchange="onPaperSizeChange()"></select>
+                                    <select id="paperSize" onchange="onPaperSizeChange()">
+                                        <option value="">-- Chọn khổ in --</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -384,7 +415,19 @@
                                     <input type="text" id="paperTypeSearch" class="select-search-input"
                                         placeholder="🔍 Tìm kiếm loại giấy..." oninput="filterPaperTypes()"
                                         onfocus="showPaperTypeDropdown()">
-                                    <select id="paperType" size="8" class="select-search-dropdown"></select>
+                                    <select id="paperType" size="8" class="select-search-dropdown"
+                                        onchange="hidePaperTypeDropdown(); updatePaperPreview()"></select>
+                                </div>
+                                <!-- Toggle + Ô nhập giá tay (cùng hàng) -->
+                                <div class="custom-price-row">
+                                    <button type="button" id="btnCustomPriceToggle" class="btn-toggle"
+                                        onclick="toggleCustomPrice()">
+                                        💰 Nhập giá
+                                    </button>
+                                    <div id="customPriceInput" class="custom-price-input-inline" style="display: none;">
+                                        <input type="number" id="paperCustomPrice" value="0" min="0" step="100"
+                                            placeholder="Giá/tờ (đ)" oninput="updatePaperPreview()">
+                                    </div>
                                 </div>
                             </div>
                             <div class="form-group">
@@ -486,8 +529,8 @@
                         <!-- Cột trái: Giấy + In + Cán màng -->
                         <div class="cost-col">
                             <div class="cost-row">
-                                <span>📄 Giấy: <span id="paperResSheets">0</span> tờ × <span
-                                        id="paperResPaperPrice">0</span>đ</span>
+                                <span>📄 <span id="paperResPaperName" style="font-weight:bold;">Giấy</span>: <span
+                                        id="paperResSheets">0</span> tờ × <span id="paperResPaperPrice">0</span>đ</span>
                                 <span class="cost-val" id="paperResPaperCost">0đ</span>
                             </div>
                             <div id="paperResPaperDetails" class="cost-sub-items"></div>
@@ -542,6 +585,264 @@
                         <button class="btn-danger" onclick="clearPaperHistory()">🗑️ Xóa Tất Cả</button>
                     </div>
                     <div id="paperHistoryList" class="history-list"></div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- ==================== LARGE FORMAT CALCULATOR (Khổ Lớn >48cm) ==================== -->
+        <section id="largeformat-calculator" class="tab-content" style="display:none;">
+            <!-- Header với sub-tabs -->
+            <div class="sub-tabs-header">
+                <div class="sub-tabs-left">
+                    <button class="sub-tab active" onclick="showSubTab('largeformat', 'calc', this)">📐 Tính Giá In Khổ
+                        Lớn</button>
+                </div>
+                <div class="sub-tabs-right">
+                    <button class="sub-tab" onclick="showSubTab('largeformat', 'history', this)">📋 Lịch Sử Tính
+                        Giá</button>
+                </div>
+            </div>
+
+            <!-- ========== TAB: TÍNH GIÁ KHỔ LỚN ========== -->
+            <div id="largeformat-calc" class="sub-content active">
+                <div class="card compact-card">
+                    <!-- Imposition Preview -->
+                    <div class="imposition-preview-top compact" id="largeformatImpositionPreview">
+                        <div class="imposition-sheet">
+                            <div class="sheet-grid" id="largeformatSheetGrid"></div>
+                        </div>
+                        <div class="imposition-info-wrapper">
+                            <div class="sheet-label"><span id="largeformatSheetSize">33×65 (330×650)</span></div>
+                            <div class="imposition-info">
+                                <div class="info-item">
+                                    <span class="info-value" id="largeformatYield">0</span>
+                                    <span class="info-label">sp/tờ</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-value" id="largeformatSheets">0</span>
+                                    <span class="info-label">tờ in</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="imposition-settings-horizontal compact">
+                            <div class="imp-setting">
+                                <label>Khoảng cách SP</label>
+                                <input type="number" id="largeformatSpacingCalc" value="0" min="0" step="0.5"
+                                    oninput="updateLargeFormatPreview()">
+                                <span>mm</span>
+                            </div>
+                            <div class="margin-lock-group">
+                                <div class="imp-setting">
+                                    <label>Lề ngang</label>
+                                    <input type="number" id="largeformatMarginH" value="5" min="0" step="0.5"
+                                        oninput="updateLargeFormatPreview()">
+                                    <span>mm</span>
+                                </div>
+                                <button type="button" class="btn-margin-lock" id="btnLargeformatMarginLock"
+                                    onclick="toggleLargeformatMarginLock()" title="Khóa/Mở lề">
+                                    <span id="largeformatMarginLockIcon">🔒</span>
+                                </button>
+                                <div class="imp-setting">
+                                    <label>Lề dọc</label>
+                                    <input type="number" id="largeformatMarginV" value="5" min="0" step="0.5"
+                                        oninput="updateLargeFormatPreview()">
+                                    <span>mm</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form inputs -->
+                    <div class="form-grid compact">
+                        <div class="form-group">
+                            <label>📐 Khổ giấy in lớn</label>
+                            <select id="largeformatPaperSize" onchange="updateLargeFormatPreview()">
+                                <option value="33x65">33 × 65 cm (330×650mm)</option>
+                                <option value="35x50">35 × 50 cm (350×500mm)</option>
+                                <option value="43x65">43 × 65 cm (430×650mm)</option>
+                                <option value="50x70">50 × 70 cm (500×700mm)</option>
+                                <option value="custom">Tuỳ chọn khác...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>📄 Loại giấy</label>
+                            <select id="largeformatPaperType"></select>
+                        </div>
+                        <div class="form-group">
+                            <label>📦 Kích thước SP (mm)</label>
+                            <div class="size-inputs">
+                                <input type="number" id="largeformatProductWidth" placeholder="Ngang" value="210"
+                                    oninput="updateLargeFormatPreview()">
+                                <span>×</span>
+                                <input type="number" id="largeformatProductHeight" placeholder="Cao" value="297"
+                                    oninput="updateLargeFormatPreview()">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>🔢 Số lượng</label>
+                            <input type="number" id="largeformatQuantity" value="0" min="0"
+                                oninput="updateLargeFormatPreview()">
+                        </div>
+                    </div>
+
+                    <!-- In 2 mặt + Cán màng -->
+                    <div class="print-options-row compact">
+                        <div class="option-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="largeformatDoubleSided"
+                                    onchange="updateLargeFormatPreview()">
+                                <span>🖨️ In 2 mặt</span>
+                            </label>
+                        </div>
+                        <div class="option-group lam-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="largeformatLaminate"
+                                    onchange="toggleLargeFormatLamination()">
+                                <span>✨ Cán màng</span>
+                            </label>
+                            <select id="largeformatLamType" disabled onchange="toggleLargeFormatLam2Sides()">
+                                <option value="none">Không cán</option>
+                                <option value="matte">Cán mờ</option>
+                                <option value="glossy">Cán bóng</option>
+                            </select>
+                            <label class="checkbox-label lam-2sides" style="display: none;">
+                                <input type="checkbox" id="largeformatLam2Sides">
+                                <span>Cán 2 mặt</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Gia công -->
+                    <div class="processing-section compact">
+                        <span class="section-label">✂️ Gia công:</span>
+                        <div class="processing-options">
+                            <label class="checkbox-label"><input type="checkbox" id="largeformatProcCut"><span>Cắt đề
+                                    can</span></label>
+                            <label class="checkbox-label"><input type="checkbox" id="largeformatProcRound"><span>Bo
+                                    góc</span></label>
+                            <label class="checkbox-label"><input type="checkbox"
+                                    id="largeformatProcFold"><span>Gấp</span></label>
+                            <label class="checkbox-label"><input type="checkbox" id="largeformatProcHole"><span>Đục
+                                    lỗ</span></label>
+                        </div>
+                    </div>
+
+                    <!-- Chi phí khác -->
+                    <div class="extra-costs-section compact">
+                        <div class="extra-costs-header">
+                            <span class="section-label">💰 Chi phí khác:</span>
+                            <div class="extra-costs-actions">
+                                <select id="largeformatDeliverySuggestions"
+                                    onchange="addLargeFormatDeliverySuggestion()" class="delivery-select">
+                                    <option value="">💡 Gợi ý chi phí</option>
+                                    <option value="Phí Giao hàng|50000">🚚 Phí Giao hàng - 50,000đ</option>
+                                    <option value="Phí Giao hàng|100000">🚚 Phí Giao hàng - 100,000đ</option>
+                                    <option value="Phí Giao hàng|200000">🚚 Phí Giao hàng - 200,000đ</option>
+                                </select>
+                                <button type="button" class="btn-add-extra-sm" onclick="addLargeFormatExtraCost()">+
+                                    Thêm</button>
+                            </div>
+                        </div>
+                        <div id="largeformatExtraCosts" class="extra-costs-list"></div>
+                    </div>
+
+                    <!-- Nút tính giá -->
+                    <div class="calculate-compact center">
+                        <select id="largeformatCustomerType" class="customer-select-sm"></select>
+                        <button class="btn-calc-sm" onclick="calculateLargeFormat()">🧮 Tính giá</button>
+                    </div>
+
+                    <div id="largeformatCalcNotification" class="calc-notification" style="display: none;">
+                        ✅ Đã tính giá thành công!
+                    </div>
+
+                    <input type="hidden" id="largeformatNote" value="">
+                </div>
+
+                <!-- Large Format Results -->
+                <div class="card results" id="largeformatResults">
+                    <h2>📊 KẾT QUẢ TÍNH GIÁ - IN KHỔ LỚN</h2>
+                    <div class="summary-row">
+                        <div class="summary-card summary-yellow">
+                            <span class="summary-label">Số lượng</span>
+                            <span class="summary-value" id="largeformatResQty">0</span>
+                        </div>
+                        <div class="summary-card summary-green">
+                            <span class="summary-label">Giá bán/SP</span>
+                            <span class="summary-value" id="largeformatResSellPrice">0đ</span>
+                        </div>
+                        <div class="summary-card summary-blue">
+                            <span class="summary-label">Tổng tiền</span>
+                            <span class="summary-value" id="largeformatResTotalSell">0đ</span>
+                        </div>
+                    </div>
+
+                    <div class="cost-detail-toggle" style="display: block;">
+                        <button class="btn-toggle-cost" onclick="toggleLargeFormatCostDetail()">
+                            <span id="largeformatCostDetailToggleIcon">👁️</span>
+                            <span id="largeformatCostDetailToggleText">Ẩn chi tiết</span>
+                        </button>
+                    </div>
+
+                    <div class="cost-detail-compact" id="largeformatCostDetailSection">
+                        <div class="cost-col">
+                            <div class="cost-row">
+                                <span>📄 <span id="largeformatResPaperName" style="font-weight:bold;">Giấy</span>: <span
+                                        id="largeformatResSheets">0</span> tờ × <span
+                                        id="largeformatResPaperPrice">0</span>đ</span>
+                                <span class="cost-val" id="largeformatResPaperCost">0đ</span>
+                            </div>
+                            <div id="largeformatResPaperDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>🖨️ <span id="largeformatResPrintName">In 1 mặt</span>: <span
+                                        id="largeformatResPrintSheets">0</span> tờ × <span
+                                        id="largeformatResPrintPrice">0</span>đ</span>
+                                <span class="cost-val" id="largeformatResPrintCost">0đ</span>
+                            </div>
+                            <div id="largeformatResPrintDetails" class="cost-sub-items"></div>
+                            <div class="cost-row">
+                                <span>✨ <span id="largeformatResLamName">Cán màng</span>: <span
+                                        id="largeformatResLamSheets">0</span> tờ × <span
+                                        id="largeformatResLamPrice">0</span>đ</span>
+                                <span class="cost-val" id="largeformatResLamCost">0đ</span>
+                            </div>
+                            <div id="largeformatResLamDetails" class="cost-sub-items"></div>
+                        </div>
+                        <div class="cost-col">
+                            <div class="cost-row"><span>✂️ Gia công</span><span class="cost-val"
+                                    id="largeformatResProcCost">0đ</span></div>
+                            <div id="largeformatResProcDetails" class="cost-sub-items"></div>
+                            <div class="cost-row"><span>💰 Chi phí khác</span><span class="cost-val"
+                                    id="largeformatResExtraCost">0đ</span></div>
+                            <div id="largeformatResExtraDetails" class="cost-sub-items"></div>
+                        </div>
+                    </div>
+
+                    <div class="cost-summary-bar" id="largeformatCostSummarySection">
+                        <div class="summary-bar-item">
+                            <span class="summary-bar-label">💵 Tổng vốn</span>
+                            <span class="summary-bar-value" id="largeformatResTotalCost">0đ</span>
+                        </div>
+                        <div class="summary-bar-item profit-bar">
+                            <span class="summary-bar-label">📈 Lợi nhuận</span>
+                            <span class="summary-bar-value profit-text" id="largeformatResProfit">0đ</span>
+                        </div>
+                    </div>
+                    <div id="largeformatResSummaryDetails" class="cost-sub-items"></div>
+                </div>
+            </div>
+
+            <!-- ========== TAB: LỊCH SỬ ========== -->
+            <div id="largeformat-history" class="sub-content">
+                <div class="card">
+                    <h2>📋 Lịch Sử Tính Giá - In Khổ Lớn</h2>
+                    <div class="history-controls">
+                        <input type="text" id="largeformatHistorySearch" placeholder="🔍 Tìm kiếm theo ghi chú..."
+                            oninput="filterLargeFormatHistory()">
+                        <button class="btn-danger" onclick="clearLargeFormatHistory()">🗑️ Xóa Tất Cả</button>
+                    </div>
+                    <div id="largeformatHistoryList" class="history-list"></div>
                 </div>
             </div>
 
@@ -624,7 +925,7 @@
                         <div class="form-group">
                             <label>📚 Khổ giấy in</label>
                             <select id="catPrintSize" onchange="onCatPrintSizeChange()">
-                                <!-- Populate from PAPER_SETTINGS.printSizes -->
+                                <option value="">-- Chọn khổ in --</option>
                             </select>
                         </div>
                     </div>
@@ -677,6 +978,21 @@
                             <select id="catCoverPaperType" onchange="updateCatCalculation()">
                                 <!-- Populate from PAPER_SETTINGS -->
                             </select>
+                            <!-- Ô nhập tên giấy tuỳ ý (ẩn mặc định) -->
+                            <input type="text" id="catCoverPaperName" class="custom-paper-name-input"
+                                style="display: none;" placeholder="✍️ Nhập tên giấy bìa...">
+                            <!-- Toggle + Ô nhập giá tay BÌA (cùng hàng) -->
+                            <div class="custom-price-row">
+                                <button type="button" id="btnCatCoverCustomPrice" class="btn-toggle btn-toggle-sm"
+                                    onclick="toggleCatCoverCustomPrice()">
+                                    💰 Nhập giá
+                                </button>
+                                <div id="catCoverCustomPriceInput" class="custom-price-input-inline"
+                                    style="display: none;">
+                                    <input type="number" id="catCoverCustomPrice" value="0" min="0" step="100"
+                                        placeholder="Giá/tờ (đ)" oninput="updateCatCalculation()">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -705,6 +1021,21 @@
                             <select id="catInnerPaperType" onchange="updateCatCalculation()">
                                 <!-- Populate from PAPER_SETTINGS -->
                             </select>
+                            <!-- Ô nhập tên giấy tuỳ ý (ẩn mặc định) -->
+                            <input type="text" id="catInnerPaperName" class="custom-paper-name-input"
+                                style="display: none;" placeholder="✍️ Nhập tên giấy ruột...">
+                            <!-- Toggle + Ô nhập giá tay RUỘT (cùng hàng) -->
+                            <div class="custom-price-row">
+                                <button type="button" id="btnCatInnerCustomPrice" class="btn-toggle btn-toggle-sm"
+                                    onclick="toggleCatInnerCustomPrice()">
+                                    💰 Nhập giá
+                                </button>
+                                <div id="catInnerCustomPriceInput" class="custom-price-input-inline"
+                                    style="display: none;">
+                                    <input type="number" id="catInnerCustomPrice" value="0" min="0" step="100"
+                                        placeholder="Giá/tờ (đ)" oninput="updateCatCalculation()">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="form-group">
@@ -855,42 +1186,20 @@
             </div>
         </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         <!-- USER MANAGEMENT -->
         <section id="users" class="tab-content" style="display:none;">
             <!-- Menu Tabs -->
             <div class="settings-menu-tabs">
                 <button class="settings-menu-tab active" onclick="showSettingsTab('price')">💰 Cài đặt giá</button>
                 <button class="settings-menu-tab" onclick="showSettingsTab('account')">👥 Cài đặt tài khoản</button>
-                <button class="settings-menu-tab" onclick="showSettingsTab('data')">💾 Dữ liệu</button>
             </div>
 
             <!-- Tab: Cài đặt giá -->
             <div id="settingsPriceTab" class="settings-tab-content active">
+                <!-- ========== CÀI ĐẶT GIÁ IN NHANH ========== -->
                 <div class="card">
                     <div class="settings-container">
-                        <h2 class="settings-title">⚙️ CÀI ĐẶT GIÁ</h2>
+                        <h2 class="settings-title">⚡ CÀI ĐẶT GIÁ IN NHANH</h2>
 
                         <div class="settings-grid">
                             <!-- Loại Giấy + Khổ In -->
@@ -944,10 +1253,61 @@
                             </div>
                         </div>
 
-                        <button class="btn-save-settings" onclick="savePaperSettings()">💾 LƯU TẤT CẢ CÀI ĐẶT</button>
+                        <button class="btn-save-settings" onclick="savePaperSettings()">💾 LƯU CÀI ĐẶT IN NHANH</button>
                     </div>
                 </div>
 
+                <!-- ========== CÀI ĐẶT GIÁ IN OFFSET ========== -->
+                <div class="card">
+                    <div class="settings-container">
+                        <h2 class="settings-title">🏭 CÀI ĐẶT GIÁ IN OFFSET</h2>
+
+                        <div class="settings-grid">
+                            <!-- Placeholder cho các settings In Offset - Anh sẽ thêm sau -->
+                            <div class="setting-card setting-card-placeholder" style="opacity: 0.5; cursor: default;">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>📄 Loại Giấy Offset</span>
+                                    </div>
+                                    <span class="setting-edit-icon" style="color: #999;">🔜</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-card setting-card-placeholder" style="opacity: 0.5; cursor: default;">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>🖨️ Giá In Offset</span>
+                                    </div>
+                                    <span class="setting-edit-icon" style="color: #999;">🔜</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-card setting-card-placeholder" style="opacity: 0.5; cursor: default;">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>✨ Cán Màng Offset</span>
+                                    </div>
+                                    <span class="setting-edit-icon" style="color: #999;">🔜</span>
+                                </div>
+                            </div>
+
+                            <div class="setting-card setting-card-placeholder" style="opacity: 0.5; cursor: default;">
+                                <div class="setting-card-header">
+                                    <div class="setting-header-left">
+                                        <span>✂️ Gia Công Offset</span>
+                                    </div>
+                                    <span class="setting-edit-icon" style="color: #999;">🔜</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="hint" style="text-align: center; margin-top: 15px; color: #888;">
+                            📌 Phần cài đặt In Offset sẽ được cập nhật sau
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ========== RESET HỆ THỐNG ========== -->
                 <div class="card">
                     <h2>⚠️ Reset Hệ Thống</h2>
                     <p class="hint">Xóa toàn bộ cài đặt và quay về mặc định ban đầu</p>
@@ -981,10 +1341,6 @@
                 </div>
             </div>
 
-            <!-- Tab: Dữ liệu (Backup/Restore) -->
-            <div id="settingsDataTab" class="settings-tab-content">
-                <div id="backupUIContainer"></div>
-            </div>
         </section>
     </div>
 
@@ -1036,8 +1392,8 @@
     <script src="app.js?v=20260118120000"></script>
     <script src="paper_helpers.js?v=20260118120000"></script>
     <script src="lamination_helpers.js?v=20260118120000"></script>
-    <script src="lamination_populate.js?v=20260118120000"></script>
     <script src="paper_pricing_settings.js?v=20260118120000"></script>
+    <script src="tab_manager.js?v=20260118120000"></script>
     <script src="lamination_settings.js?v=20250120000000"></script>
     <script src="print_pricing_settings.js?v=20260118130000"></script>
     <script src="processing_settings.js?v=20260118140000"></script>
@@ -1045,8 +1401,9 @@
     <script src="paper_history_integration.js?v=20260118120000"></script>
     <script src="catalogue_history.js?v=20260129220000"></script>
     <script src="catalogue_history_integration.js?v=20260129220000"></script>
+    <script src="settings_panel.js?v=20260227000000"></script>
     <script src="backup_restore.js?v=20260130100000"></script>
-    <script src="update_lamination_prices.js?v=20260131130000"></script>
+
 </body>
 
 </html>

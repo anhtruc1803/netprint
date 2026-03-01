@@ -4,6 +4,37 @@
 const ADMIN_KEY = 'netprint2024';
 let currentUser = null;
 
+// ===== CHỨC NĂNG MỞ CỬA SỔ MỚI =====
+// (Giờ dùng thẻ <a> với href, trình duyệt tự hiện menu "Open link in new tab")
+
+// Xử lý URL parameter khi load page
+function handleUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+
+    if (tabParam) {
+        console.log('=== URL PARAMETER DETECTED ===');
+        console.log('Tab parameter:', tabParam);
+
+        // Đợi một chút để đảm bảo DOM đã sẵn sàng
+        setTimeout(() => {
+            if (tabParam === 'paper') {
+                showSubTab('paper', 'calc', null);
+                console.log('Switched to Paper tab from URL parameter');
+            } else if (tabParam === 'catalogue') {
+                showSubTab('catalogue', 'calc', null);
+                console.log('Switched to Catalogue tab from URL parameter');
+            } else if (tabParam === 'largeformat') {
+                showSubTab('largeformat', 'calc', null);
+                console.log('Switched to LargeFormat tab from URL parameter');
+            }
+        }, 300);
+
+        return true; // Có parameter
+    }
+    return false; // Không có parameter
+}
+
 // ===== DEFAULT SETTINGS =====
 // Version cho settings - tăng lên khi có thay đổi
 const LAMINATIONS_VERSION = 12; // Version 12: Thêm Bo góc
@@ -21,8 +52,13 @@ let PAPER_SETTINGS = {
                 { max: 500, price: 2000 },
                 { max: 999999, price: 1800 }
             ]
+        },
+        {
+            id: 2, name: 'In 2 mặt', tiers: [
+                { max: 500, price: 3500 },
+                { max: 999999, price: 3000 }
+            ]
         }
-        // In 2 mặt: tính mốc theo số tờ 1 mặt tương đương (ví dụ: 300 tờ 2 mặt = 600 tờ 1 mặt)
     ],
     // CÁN MÀNG - Cấu trúc mới: Khổ giấy → Loại cán màng → Giá theo mốc số lượng
     // Mỗi mốc có unit: 'per_sheet' (đ/tờ), 'per_lot' (đ/lô), 'per_m2' (đ/m²)
@@ -434,10 +470,17 @@ function showApp() {
         updatePaperPreview();
         updateLabelPreview();
 
-        // Khôi phục tab đã lưu từ localStorage (giữ nguyên vị trí khi refresh)
-        // Chạy sau khi DOM đã hoàn tất render
-        restoreLastTab();
-    }, 150);
+        // Kiểm tra URL parameter trước (ưu tiên cao hơn localStorage)
+        // Nếu có ?tab=paper hoặc ?tab=catalogue thì mở tab đó
+        const hasUrlParam = handleUrlParameters();
+
+        // Chỉ khôi phục tab cũ nếu không có URL parameter
+        if (!hasUrlParam) {
+            // Khôi phục tab đã lưu từ localStorage (giữ nguyên vị trí khi refresh)
+            console.log('🔄 Calling restoreLastTab...');
+            restoreLastTab();
+        }
+    }, 300); // Tăng timeout để đảm bảo chạy sau các init khác
 }
 
 // Show tab (users tab)
@@ -665,7 +708,7 @@ function loadAllSettings() {
     }
 }
 
-function savePaperSettings() {
+function savePaperSettings(silent = false) {
     // Validation: Kiểm tra dữ liệu trước khi lưu
     let errors = [];
 
@@ -721,10 +764,14 @@ function savePaperSettings() {
     }
 
     if (errors.length > 0) {
-        alert('⚠️ Lỗi cài đặt:\n\n' + errors.join('\n'));
-        // Phát âm thanh lỗi
-        playSound('error');
-        return;
+        // Chỉ hiển thị alert khi không phải silent mode
+        if (!silent) {
+            alert('⚠️ Lỗi cài đặt:\n\n' + errors.join('\n'));
+            playSound('error');
+        } else {
+            console.warn('⚠️ Silent save failed:', errors);
+        }
+        return false;
     }
 
     // AUTO BACKUP trước khi lưu mới
@@ -738,13 +785,14 @@ function savePaperSettings() {
     // CẬP NHẬT DROPDOWNS QUAN TRỌNG!
     populatePaperDropdowns();
 
-    // Phát âm thanh thành công
-    playSound('success');
-
-    // Hiển thị thông báo
-    showToast('✅ Đã lưu tất cả cài đặt thành công!');
+    // Chỉ hiển thị thông báo khi không phải silent mode
+    if (!silent) {
+        playSound('success');
+        showToast('✅ Đã lưu tất cả cài đặt thành công!');
+    }
 
     console.log('✅ Đã lưu PAPER_SETTINGS:', PAPER_SETTINGS);
+    return true;
 }
 
 function saveLabelSettings() {
@@ -920,6 +968,13 @@ function initTabs() {
 }
 
 function showSubTab(section, tabName, btn) {
+    // DEBUG: Xem ai gọi showSubTab
+    console.log('📍 showSubTab called:', section, tabName);
+    if (section === 'catalogue') {
+        console.log('⚠️ CATALOGUE TAB ACTIVATED! Stack trace:');
+        console.trace();
+    }
+
     // Hide all tab-content sections first
     document.querySelectorAll('.tab-content').forEach(tab => {
         tab.style.display = 'none';
@@ -944,6 +999,7 @@ function showSubTab(section, tabName, btn) {
     // Lưu tab hiện tại vào localStorage để khôi phục khi refresh
     localStorage.setItem('netprint_current_section', section);
     localStorage.setItem('netprint_current_tab', tabName);
+    console.log('💾 Saved tab:', section, tabName);
 
     // Populate dropdowns when switching to calculator sections
     if (tabName === 'calc') {
@@ -969,6 +1025,7 @@ function updateMainTitle(section) {
     const titles = {
         'paper': 'TÍNH GIÁ IN NHANH',
         'catalogue': 'TÍNH GIÁ CATALOGUE',
+        'largeformat': 'TÍNH GIÁ IN KHỔ LỚN',
         'label': 'TÍNH GIÁ TEM NHÃN',
         'offset': 'TÍNH GIÁ OFFSET'
     };
@@ -978,53 +1035,9 @@ function updateMainTitle(section) {
 
 // Khôi phục tab đã lưu từ localStorage khi refresh trang
 function restoreLastTab() {
-    const savedSection = localStorage.getItem('netprint_current_section');
-    const savedTabName = localStorage.getItem('netprint_current_tab');
-
-    console.log('=== RESTORE TAB DEBUG ===');
-    console.log('Saved section:', savedSection);
-    console.log('Saved tab:', savedTabName);
-
-    // Nếu không có dữ liệu lưu, mặc định là paper/calc
-    if (!savedSection || !savedTabName) {
-        console.log('No saved tab data, using default: paper/calc');
-        return;
-    }
-
-    // Nếu đã là paper/calc thì không cần làm gì (đã mặc định trong HTML)
-    if (savedSection === 'paper' && savedTabName === 'calc') {
-        console.log('Already on default tab paper/calc, no action needed');
-        return;
-    }
-
-    // Tìm parent calculator section
-    const parent = document.getElementById(savedSection + '-calculator');
-    console.log('Parent element:', parent);
-
-    if (parent) {
-        // Tìm button đúng để active
-        const allBtns = parent.querySelectorAll('.sub-tab');
-        let targetBtn = null;
-
-        allBtns.forEach(btn => {
-            const text = btn.textContent.toLowerCase();
-            if (savedTabName === 'calc' && text.includes('tính giá')) {
-                targetBtn = btn;
-            } else if (savedTabName === 'history' && text.includes('lịch sử')) {
-                targetBtn = btn;
-            }
-        });
-
-        console.log('Target button:', targetBtn);
-        console.log('Calling showSubTab with:', savedSection, savedTabName);
-
-        // Gọi showSubTab để chuyển tab
-        showSubTab(savedSection, savedTabName, targetBtn);
-
-        console.log('Tab restored successfully to:', savedSection, savedTabName);
-    } else {
-        console.log('Parent element not found for section:', savedSection);
-    }
+    // LUÔN mặc định về paper/calc khi khởi động
+    console.log('🏠 Mở mặc định tab: paper/calc (Tính giá In nhanh)');
+    showSubTab('paper', 'calc', document.querySelector('#paper-calculator .sub-tab'));
 }
 
 // ===== QUẢN LÝ TAB CÀI ĐẶT =====
@@ -1045,121 +1058,8 @@ function showSettingsTab(tabName) {
 }
 
 // ===== QUẢN LÝ MODAL CÀI ĐẶT =====
-function openSettingModal(settingType) {
-    const modal = document.getElementById('settingEditModal');
-    const modalTitle = document.getElementById('settingModalTitle');
-    const modalContent = document.getElementById('settingModalContent');
-
-    if (!modal || !modalTitle || !modalContent) return;
-
-    // Lưu loại cài đặt đang chỉnh sửa
-    modal.dataset.settingType = settingType;
-
-    // Đặt tiêu đề và nội dung theo loại cài đặt
-    switch (settingType) {
-        case 'paperTypes':
-            modalTitle.textContent = '⚙️ Loại Giấy + Khổ In';
-            // Render giao diện quản lý loại giấy và khổ in
-            modalContent.innerHTML = `
-                <div class="paper-pricing-settings">
-                    <div class="settings-header">
-                        <h3>📐 Quản lý Khổ Giấy và Loại Giấy</h3>
-                        <button class="btn-add-size" onclick="addPrintSize()">+ Thêm khổ giấy</button>
-                    </div>
-                    <div id="paperPricingContainer"></div>
-                </div>
-            `;
-            // Gọi hàm render từ paper_pricing_settings.js
-            if (typeof renderPaperPricingSettings === 'function') {
-                renderPaperPricingSettings();
-            }
-            break;
-
-        case 'paperPrint':
-            modalTitle.textContent = '⚙️ Giá In';
-            modalContent.innerHTML = '<p>Đang phát triển chức năng chỉnh sửa giá in...</p>';
-            break;
-
-        case 'paperLam':
-            modalTitle.textContent = '⚙️ Cán Màng';
-            // Render giao diện quản lý cán màng
-            modalContent.innerHTML = `
-                <div class="lamination-settings">
-                    <div class="settings-header">
-                        <h3>✨ Quản lý Cán Màng theo Khổ Giấy</h3>
-                        <p style="font-size: 13px; color: #666; margin-top: 5px;">
-                            Đơn vị tính: <strong>đ/tờ</strong> (giá mỗi tờ), <strong>đ/lô</strong> (giá cố định theo lô), <strong>đ/m²</strong> (giá theo diện tích)
-                        </p>
-                    </div>
-                    <div id="laminationContainer"></div>
-                </div>
-            `;
-            // Gọi hàm render từ lamination_settings.js
-            if (typeof renderLaminationSettings === 'function') {
-                renderLaminationSettings();
-            }
-            break;
-
-        case 'paperProc':
-            modalTitle.textContent = '⚙️ Gia Công Thành Phẩm';
-            modalContent.innerHTML = '<p>Đang phát triển chức năng chỉnh sửa gia công...</p>';
-            break;
-
-        case 'paperCustomer':
-            modalTitle.textContent = '⚙️ Loại Khách Hàng (% lợi nhuận)';
-            modalContent.innerHTML = '<p>Đang phát triển chức năng chỉnh sửa loại khách...</p>';
-            break;
-
-        default:
-            modalTitle.textContent = '⚙️ Cài đặt';
-            modalContent.innerHTML = '<p>Không tìm thấy loại cài đặt.</p>';
-    }
-
-    // Hiển thị modal
-    modal.style.display = 'flex';
-}
-
-function closeSettingModal() {
-    const modal = document.getElementById('settingEditModal');
-    if (modal) {
-        modal.style.display = 'none';
-        // Xóa nội dung modal
-        const modalContent = document.getElementById('settingModalContent');
-        if (modalContent) {
-            modalContent.innerHTML = '';
-        }
-    }
-}
-
-function saveSettingModal() {
-    const modal = document.getElementById('settingEditModal');
-    const settingType = modal?.dataset?.settingType;
-
-    // Lưu cài đặt tùy theo loại
-    if (settingType === 'paperTypes') {
-        // Gọi hàm lưu settings từ app.js
-        if (typeof savePaperSettings === 'function') {
-            savePaperSettings();
-            showToast('✅ Đã lưu cài đặt loại giấy và khổ in!');
-            closeSettingModal();
-        } else {
-            alert('⚠️ Không tìm thấy hàm lưu cài đặt!');
-        }
-    } else if (settingType === 'paperLam') {
-        // Lưu cài đặt cán màng
-        if (typeof savePaperSettings === 'function') {
-            savePaperSettings();
-            showToast('✅ Đã lưu cài đặt cán màng!');
-            closeSettingModal();
-        } else {
-            alert('⚠️ Không tìm thấy hàm lưu cài đặt!');
-        }
-    } else {
-        // Các loại cài đặt khác
-        showToast('✅ Đã lưu cài đặt!');
-        closeSettingModal();
-    }
-}
+// Các hàm openSettingModal, closeSettingModal, saveSettingModal
+// được định nghĩa đầy đủ ở phía dưới (SETTING MODAL section)
 
 // ===== THUẬT TOÁN DÀN IN THÔNG MINH - TỐI ƯU TỐI ĐA (Giống DyCut) =====
 // Thuật toán tìm nhiều cách dàn khác nhau và chọn cách tối ưu nhất
@@ -1568,72 +1468,69 @@ function populatePaperDropdowns() {
     // Loại giấy - Sẽ được populate bởi onPaperSizeChange() sau khi khổ in được set
     // Không populate ở đây vì cần filter theo khổ in đã chọn
 
-    // Populate print options: In 1 mặt và In 2 mặt (tính mốc theo số tờ 1 mặt tương đương)
-    if (printSides) {
-        const printOneSide = PAPER_SETTINGS.printOptions.find(p => p.id === 1);
-        if (printOneSide) {
-            printSides.innerHTML = `
-                <option value="1">In 1 mặt</option>
-                <option value="2">In 2 mặt</option>
-            `;
-        } else {
-            printSides.innerHTML = '<option value="">Chưa có cài đặt</option>';
-        }
-    }
-
     // Populate cán màng theo khổ giấy (CẤU TRÚC MỚI)
     if (typeof populateLaminationDropdown === 'function') {
         populateLaminationDropdown();
     }
 
-    if (customerType) customerType.innerHTML = PAPER_SETTINGS.customerTypes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    // Populate print options: In 1 mặt và In 2 mặt (tính mốc theo số tờ 1 mặt tương đương)
+    if (printSides) {
+        // Populate print sides
+        printSides.innerHTML = PAPER_SETTINGS.printOptions.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
 
-    // Populate checkbox cho gia công thành phẩm
-    const procGroup = document.getElementById('paperProcessingGroup');
-    if (procGroup) {
-        procGroup.innerHTML = PAPER_SETTINGS.processing.map(p => `
+        // Populate lamination options
+        if (lamination) lamination.innerHTML = PAPER_SETTINGS.laminations.map(l => `<option value="${l.id}">${l.name}</option>`).join('');
+
+        // Populate customer types
+        if (customerType) customerType.innerHTML = PAPER_SETTINGS.customerTypes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+        // Populate checkbox cho gia công thành phẩm
+        const procGroup = document.getElementById('paperProcessingGroup');
+        if (procGroup) {
+            procGroup.innerHTML = PAPER_SETTINGS.processing.map(p => `
             <label>
                 <input type="checkbox" name="paperProc" value="${p.id}" onchange="updatePaperMargin(); updatePaperPreview();">
                 <span>${p.name}</span>
             </label>
         `).join('');
-    }
+        }
 
-    // Khôi phục giá trị đã chọn hoặc đặt mặc định
-    if (paperType && savedPaper) {
-        paperType.value = savedPaper;
-        // Đồng bộ khổ in theo loại giấy đã chọn
-        onPaperTypeChange();
-        // Cập nhật search input với giá trị đã chọn
-        const searchInput = document.getElementById('paperTypeSearch');
-        if (searchInput) {
-            const selectedOption = paperType.options[paperType.selectedIndex];
-            if (selectedOption) {
-                searchInput.value = selectedOption.text;
+        // Khôi phục giá trị đã chọn hoặc đặt mặc định
+        if (paperType && savedPaper) {
+            paperType.value = savedPaper;
+            // Đồng bộ khổ in theo loại giấy đã chọn
+            onPaperTypeChange();
+            // Cập nhật search input với giá trị đã chọn
+            const searchInput = document.getElementById('paperTypeSearch');
+            if (searchInput) {
+                const selectedOption = paperType.options[paperType.selectedIndex];
+                if (selectedOption) {
+                    searchInput.value = selectedOption.text;
+                }
             }
         }
-    }
-    if (printSides && savedPrint) printSides.value = savedPrint;
-    if (lamination && savedLam) lamination.value = savedLam;
+        if (printSides && savedPrint) printSides.value = savedPrint;
+        if (lamination && savedLam) lamination.value = savedLam;
 
-    // Loại khách hàng: mặc định là "Khách lẻ" (id = 3)
-    if (customerType) {
-        if (savedCust) {
-            customerType.value = savedCust;
-        } else {
-            // Tìm "Khách lẻ" và đặt làm mặc định
-            const khachLe = PAPER_SETTINGS.customerTypes.find(c => c.name.toLowerCase().includes('khách lẻ') || c.name.toLowerCase().includes('khach le'));
-            if (khachLe) {
-                customerType.value = khachLe.id;
+        // Loại khách hàng: mặc định là "Khách lẻ" (id = 3)
+        if (customerType) {
+            if (savedCust) {
+                customerType.value = savedCust;
+            } else {
+                // Tìm "Khách lẻ" và đặt làm mặc định
+                const khachLe = PAPER_SETTINGS.customerTypes.find(c => c.name.toLowerCase().includes('khách lẻ') || c.name.toLowerCase().includes('khach le'));
+                if (khachLe) {
+                    customerType.value = khachLe.id;
+                }
             }
         }
+
+        // Cập nhật preview sau khi populate
+        updatePaperPreview();
+
+        // Khởi tạo search cho paper type
+        initPaperTypeSearch();
     }
-
-    // Cập nhật preview sau khi populate
-    updatePaperPreview();
-
-    // Khởi tạo search cho paper type
-    initPaperTypeSearch();
 }
 
 // ===== CAPITALIZE WORDS =====
@@ -2441,7 +2338,9 @@ function calculatePaper() {
     const cust = PAPER_SETTINGS.customerTypes.find(c => c.id === custId);
 
     // Kiểm tra dữ liệu settings
-    if (!paper) return alert('⚠️ Vui lòng chọn loại giấy!');
+    // Chỉ yêu cầu chọn loại giấy nếu không dùng chế độ nhập giá tay
+    const isUsingCustomPrice = typeof isCustomPriceEnabled === 'function' && isCustomPriceEnabled();
+    if (!paper && !isUsingCustomPrice) return alert('⚠️ Vui lòng chọn loại giấy!');
     if (!printOneSide || !printOneSide.tiers) return alert('⚠️ Vui lòng cài đặt giá in 1 mặt!');
     if (!cust) return alert('⚠️ Vui lòng chọn loại khách hàng!');
 
@@ -2470,7 +2369,26 @@ function calculatePaper() {
     // Kiểm tra xem có cho phép xoay không
     const rotationBtn = document.getElementById('btnRotationToggle');
     const allowRotation = rotationBtn ? rotationBtn.classList.contains('active') : false;
-    const imposition = calculateImposition(prodW, prodH, paper.w, paper.h, bleed, margin, spacing, allowRotation);
+
+    // Lấy kích thước khổ giấy - từ paper hoặc từ dropdown khổ giấy (khi dùng nhập giá tay)
+    let printSheetW = 325, printSheetH = 430; // Mặc định A3
+    if (paper) {
+        printSheetW = paper.w;
+        printSheetH = paper.h;
+    } else {
+        // Lấy từ dropdown khổ giấy
+        const printSizeSelect = document.getElementById('paperPrintSize');
+        if (printSizeSelect && printSizeSelect.value) {
+            const printSizeId = parseInt(printSizeSelect.value);
+            const printSize = PAPER_SETTINGS.printSizes.find(s => s.id === printSizeId);
+            if (printSize) {
+                printSheetW = printSize.w;
+                printSheetH = printSize.h;
+            }
+        }
+    }
+
+    const imposition = calculateImposition(prodW, prodH, printSheetW, printSheetH, bleed, margin, spacing, allowRotation);
 
     if (imposition.total <= 0) return alert('⚠️ Sản phẩm quá lớn so với khổ in! Hãy chọn loại giấy với khổ lớn hơn.');
 
@@ -2480,7 +2398,18 @@ function calculatePaper() {
 
     // ===== 6. TÍNH GIÁ VỐN =====
     // Giá giấy: số tờ × giá theo tier (sử dụng helper function)
-    const paperPricePerSheet = getPaperPrice(paperTypeId, sheets);
+    // ĐẶC BIỆT: Nếu toggle "Nhập giá tay" được bật thì lấy giá từ input
+    let paperPricePerSheet = 0;
+    const customPrice = getCustomPaperPrice();
+    const hasCustomPrice = customPrice !== null;
+
+    if (hasCustomPrice) {
+        // Lấy giá từ ô nhập giá tay
+        paperPricePerSheet = customPrice;
+    } else {
+        // Lấy giá từ tiers như bình thường
+        paperPricePerSheet = getPaperPrice(paperTypeId, sheets);
+    }
     const paperCost = Math.round(sheets * paperPricePerSheet);
     const paperTier = (() => {
         const paperObj = getPaperById(paperTypeId);
@@ -2501,11 +2430,24 @@ function calculatePaper() {
     const printCost = Math.round(sheets * printPricePerSheet);
 
     // Giá cán màng: SỬ DỤNG CẤU TRÚC MỚI (Khổ giấy → Loại cán màng → Tiers)
-    // Lấy printSizeId từ paper đã chọn
+    // Lấy printSizeId từ paper đã chọn hoặc từ dropdown khổ giấy (khi dùng nhập giá tay)
     let lamCost = 0;
-    if (lamId && paper.printSizeId) {
+    let printSizeIdForLam = paper ? paper.printSizeId : null;
+
+    // Nếu không có paper (đang dùng nhập giá tay), lấy printSizeId từ dropdown khổ giấy
+    if (!printSizeIdForLam) {
+        const printSizeSelect = document.getElementById('paperPrintSize');
+        if (printSizeSelect && printSizeSelect.value) {
+            printSizeIdForLam = parseInt(printSizeSelect.value);
+        }
+    }
+
+    if (lamId && printSizeIdForLam) {
         // Sử dụng helper function mới từ lamination_helpers.js
-        lamCost = calculateLaminationCost(paper.printSizeId, lamId, sheets, paper.w, paper.h);
+        // Khi dùng nhập giá tay, không có paper.w/h nên truyền 0
+        const paperW = paper ? paper.w : 0;
+        const paperH = paper ? paper.h : 0;
+        lamCost = calculateLaminationCost(printSizeIdForLam, lamId, sheets, paperW, paperH);
     }
 
     // Giá gia công: TỔNG của tất cả công đoạn đã chọn
@@ -2541,6 +2483,17 @@ function calculatePaper() {
         setText('paperResQty', qty.toLocaleString('vi-VN') + ' sp');
         setText('paperResSellPrice', formatMoney(sellPerItem));
         setText('paperResTotalSell', formatMoney(totalSell));
+
+
+        // Tên giấy hiển thị
+        let paperDisplayName = 'Giấy';
+        if (paper) {
+            paperDisplayName = paper.name;
+        } else if (hasCustomPrice) {
+            const typedName = document.getElementById('paperTypeSearch')?.value;
+            if (typedName) paperDisplayName = typedName;
+        }
+        setText('paperResPaperName', paperDisplayName);
 
         // Chi tiết Giấy: số tờ × đơn giá = tổng
         setText('paperResSheets', sheets.toLocaleString('vi-VN'));
@@ -2583,50 +2536,23 @@ function calculatePaper() {
 
         // Chi tiết Cán màng: số tờ × đơn giá = tổng
         // Sử dụng cấu trúc mới để lấy thông tin
-        const lamInfo = getLaminationBySizeAndId(paper.printSizeId, lamId);
+        const lamInfo = getLaminationBySizeAndId(printSizeIdForLam, lamId);
         // Hiển thị tên đầy đủ (đã bao gồm "1 mặt" hoặc "2 mặt" nếu có)
         // Nếu không có hoặc không chọn, hiển thị "Không cán"
         const lamDisplayName = lamInfo ? lamInfo.name : (lamId === 1 || !lamId ? 'Không cán' : 'Cán màng');
         setText('paperResLamName', lamDisplayName);
-
-        let lamPricePerSheet = 0;
-        if (lamInfo && lamInfo.tiers && lamInfo.tiers.length > 0) {
-            // Sắp xếp tiers theo max tăng dần để đảm bảo logic đúng
-            const sortedTiers = [...lamInfo.tiers].sort((a, b) => a.max - b.max);
-
-            // Tìm tier phù hợp: tier đầu tiên mà sheets <= tier.max
-            let selectedTier = null;
-            for (const tier of sortedTiers) {
-                if (sheets <= tier.max) {
-                    selectedTier = tier;
-                    break;
-                }
-            }
-            if (!selectedTier) {
-                selectedTier = sortedTiers[sortedTiers.length - 1];
-            }
-
-            // Tính giá hiển thị dựa trên unit
-            // LƯU Ý: Giá đã được nhập sẵn cho từng loại (1 mặt hoặc 2 mặt)
-            // KHÔNG cần nhân thêm sideMultiplier
-            if (selectedTier.unit === 'per_sheet') {
-                lamPricePerSheet = selectedTier.price;
-            } else if (selectedTier.unit === 'per_m2') {
-                const sheetAreaM2 = (paper.w * paper.h) / 1000000;
-                lamPricePerSheet = Math.round(sheetAreaM2 * selectedTier.price);
-            } else if (selectedTier.unit === 'per_lot') {
-                // Giá theo lô: hiển thị tổng chi phí chia cho số tờ
-                lamPricePerSheet = Math.round(selectedTier.price / sheets);
-            }
-        }
         setText('paperResLamSheets', sheets.toLocaleString('vi-VN'));
-        setText('paperResLamPrice', lamPricePerSheet.toLocaleString('vi-VN'));
+
+        // Tính đơn giá hiển thị (đơn giản hoá, chia ngược lại)
+        const lamDisplayPrice = sheets > 0 ? Math.round(lamCost / sheets) : 0;
+        setText('paperResLamPrice', lamDisplayPrice.toLocaleString('vi-VN'));
+
         setText('paperResLamCost', formatMoney(lamCost));
         const lamDetailsEl = document.getElementById('paperResLamDetails');
         if (lamDetailsEl) {
-            if (!lamInfo || !lamInfo.tiers || lamInfo.tiers.length === 0) {
-                lamDetailsEl.innerHTML = `<div class="cost-sub-item"><span>Công thức</span><span>0</span></div>`;
-            } else {
+            if (lamInfo && lamInfo.tiers) {
+                // Logic hiển thị đúng mốc áp dụng theo cấu trúc mới
+                // Sort tiers by max quantity ascending
                 const sortedTiers = [...lamInfo.tiers].sort((a, b) => a.max - b.max);
                 let selectedTier = null;
                 let prevMax = 0;
@@ -2641,8 +2567,11 @@ function calculatePaper() {
                 const details = [];
                 details.push(`<div class="cost-sub-item"><span>Mốc cán</span><span>${min.toLocaleString('vi-VN')}–${maxText} tờ → ${selectedTier.price.toLocaleString('vi-VN')} ${unitName}</span></div>`);
                 if (selectedTier.unit === 'per_m2') {
-                    const sheetAreaM2 = (paper.w * paper.h) / 1000000;
-                    details.push(`<div class="cost-sub-item"><span>Diện tích tờ</span><span>${paper.w}×${paper.h}mm = ${sheetAreaM2.toFixed(4)} m²</span></div>`);
+                    // Fix lỗi paper.w/h khi dùng nhập giá tay (paper = null)
+                    const pW = paper ? paper.w : printSheetW;
+                    const pH = paper ? paper.h : printSheetH;
+                    const sheetAreaM2 = (pW * pH) / 1000000;
+                    details.push(`<div class="cost-sub-item"><span>Diện tích tờ</span><span>${pW}×${pH}mm = ${sheetAreaM2.toFixed(4)} m²</span></div>`);
                     const total = Math.round(sheetAreaM2 * sheets * selectedTier.price);
                     details.push(`<div class="cost-sub-item"><span>Công thức</span><span>${sheetAreaM2.toFixed(4)} × ${sheets.toLocaleString('vi-VN')} × ${selectedTier.price.toLocaleString('vi-VN')} = ${formatMoney(total)}</span></div>`);
                 } else if (selectedTier.unit === 'per_lot') {
@@ -3190,122 +3119,9 @@ function renderTieredList(containerId, items, prefix) {
 }
 
 // ===== SETTING MODAL =====
-let currentSettingType = null;
-
-function openSettingModal(type) {
-    currentSettingType = type;
-    const modal = document.getElementById('settingEditModal');
-    const titleEl = document.getElementById('settingModalTitle');
-    const contentEl = document.getElementById('settingModalContent');
-
-    if (!modal || !titleEl || !contentEl) return;
-
-    // Set title
-    const titles = {
-        'paperTypes': '📄 Loại Giấy + Khổ In',
-        'paperPrint': '🖨️ Giá In',
-        'paperLam': '✨ Cán Màng',
-        'paperProc': '✂️ Gia Công Thành Phẩm',
-        'paperCustomer': '👥 Loại Khách (% lợi nhuận)'
-    };
-    titleEl.textContent = titles[type] || '⚙️ Chỉnh sửa cài đặt';
-
-    // Render content based on type
-    let html = '';
-    if (type === 'paperTypes') {
-        // GIAO DIỆN MỚI: Cấu trúc phân cấp
-        html = `
-            <div id="paperPricingContainer"></div>
-            <button class="btn-add-print-size" onclick="addPrintSize()">
-                📐 + Thêm khổ giấy
-            </button>
-        `;
-    } else if (type === 'paperPrint') {
-        html = `
-            <div class="print-pricing-settings">
-                <div class="settings-header">
-                    <h3>🖨️ Quản lý Giá In</h3>
-                    <p style="font-size: 13px; color: #666; margin-top: 5px;">
-                        Đơn vị tính: <strong>đ/tờ</strong> (giá mỗi tờ in)
-                    </p>
-                </div>
-                <div id="printPricingContainer"></div>
-            </div>
-        `;
-    } else if (type === 'paperLam') {
-        html = `
-            <div class="lamination-settings">
-                <div class="settings-header">
-                    <h3>✨ Quản lý Cán Màng theo Khổ Giấy</h3>
-                </div>
-                <div id="laminationContainer"></div>
-            </div>
-        `;
-    } else if (type === 'paperProc') {
-        html = `
-            <div class="processing-settings">
-                <div class="settings-header">
-                    <h3>✂️ Quản lý Gia Công Thành Phẩm</h3>
-                </div>
-                <div id="processingContainer"></div>
-            </div>
-        `;
-    } else if (type === 'paperCustomer') {
-        html = `
-            <div class="setting-modal-list" id="paperCustomerTypesList"></div>
-            <div class="setting-modal-actions">
-                <button class="btn-add-sm" onclick="addPaperCustomerType()">+ Thêm loại khách</button>
-            </div>
-        `;
-    }
-
-    contentEl.innerHTML = html;
-
-    // Render the actual list content
-    if (type === 'paperTypes') {
-        // Giao diện mới
-        renderPaperPricingSettings();
-    } else if (type === 'paperPrint') {
-        // Giao diện mới cho giá in
-        if (typeof renderPrintPricingSettings === 'function') {
-            renderPrintPricingSettings();
-        } else {
-            renderPaperSettings();
-        }
-    } else if (type === 'paperLam') {
-        // Giao diện mới cho cán màng
-        if (typeof renderLaminationSettings === 'function') {
-            renderLaminationSettings();
-        }
-    } else if (type === 'paperProc') {
-        // Giao diện mới cho gia công
-        if (typeof renderProcessingSettings === 'function') {
-            renderProcessingSettings();
-        } else {
-            renderPaperSettings();
-        }
-    } else {
-        // Giao diện cũ cho các phần khác
-        renderPaperSettings();
-    }
-
-    // Show modal
-    modal.style.display = 'flex';
-}
-
-function closeSettingModal() {
-    const modal = document.getElementById('settingEditModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-    currentSettingType = null;
-}
-
-function saveSettingModal() {
-    // Settings are saved automatically on change, so just close
-    closeSettingModal();
-    showToast('✅ Đã lưu thay đổi!');
-}
+// openSettingModal / closeSettingModal / saveSettingModal
+// và toàn bộ UI cài đặt giá đã được chuyển sang settings_panel.js
+// (thiết kế lại hoàn toàn - hiện đại, không lỗi)
 
 // Close modal when clicking outside
 window.onclick = function (event) {
@@ -3342,7 +3158,7 @@ function renderPaperSettings() {
     if (printList) {
         let printOneSide = PAPER_SETTINGS.printOptions.find(p => p.id === 1);
 
-        // Tự động khởi tạo nếu chưa có
+        // Tự động khởi tạo In 1 mặt nếu chưa có
         if (!printOneSide) {
             printOneSide = {
                 id: 1, name: 'In 1 mặt', tiers: [
@@ -3353,12 +3169,25 @@ function renderPaperSettings() {
             PAPER_SETTINGS.printOptions.push(printOneSide);
         }
 
-        // Đảm bảo có tiers
+        // Đảm bảo có tiers cho In 1 mặt
         if (!printOneSide.tiers || printOneSide.tiers.length === 0) {
             printOneSide.tiers = [
                 { max: 500, price: 2000 },
                 { max: 999999, price: 1800 }
             ];
+        }
+
+        // Tự động khởi tạo In 2 mặt nếu chưa có
+        let printTwoSide = PAPER_SETTINGS.printOptions.find(p => p.id === 2);
+        if (!printTwoSide) {
+            printTwoSide = {
+                id: 2, name: 'In 2 mặt', tiers: [
+                    { max: 500, price: 3500 },
+                    { max: 999999, price: 3000 }
+                ]
+            };
+            PAPER_SETTINGS.printOptions.push(printTwoSide);
+            savePaperSettings(); // Lưu để lần sau không cần thêm lại
         }
 
         printList.innerHTML = `
@@ -6919,11 +6748,17 @@ function calculateCatPrice() {
     const totalCoverSheets = Math.ceil(coverPerBook * qty);
     const totalInnerSheets = Math.ceil(innerPerBook * qty);
 
-    // Giá giấy - lấy từ PAPER_SETTINGS
+    // Giá giấy - kiểm tra nhập giá tay trước, nếu không thì lấy từ PAPER_SETTINGS
     const coverPaperId = parseInt(document.getElementById('catCoverPaperType')?.value) || 0;
     const innerPaperId = parseInt(document.getElementById('catInnerPaperType')?.value) || 0;
-    const coverPaperPrice = getCatPaperPrice(coverPaperId, totalCoverSheets);
-    const innerPaperPrice = getCatPaperPrice(innerPaperId, totalInnerSheets);
+
+    // Kiểm tra nhập giá tay cho BÌA
+    const coverCustomPrice = getCatCoverCustomPrice();
+    const coverPaperPrice = coverCustomPrice !== null ? coverCustomPrice : getCatPaperPrice(coverPaperId, totalCoverSheets);
+
+    // Kiểm tra nhập giá tay cho RUỘT
+    const innerCustomPrice = getCatInnerCustomPrice();
+    const innerPaperPrice = innerCustomPrice !== null ? innerCustomPrice : getCatPaperPrice(innerPaperId, totalInnerSheets);
 
     // Giá in - dùng CAT_PRINT_PRICES
     const coverPrint = document.getElementById('catCoverPrint')?.value || '1mat';
@@ -7049,5 +6884,323 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize demo catalogue calculation if elements exist
     if (document.getElementById('catSize')) {
         updateCatCalculation();
+    }
+});
+
+// ===== AUTH HANDLER =====
+function loadUser() {
+    try {
+        const storedUser = localStorage.getItem('netprint_current_user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            if (user && user.username) {
+                console.log('Auto login:', user.username);
+                currentUser = user;
+
+                // Cập nhật UI
+                if (typeof showApp === 'function') {
+                    showApp();
+                } else {
+                    // Fallback UI nếu showApp chưa load
+                    const loginModal = document.getElementById('loginModal');
+                    const mainApp = document.getElementById('mainApp');
+                    if (loginModal) loginModal.style.display = 'none';
+                    if (mainApp) mainApp.style.display = 'block';
+
+                    // Update user info header
+                    const userDisplay = document.getElementById('currentUserDisplay');
+                    if (userDisplay) userDisplay.textContent = user.fullname || user.username;
+                }
+                return true;
+            }
+        }
+    } catch (e) {
+        console.error('Load user error:', e);
+    }
+    // Nếu không login được
+    const loginModal = document.getElementById('loginModal');
+    if (loginModal) loginModal.style.display = 'block';
+    return false;
+}
+
+
+// ===== KHỞI TẠO ỨNG DỤNG (PHỤC HỒI) =====
+window.onload = function () {
+    console.log('App Loaded!');
+
+    // Load hết setting
+    if (typeof loadPaperSettings === 'function') {
+        PAPER_SETTINGS = loadPaperSettings();
+    }
+
+    // Fallback nếu null
+    if (!PAPER_SETTINGS || !PAPER_SETTINGS.paperPricing) {
+        PAPER_SETTINGS = DEFAULT_PAPER_SETTINGS || {};
+        if (typeof savePaperSettings === 'function') savePaperSettings(true);
+    }
+
+    // Đảm bảo có In 2 mặt trong printOptions
+    if (PAPER_SETTINGS.printOptions && !PAPER_SETTINGS.printOptions.find(p => p.id === 2)) {
+        PAPER_SETTINGS.printOptions.push({
+            id: 2, name: 'In 2 mặt', tiers: [
+                { max: 500, price: 3500 },
+                { max: 999999, price: 3000 }
+            ]
+        });
+        if (typeof savePaperSettings === 'function') savePaperSettings();
+        console.log('✅ Đã thêm In 2 mặt vào printOptions');
+    }
+
+    if (typeof populateAllDropdowns === 'function') populateAllDropdowns();
+    if (typeof updateDateTime === 'function') updateDateTime();
+
+    // Quan trọng: Load User để xử lý đăng nhập
+    if (typeof loadUser === 'function') loadUser(); // Hàm này check localStorage -> login hoặc show modal
+    else {
+        // Fallback nếu loadUser chưa define kịp
+        const loginModal = document.getElementById('loginModal');
+        if (loginModal) loginModal.style.display = 'block';
+    }
+
+    if (typeof populateLaminationData === 'function') {
+        populateLaminationData();
+    }
+};
+
+// ===== PASSWORD VISIBILITY TOGGLE =====
+function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('loginPass');
+    const toggleIcon = document.querySelector('#loginModal span[onclick="togglePasswordVisibility()"]');
+
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.textContent = '❌'; // Hoặc icon mắt gạch chéo
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.textContent = '👁️';
+    }
+}
+
+// ===== IN KHỔ LỚN (LARGE FORMAT) CALCULATOR =====
+// Biến lưu chi phí phụ cho khổ lớn
+let largeFormatExtraCosts = [];
+let largeformatMarginLocked = true;
+
+// Khổ giấy lớn với kích thước (mm)
+const LARGE_FORMAT_SIZES = {
+    '33x65': { width: 330, height: 650, label: '33×65 (330×650)' },
+    '35x50': { width: 350, height: 500, label: '35×50 (350×500)' },
+    '43x65': { width: 430, height: 650, label: '43×65 (430×650)' },
+    '50x70': { width: 500, height: 700, label: '50×70 (500×700)' }
+};
+
+// Cập nhật preview cho In Khổ Lớn
+function updateLargeFormatPreview() {
+    const paperSizeKey = document.getElementById('largeformatPaperSize')?.value || '33x65';
+    const paperSize = LARGE_FORMAT_SIZES[paperSizeKey] || LARGE_FORMAT_SIZES['33x65'];
+
+    const productWidth = parseFloat(document.getElementById('largeformatProductWidth')?.value) || 210;
+    const productHeight = parseFloat(document.getElementById('largeformatProductHeight')?.value) || 297;
+    const quantity = parseInt(document.getElementById('largeformatQuantity')?.value) || 0;
+    const spacing = parseFloat(document.getElementById('largeformatSpacingCalc')?.value) || 0;
+    const marginH = parseFloat(document.getElementById('largeformatMarginH')?.value) || 5;
+    const marginV = parseFloat(document.getElementById('largeformatMarginV')?.value) || 5;
+
+    // Tính số SP trên tờ
+    const availableWidth = paperSize.width - (2 * marginH);
+    const availableHeight = paperSize.height - (2 * marginV);
+
+    // Tính layout ngang và dọc
+    const cols1 = Math.floor((availableWidth + spacing) / (productWidth + spacing));
+    const rows1 = Math.floor((availableHeight + spacing) / (productHeight + spacing));
+    const yield1 = cols1 * rows1;
+
+    const cols2 = Math.floor((availableWidth + spacing) / (productHeight + spacing));
+    const rows2 = Math.floor((availableHeight + spacing) / (productWidth + spacing));
+    const yield2 = cols2 * rows2;
+
+    const bestYield = Math.max(yield1, yield2, 1);
+    const sheets = quantity > 0 ? Math.ceil(quantity / bestYield) : 0;
+
+    // Cập nhật UI
+    const sheetSizeEl = document.getElementById('largeformatSheetSize');
+    if (sheetSizeEl) sheetSizeEl.textContent = paperSize.label;
+
+    const yieldEl = document.getElementById('largeformatYield');
+    if (yieldEl) yieldEl.textContent = bestYield;
+
+    const sheetsEl = document.getElementById('largeformatSheets');
+    if (sheetsEl) sheetsEl.textContent = sheets;
+}
+
+// Toggle khóa lề
+function toggleLargeformatMarginLock() {
+    largeformatMarginLocked = !largeformatMarginLocked;
+    const icon = document.getElementById('largeformatMarginLockIcon');
+    if (icon) {
+        icon.textContent = largeformatMarginLocked ? '🔒' : '🔓';
+    }
+
+    if (largeformatMarginLocked) {
+        const marginH = document.getElementById('largeformatMarginH');
+        const marginV = document.getElementById('largeformatMarginV');
+        if (marginH && marginV) {
+            marginV.value = marginH.value;
+            updateLargeFormatPreview();
+        }
+    }
+}
+
+// Toggle cán màng
+function toggleLargeFormatLamination() {
+    const checkbox = document.getElementById('largeformatLaminate');
+    const select = document.getElementById('largeformatLamType');
+    if (checkbox && select) {
+        select.disabled = !checkbox.checked;
+        if (checkbox.checked) {
+            select.value = 'matte';
+        } else {
+            select.value = 'none';
+        }
+        toggleLargeFormatLam2Sides();
+    }
+}
+
+function toggleLargeFormatLam2Sides() {
+    const lamType = document.getElementById('largeformatLamType')?.value || 'none';
+    const lam2SidesContainer = document.querySelector('#largeformat-calc .lam-2sides');
+    if (lam2SidesContainer) {
+        lam2SidesContainer.style.display = (lamType !== 'none') ? 'inline-flex' : 'none';
+    }
+}
+
+// Thêm chi phí phụ
+function addLargeFormatExtraCost() {
+    const container = document.getElementById('largeformatExtraCosts');
+    if (!container) return;
+
+    const id = Date.now();
+    const html = `
+        <div class="extra-cost-item" data-id="${id}">
+            <input type="text" placeholder="Tên chi phí" class="extra-cost-name">
+            <input type="number" placeholder="Số tiền" class="extra-cost-amount" value="0">
+            <button type="button" class="btn-remove-extra" onclick="removeLargeFormatExtraCost(${id})">×</button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+}
+
+function removeLargeFormatExtraCost(id) {
+    const item = document.querySelector(`#largeformatExtraCosts .extra-cost-item[data-id="${id}"]`);
+    if (item) item.remove();
+}
+
+function addLargeFormatDeliverySuggestion() {
+    const select = document.getElementById('largeformatDeliverySuggestions');
+    if (!select || !select.value) return;
+
+    const [name, amount] = select.value.split('|');
+    const container = document.getElementById('largeformatExtraCosts');
+    if (!container) return;
+
+    const id = Date.now();
+    const html = `
+        <div class="extra-cost-item" data-id="${id}">
+            <input type="text" placeholder="Tên chi phí" class="extra-cost-name" value="${name}">
+            <input type="number" placeholder="Số tiền" class="extra-cost-amount" value="${amount}">
+            <button type="button" class="btn-remove-extra" onclick="removeLargeFormatExtraCost(${id})">×</button>
+        </div>
+    `;
+    container.insertAdjacentHTML('beforeend', html);
+    select.value = '';
+}
+
+// Hàm tính giá In Khổ Lớn (stub - cần implement đầy đủ sau)
+function calculateLargeFormat() {
+    showToast('📐 Tính giá In Khổ Lớn - Đang phát triển. Vui lòng sử dụng In Nhanh và chọn khổ giấy lớn trong cài đặt!', 'info');
+
+    // Hiển thị notification
+    const notification = document.getElementById('largeformatCalcNotification');
+    if (notification) {
+        notification.style.display = 'block';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+}
+
+// Toggle chi tiết cost
+function toggleLargeFormatCostDetail() {
+    const section = document.getElementById('largeformatCostDetailSection');
+    const summarySection = document.getElementById('largeformatCostSummarySection');
+    const icon = document.getElementById('largeformatCostDetailToggleIcon');
+    const text = document.getElementById('largeformatCostDetailToggleText');
+
+    if (section && summarySection) {
+        const isHidden = section.style.display === 'none';
+        section.style.display = isHidden ? 'grid' : 'none';
+        summarySection.style.display = isHidden ? 'flex' : 'none';
+
+        if (icon) icon.textContent = isHidden ? '👁️' : '👁️‍🗨️';
+        if (text) text.textContent = isHidden ? 'Ẩn chi tiết' : 'Xem chi tiết';
+    }
+}
+
+// History functions
+function filterLargeFormatHistory() {
+    // TODO: Implement filter
+}
+
+function clearLargeFormatHistory() {
+    if (confirm('Bạn có chắc muốn xóa tất cả lịch sử tính giá In Khổ Lớn?')) {
+        localStorage.removeItem('largeformat_history');
+        loadHistory('largeformat');
+        showToast('Đã xóa lịch sử In Khổ Lớn!');
+    }
+}
+
+// Populate dropdowns for large format
+function populateLargeFormatDropdowns() {
+    // Populate paper type dropdown
+    const paperTypeSelect = document.getElementById('largeformatPaperType');
+    if (paperTypeSelect && paperTypeSelect.options.length === 0) {
+        const settings = JSON.parse(localStorage.getItem('netprint_settings') || '{}');
+        const paperSettings = settings.paper || PAPER_SETTINGS;
+
+        Object.keys(paperSettings.paperTypes || {}).forEach(key => {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = paperSettings.paperTypes[key].name;
+            paperTypeSelect.appendChild(option);
+        });
+    }
+
+    // Populate customer type dropdown
+    const customerTypeSelect = document.getElementById('largeformatCustomerType');
+    if (customerTypeSelect && customerTypeSelect.options.length === 0) {
+        const settings = JSON.parse(localStorage.getItem('netprint_settings') || '{}');
+        const percentSettings = settings.percent || PERCENT_SETTINGS;
+
+        percentSettings.forEach(customer => {
+            const option = document.createElement('option');
+            option.value = customer.name;
+            option.textContent = `${customer.name} (+${customer.percent}%)`;
+            customerTypeSelect.appendChild(option);
+        });
+    }
+}
+
+// Initialize large format calculator on page load
+document.addEventListener('DOMContentLoaded', function () {
+    // Populate dropdowns when switching to largeformat tab
+    const originalShowSubTab = window.showSubTab;
+    if (typeof originalShowSubTab === 'function') {
+        window.showSubTab = function (section, tabName, btn) {
+            originalShowSubTab(section, tabName, btn);
+            if (section === 'largeformat' && tabName === 'calc') {
+                populateLargeFormatDropdowns();
+                updateLargeFormatPreview();
+            }
+        };
     }
 });

@@ -1,6 +1,31 @@
 // ===== HELPER FUNCTIONS - CẤU TRÚC MỚI =====
 
 /**
+ * Format kích thước giấy từ mm sang cm, bỏ số thập phân .0 nếu là số nguyên
+ * Ví dụ: 325 → "32.5", 430 → "43", 330 → "33"
+ */
+function formatMmToCm(mm) {
+    const cm = mm / 10;
+    return cm % 1 === 0 ? cm.toFixed(0) : cm.toFixed(1);
+}
+
+/**
+ * Format tên khổ giấy chuẩn: "Khổ (W × H) cm"
+ * @param {Object} size - { w: mm, h: mm }
+ * @returns {string} ví dụ: "Khổ (32.5 × 43) cm"
+ */
+function formatSizeName(size) {
+    return `Khổ (${formatMmToCm(size.w)} × ${formatMmToCm(size.h)}) cm`;
+}
+
+/**
+ * Format tên ngắn (không có "Khổ"): "32.5 × 43 cm"
+ */
+function formatSizeShort(size) {
+    return `${formatMmToCm(size.w)} × ${formatMmToCm(size.h)} cm`;
+}
+
+/**
  * Lấy tất cả loại giấy từ cấu trúc mới (flatten từ printSizes + paperPricing)
  * Trả về array với format: { id, name, w, h, printSizeId, tiers }
  */
@@ -43,7 +68,7 @@ function getUniquePaperNames() {
         normalizedName = normalizedName.replace(/\s+/g, ' ');
         // Normalize unicode (chữ có dấu)
         normalizedName = normalizedName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').normalize('NFC');
-        
+
         if (normalizedName && !seenNames.has(normalizedName)) {
             seenNames.set(normalizedName, paper);
         }
@@ -59,7 +84,7 @@ function getUniquePaperNames() {
 
     // Debug: Log để kiểm tra
     console.log('📋 getUniquePaperNames - Total papers:', allPapers.length, 'Unique:', uniquePapers.length);
-    
+
     // Kiểm tra Decal nhựa sữa
     const allDecalNhuaSua = allPapers.filter(p => {
         const name = (p.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
@@ -68,7 +93,7 @@ function getUniquePaperNames() {
     if (allDecalNhuaSua.length > 0) {
         console.log('🔍 All "Decal nhựa sữa" entries:', allDecalNhuaSua.map(p => `"${p.name}" (id: ${p.id})`));
     }
-    
+
     const uniqueDecalNhuaSua = uniquePapers.filter(p => {
         const name = (p.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
         return name.includes('decal') && name.includes('nhua') && name.includes('sua');
@@ -160,7 +185,7 @@ function migratePaperTypesToNewStructure(oldPaperTypes) {
             id: sizeId,
             w: group.w,
             h: group.h,
-            name: `${group.w} x ${group.h} mm`
+            name: formatSizeName({ w: group.w, h: group.h })
         });
 
         paperPricing.push({
@@ -239,7 +264,7 @@ function getPaperSizesByPaperId(paperId) {
 function onPaperTypeChange() {
     // Chỉ cập nhật preview, không cần filter khổ in
     // Khổ in đã được chọn trước, loại giấy chỉ được filter theo khổ in đó
-    
+
     // Cập nhật preview
     if (typeof updatePaperPreview === 'function') {
         updatePaperPreview();
@@ -265,7 +290,7 @@ function onPaperSizeChange() {
     // Re-populate dropdown loại giấy với danh sách khả dụng (unique theo tên)
     if (paperTypeSelect) {
         const currentPaperId = parseInt(paperTypeSelect.value);
-        
+
         // Tạo danh sách unique papers (theo tên)
         const uniqueAvailablePapers = [];
         const seenNames = new Set();
@@ -329,9 +354,9 @@ function populatePaperSizeDropdown() {
     // Lưu giá trị đang chọn
     const savedSize = sizeSelect.value;
 
-    // Populate dropdown
+    // Populate dropdown - dùng formatSizeName cho hiển thị đẹp
     sizeSelect.innerHTML = PAPER_SETTINGS.printSizes.map(size =>
-        `<option value="${size.id}">${size.name}</option>`
+        `<option value="${size.id}">${formatSizeName(size)}</option>`
     ).join('');
 
     // Khôi phục giá trị hoặc chọn mặc định (325 x 430 mm)
@@ -339,7 +364,7 @@ function populatePaperSizeDropdown() {
         sizeSelect.value = savedSize;
     } else {
         // Tìm khổ 325 x 430 mm (mặc định)
-        const defaultSize = PAPER_SETTINGS.printSizes.find(s => 
+        const defaultSize = PAPER_SETTINGS.printSizes.find(s =>
             (s.w === 325 && s.h === 430) || s.name === '325 x 430 mm'
         );
         if (defaultSize) {
@@ -352,4 +377,224 @@ function populatePaperSizeDropdown() {
 
     // Trigger change để filter loại giấy theo khổ in mặc định
     onPaperSizeChange();
+}
+
+// ===== CUSTOM PRICE - Nhập giá tay =====
+
+/**
+ * Toggle bật/tắt chế độ nhập giá tay
+ */
+function toggleCustomPrice() {
+    const btn = document.getElementById('btnCustomPriceToggle');
+    const customPriceInput = document.getElementById('customPriceInput');
+    const paperTypeSearch = document.getElementById('paperTypeSearch');
+    const paperTypeSelect = document.getElementById('paperType');
+
+    if (!btn || !customPriceInput) return;
+
+    const isActive = btn.classList.toggle('active');
+    customPriceInput.style.display = isActive ? 'block' : 'none';
+
+    // Khi bật toggle: cho phép nhập tên loại giấy tuỳ ý
+    if (isActive) {
+        // Lưu giá trị cũ để restore khi tắt
+        if (paperTypeSearch && !paperTypeSearch.dataset.originalValue) {
+            paperTypeSearch.dataset.originalValue = paperTypeSearch.value;
+        }
+
+        // Cho phép nhập tên tuỳ ý - thay placeholder
+        if (paperTypeSearch) {
+            paperTypeSearch.placeholder = '✍️ Nhập tên loại giấy...';
+            paperTypeSearch.value = ''; // Xoá để nhập mới
+            paperTypeSearch.style.borderColor = '#ff9800';
+            paperTypeSearch.style.background = 'linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)';
+        }
+
+        // Ẩn dropdown select
+        if (paperTypeSelect) {
+            paperTypeSelect.style.display = 'none';
+        }
+
+        // Focus vào ô nhập giá
+        const priceInput = document.getElementById('paperCustomPrice');
+        if (priceInput) {
+            priceInput.focus();
+            priceInput.select();
+        }
+    } else {
+        // Khi tắt toggle: quay về chức năng tìm kiếm bình thường
+        if (paperTypeSearch) {
+            paperTypeSearch.placeholder = '🔍 Tìm kiếm loại giấy...';
+            // Restore giá trị cũ nếu có
+            if (paperTypeSearch.dataset.originalValue) {
+                paperTypeSearch.value = paperTypeSearch.dataset.originalValue;
+                delete paperTypeSearch.dataset.originalValue;
+            }
+            paperTypeSearch.style.borderColor = '';
+            paperTypeSearch.style.background = '';
+        }
+
+        // Hiện lại dropdown select
+        if (paperTypeSelect) {
+            paperTypeSelect.style.display = '';
+        }
+    }
+
+    // Cập nhật preview
+    if (typeof updatePaperPreview === 'function') {
+        updatePaperPreview();
+    }
+}
+
+/**
+ * Kiểm tra xem chế độ nhập giá tay có đang bật không
+ */
+function isCustomPriceEnabled() {
+    const btn = document.getElementById('btnCustomPriceToggle');
+    return btn && btn.classList.contains('active');
+}
+
+/**
+ * Lấy giá tuỳ chỉnh từ input (nếu đang bật chế độ nhập giá tay)
+ */
+function getCustomPaperPrice() {
+    if (!isCustomPriceEnabled()) return null;
+
+    const customPriceInputEl = document.getElementById('paperCustomPrice');
+    if (!customPriceInputEl) return null;
+
+    const price = parseInt(customPriceInputEl.value) || 0;
+    return price;
+}
+
+// ===== CATALOGUE CUSTOM PRICE =====
+
+/**
+ * Toggle bật/tắt nhập giá tay cho Giấy BÌA Catalogue
+ */
+function toggleCatCoverCustomPrice() {
+    const btn = document.getElementById('btnCatCoverCustomPrice');
+    const customPriceInput = document.getElementById('catCoverCustomPriceInput');
+    const paperTypeSelect = document.getElementById('catCoverPaperType');
+    const paperNameInput = document.getElementById('catCoverPaperName');
+
+    if (!btn || !customPriceInput) return;
+
+    const isActive = btn.classList.toggle('active');
+    customPriceInput.style.display = isActive ? 'block' : 'none';
+
+    // Hiện/ẩn ô nhập tên giấy và dropdown select
+    if (isActive) {
+        // Ẩn dropdown, hiện ô nhập tên
+        if (paperTypeSelect) paperTypeSelect.style.display = 'none';
+        if (paperNameInput) {
+            paperNameInput.style.display = 'block';
+            paperNameInput.focus();
+        }
+
+        // Focus vào ô nhập giá
+        const priceInput = document.getElementById('catCoverCustomPrice');
+        if (priceInput) {
+            setTimeout(() => {
+                priceInput.focus();
+                priceInput.select();
+            }, 100);
+        }
+    } else {
+        // Hiện lại dropdown, ẩn ô nhập tên
+        if (paperTypeSelect) paperTypeSelect.style.display = '';
+        if (paperNameInput) {
+            paperNameInput.style.display = 'none';
+            paperNameInput.value = ''; // Xoá giá trị
+        }
+    }
+
+    if (typeof updateCatCalculation === 'function') {
+        updateCatCalculation();
+    }
+}
+
+/**
+ * Toggle bật/tắt nhập giá tay cho Giấy RUỘT Catalogue
+ */
+function toggleCatInnerCustomPrice() {
+    const btn = document.getElementById('btnCatInnerCustomPrice');
+    const customPriceInput = document.getElementById('catInnerCustomPriceInput');
+    const paperTypeSelect = document.getElementById('catInnerPaperType');
+    const paperNameInput = document.getElementById('catInnerPaperName');
+
+    if (!btn || !customPriceInput) return;
+
+    const isActive = btn.classList.toggle('active');
+    customPriceInput.style.display = isActive ? 'block' : 'none';
+
+    // Hiện/ẩn ô nhập tên giấy và dropdown select
+    if (isActive) {
+        // Ẩn dropdown, hiện ô nhập tên
+        if (paperTypeSelect) paperTypeSelect.style.display = 'none';
+        if (paperNameInput) {
+            paperNameInput.style.display = 'block';
+            paperNameInput.focus();
+        }
+
+        // Focus vào ô nhập giá
+        const priceInput = document.getElementById('catInnerCustomPrice');
+        if (priceInput) {
+            setTimeout(() => {
+                priceInput.focus();
+                priceInput.select();
+            }, 100);
+        }
+    } else {
+        // Hiện lại dropdown, ẩn ô nhập tên
+        if (paperTypeSelect) paperTypeSelect.style.display = '';
+        if (paperNameInput) {
+            paperNameInput.style.display = 'none';
+            paperNameInput.value = ''; // Xoá giá trị
+        }
+    }
+
+    if (typeof updateCatCalculation === 'function') {
+        updateCatCalculation();
+    }
+}
+
+/**
+ * Kiểm tra toggle giá tay BÌA có bật không
+ */
+function isCatCoverCustomPriceEnabled() {
+    const btn = document.getElementById('btnCatCoverCustomPrice');
+    return btn && btn.classList.contains('active');
+}
+
+/**
+ * Kiểm tra toggle giá tay RUỘT có bật không
+ */
+function isCatInnerCustomPriceEnabled() {
+    const btn = document.getElementById('btnCatInnerCustomPrice');
+    return btn && btn.classList.contains('active');
+}
+
+/**
+ * Lấy giá tuỳ chỉnh BÌA
+ */
+function getCatCoverCustomPrice() {
+    if (!isCatCoverCustomPriceEnabled()) return null;
+
+    const input = document.getElementById('catCoverCustomPrice');
+    if (!input) return null;
+
+    return parseInt(input.value) || 0;
+}
+
+/**
+ * Lấy giá tuỳ chỉnh RUỘT
+ */
+function getCatInnerCustomPrice() {
+    if (!isCatInnerCustomPriceEnabled()) return null;
+
+    const input = document.getElementById('catInnerCustomPrice');
+    if (!input) return null;
+
+    return parseInt(input.value) || 0;
 }
