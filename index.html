@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="paper_pricing_settings.css">
     <link rel="stylesheet" href="settings_panel.css">
     <link rel="stylesheet" href="paper_history.css">
+    <link rel="stylesheet" href="customer_management.css">
+    <link rel="stylesheet" href="order_management.css">
+    <link rel="stylesheet" href="modern_theme.css">
 </head>
 
 <body>
@@ -132,37 +135,31 @@
             <div class="sidebar-section">
                 <h3 class="section-title">TÍNH GIÁ</h3>
                 <div class="menu-grid">
-                    <a class="menu-item" href="?tab=paper"
-                        onclick="event.preventDefault(); goToHome(); showSubTab('paper','calc', null)"
-                        title="Tính giá in nhanh" data-tags="tính giá in nhanh,in nhanh,giấy" data-context="paper">
+                    <a class="menu-item" href="?tab=paper" data-newtab="paper"
+                        onmousedown="handleMenuClick(event, 'paper', function(){ goToHome(); showSubTab('paper','calc', null); })"
+                        onclick="event.preventDefault()" title="Tính giá in nhanh (Ctrl+Click = mở tab mới)"
+                        data-tags="tính giá in nhanh,in nhanh,giấy" data-context="paper">
                         <div class="menu-icon" style="background: #e3f2fd; color: #2196f3;">
                             <span style="font-size: 24px;">🧮</span>
                         </div>
                         <span class="menu-label">In Nhanh</span>
                     </a>
-                    <a class="menu-item" href="?tab=catalogue"
-                        onclick="event.preventDefault(); goToHome(); showSubTab('catalogue','calc', null)"
-                        title="In Catalogue">
+                    <a class="menu-item" href="?tab=catalogue" data-newtab="catalogue"
+                        onmousedown="handleMenuClick(event, 'catalogue', function(){ goToHome(); showSubTab('catalogue','calc', null); })"
+                        onclick="event.preventDefault()" title="In Catalogue (Ctrl+Click = mở tab mới)">
                         <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
                             <span style="font-size: 24px;">📚</span>
                         </div>
                         <span class="menu-label">In Catalogue</span>
                     </a>
-                    <a class="menu-item" href="?tab=largeformat"
-                        onclick="event.preventDefault(); goToHome(); showSubTab('largeformat','calc', null)"
-                        title="In Khổ Lớn (>48cm)" data-tags="in khổ lớn,33x65,khổ lớn">
+                    <a class="menu-item" href="?tab=largeformat" data-newtab="largeformat"
+                        onmousedown="handleMenuClick(event, 'largeformat', function(){ goToHome(); showSubTab('largeformat','calc', null); })"
+                        onclick="event.preventDefault()" title="In Khổ Lớn (>48cm) (Ctrl+Click = mở tab mới)"
+                        data-tags="in khổ lớn,33x65,khổ lớn">
                         <div class="menu-icon" style="background: #fce4ec; color: #e91e63;">
                             <span style="font-size: 24px;">📐</span>
                         </div>
                         <span class="menu-label">In Khổ Lớn</span>
-                    </a>
-                    <a class="menu-item" href="?tab=order"
-                        onclick="event.preventDefault(); showToast('🧾 Tính giá đơn hàng đang phát triển')"
-                        title="Tính giá đơn hàng">
-                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
-                            <span style="font-size: 24px;">🧾</span>
-                        </div>
-                        <span class="menu-label">TG Đơn Hàng</span>
                     </a>
                 </div>
             </div>
@@ -171,93 +168,27 @@
             <div class="sidebar-section">
                 <h3 class="section-title">CRM</h3>
                 <div class="menu-grid">
-                    <a class="menu-item" href="?tab=sales"
-                        onclick="event.preventDefault(); showToast('🛒 Bán hàng đang phát triển')">
+                    <a class="menu-item" href="?tab=orders" data-newtab="orders"
+                        onmousedown="handleMenuClick(event, 'orders', function(){ showTab('orders-tab'); initOrderModule(); })"
+                        onclick="event.preventDefault()" title="Quản lý đơn hàng (Ctrl+Click = mở tab mới)">
                         <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
-                            <span style="font-size: 24px;">🛒</span>
+                            <span style="font-size: 24px;">📦</span>
                         </div>
-                        <span class="menu-label">Bán hàng</span>
+                        <span class="menu-label">Đơn hàng</span>
                     </a>
-                    <a class="menu-item" href="?tab=customers"
-                        onclick="event.preventDefault(); showToast('💬 Khách hàng đang phát triển')">
+                    <a class="menu-item" href="?tab=customers" data-newtab="customers"
+                        onmousedown="handleMenuClick(event, 'customers', function(){ showTab('customers-tab'); initCustomerModule(); })"
+                        onclick="event.preventDefault()" title="Quản lý khách hàng (Ctrl+Click = mở tab mới)">
                         <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
                             <span style="font-size: 24px;">💬</span>
                         </div>
                         <span class="menu-label">Khách hàng</span>
                     </a>
-                    <a class="menu-item" href="?tab=warehouse"
-                        onclick="event.preventDefault(); showToast('📦 Kho hàng đang phát triển')">
-                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
-                            <span style="font-size: 24px;">📦</span>
-                        </div>
-                        <span class="menu-label">Kho hàng</span>
-                    </a>
-                    <a class="menu-item" href="?tab=purchase"
-                        onclick="event.preventDefault(); showToast('🛍️ Mua hàng đang phát triển')">
-                        <div class="menu-icon" style="background: #f3e5f5; color: #9c27b0;">
-                            <span style="font-size: 24px;">🛍️</span>
-                        </div>
-                        <span class="menu-label">Mua hàng</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- WORKPLACE Section -->
-            <div class="sidebar-section">
-                <h3 class="section-title">WORKPLACE</h3>
-                <div class="menu-grid">
-                    <a class="menu-item" href="?tab=tasks"
-                        onclick="event.preventDefault(); showToast('📋 Công việc đang phát triển')">
-                        <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
-                            <span style="font-size: 24px;">📋</span>
-                        </div>
-                        <span class="menu-label">Công việc</span>
-                    </a>
-                    <a class="menu-item" href="?tab=documents"
-                        onclick="event.preventDefault(); showToast('📖 Tài liệu đang phát triển')">
-                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
-                            <span style="font-size: 24px;">📖</span>
-                        </div>
-                        <span class="menu-label">Tài liệu</span>
-                    </a>
-                    <a class="menu-item" href="?tab=calendar"
-                        onclick="event.preventDefault(); showToast('📅 Lịch biểu đang phát triển')">
-                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
-                            <span style="font-size: 24px;">📅</span>
-                        </div>
-                        <span class="menu-label">Lịch biểu</span>
-                    </a>
-                    <a class="menu-item" href="?tab=files"
-                        onclick="event.preventDefault(); showToast('📄 Văn bản đang phát triển')">
-                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
-                            <span style="font-size: 24px;">📄</span>
-                        </div>
-                        <span class="menu-label">Văn bản</span>
-                    </a>
-                </div>
-            </div>
-
-            <!-- HRM Section -->
-            <div class="sidebar-section">
-                <h3 class="section-title">HRM</h3>
-                <div class="menu-grid">
-                    <a class="menu-item" href="?tab=hr"
-                        onclick="event.preventDefault(); showToast('👥 Nhân sự đang phát triển')">
-                        <div class="menu-icon" style="background: #e8f5e9; color: #4caf50;">
-                            <span style="font-size: 24px;">👥</span>
-                        </div>
-                        <span class="menu-label">Nhân sự</span>
-                    </a>
-                    <a class="menu-item" href="?tab=payroll"
-                        onclick="event.preventDefault(); showToast('💰 Bảng lương đang phát triển')">
-                        <div class="menu-icon" style="background: #ffebee; color: #f44336;">
-                            <span style="font-size: 24px;">💰</span>
-                        </div>
-                        <span class="menu-label">Bảng lương</span>
-                    </a>
                 </div>
             </div>
         </div>
+    </div>
+    </div>
     </div>
 
     <!-- Main App -->
@@ -279,7 +210,8 @@
                         <div class="dropdown-user-info">
                             <span id="userDisplay"></span>
                         </div>
-                        <button class="dropdown-item admin-only" onclick="showTab('users'); closeHamburgerMenu();">
+                        <button class="dropdown-item admin-only" data-newtab="settings"
+                            onmousedown="handleMenuClick(event, 'settings', function(){ showTab('users'); closeHamburgerMenu(); })">
                             ⚙️ Cài đặt
                         </button>
                         <button class="dropdown-item" onclick="goBack(); closeHamburgerMenu();">
@@ -299,11 +231,15 @@
             <!-- Header với sub-tabs - Lịch sử nằm góc phải -->
             <div class="sub-tabs-header">
                 <div class="sub-tabs-left">
-                    <button class="sub-tab active" onclick="showSubTab('paper', 'calc', this)">🧮 Tính Giá In
+                    <button class="sub-tab active" data-newtab="paper" data-newsub="calc"
+                        onmousedown="handleSubTabClick(event, 'paper', 'calc', function(){ showSubTab('paper', 'calc', event.target); })">🧮
+                        Tính Giá In
                         Nhanh</button>
                 </div>
                 <div class="sub-tabs-right">
-                    <button class="sub-tab" onclick="showSubTab('paper', 'history', this)">📋 Lịch Sử Tính Giá</button>
+                    <button class="sub-tab" data-newtab="paper" data-newsub="history"
+                        onmousedown="handleSubTabClick(event, 'paper', 'history', function(){ showSubTab('paper', 'history', event.target); })">📋
+                        Lịch Sử Tính Giá</button>
                 </div>
             </div>
 
@@ -595,11 +531,15 @@
             <!-- Header với sub-tabs -->
             <div class="sub-tabs-header">
                 <div class="sub-tabs-left">
-                    <button class="sub-tab active" onclick="showSubTab('largeformat', 'calc', this)">📐 Tính Giá In Khổ
+                    <button class="sub-tab active"
+                        onmousedown="handleSubTabClick(event, 'largeformat', 'calc', function(){ showSubTab('largeformat', 'calc', event.target); })">📐
+                        Tính Giá In Khổ
                         Lớn</button>
                 </div>
                 <div class="sub-tabs-right">
-                    <button class="sub-tab" onclick="showSubTab('largeformat', 'history', this)">📋 Lịch Sử Tính
+                    <button class="sub-tab"
+                        onmousedown="handleSubTabClick(event, 'largeformat', 'history', function(){ showSubTab('largeformat', 'history', event.target); })">📋
+                        Lịch Sử Tính
                         Giá</button>
                 </div>
             </div>
@@ -853,11 +793,15 @@
             <!-- Header với sub-tabs - Lịch sử nằm góc phải -->
             <div class="sub-tabs-header">
                 <div class="sub-tabs-left">
-                    <button class="sub-tab active" onclick="showSubTab('catalogue', 'calc', this)">📚 Tính Giá
+                    <button class="sub-tab active"
+                        onmousedown="handleSubTabClick(event, 'catalogue', 'calc', function(){ showSubTab('catalogue', 'calc', event.target); })">📚
+                        Tính Giá
                         Catalogue</button>
                 </div>
                 <div class="sub-tabs-right">
-                    <button class="sub-tab" onclick="showSubTab('catalogue', 'history', this)">📋 Lịch Sử Tính
+                    <button class="sub-tab"
+                        onmousedown="handleSubTabClick(event, 'catalogue', 'history', function(){ showSubTab('catalogue', 'history', event.target); })">📋
+                        Lịch Sử Tính
                         Giá</button>
                 </div>
             </div>
@@ -1190,8 +1134,12 @@
         <section id="users" class="tab-content" style="display:none;">
             <!-- Menu Tabs -->
             <div class="settings-menu-tabs">
-                <button class="settings-menu-tab active" onclick="showSettingsTab('price')">💰 Cài đặt giá</button>
-                <button class="settings-menu-tab" onclick="showSettingsTab('account')">👥 Cài đặt tài khoản</button>
+                <button class="settings-menu-tab active"
+                    onmousedown="handleSubTabClick(event, 'settings', 'price', function(){ showSettingsTab('price'); })">💰
+                    Cài đặt giá</button>
+                <button class="settings-menu-tab"
+                    onmousedown="handleSubTabClick(event, 'settings', 'account', function(){ showSettingsTab('account'); })">👥
+                    Cài đặt tài khoản</button>
             </div>
 
             <!-- Tab: Cài đặt giá -->
@@ -1342,6 +1290,15 @@
             </div>
 
         </section>
+        <section id="customers-tab" class="tab-content" style="display:none;">
+            <!-- Nội dung từ customer_management.js -->
+        </section>
+
+        <!-- ==================== ORDER MANAGEMENT ==================== -->
+        <section id="orders-tab" class="tab-content" style="display:none;">
+            <!-- Nội dung từ order_management.js -->
+        </section>
+
     </div>
 
     <!-- Setting Edit Modal -->
@@ -1403,7 +1360,209 @@
     <script src="catalogue_history_integration.js?v=20260129220000"></script>
     <script src="settings_panel.js?v=20260227000000"></script>
     <script src="backup_restore.js?v=20260130100000"></script>
+    <script src="customer_management.js"></script>
+    <script src="order_management.js"></script>
 
+    <!-- Customer Add/Edit Modal (Modern Design) -->
+    <div id="customerModal" class="modal" style="display: none;">
+        <div class="modal-content customer-form-modal">
+            <div class="crm-modal-header">
+                <h2 id="customerModalTitle">➕ THÊM KHÁCH HÀNG</h2>
+                <span class="close" onclick="closeCustomerModal()">&times;</span>
+            </div>
+            <div class="crm-modal-body">
+                <form id="customerForm">
+                    <input type="hidden" id="customerId">
+
+                    <span class="form-section-title">Thông tin cơ bản</span>
+                    <div class="crm-grid">
+                        <div class="crm-input-group">
+                            <label>Mã khách hàng</label>
+                            <input type="text" id="custCode" disabled placeholder="Tự động">
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Loại khách</label>
+                            <select id="custType">
+                                <option value="Khách lẻ">👤 Khách lẻ</option>
+                                <option value="Đại lí cấp 1">🥇 Đại lí cấp 1</option>
+                                <option value="Đại lí cấp 2">🥈 Đại lí cấp 2</option>
+                                <option value="Hàng gấp">⚡ Hàng gấp</option>
+                            </select>
+                        </div>
+                        <div class="crm-input-group crm-grid-full">
+                            <label>Tên khách hàng *</label>
+                            <input type="text" id="custName" placeholder="Nhập họ tên hoặc tên công ty" required>
+                        </div>
+                    </div>
+
+                    <div style="height: 25px;"></div>
+
+                    <span class="form-section-title">Thông tin liên hệ & Tài chính</span>
+                    <div class="crm-grid">
+                        <div class="crm-input-group">
+                            <label>Số điện thoại *</label>
+                            <input type="text" id="custPhone" placeholder="09xxxxxxx" required>
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Email</label>
+                            <input type="email" id="custEmail" placeholder="example@gmail.com">
+                        </div>
+                        <div class="crm-input-group crm-grid-full">
+                            <label>Địa chỉ</label>
+                            <input type="text" id="custAddress" placeholder="Số nhà, tên đường, khu vực...">
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Công nợ ban đầu (đ)</label>
+                            <input type="number" id="custDebt" value="0">
+                        </div>
+                    </div>
+
+                    <div style="height: 25px;"></div>
+
+                    <span class="form-section-title">Ghi chú khác</span>
+                    <div class="crm-input-group">
+                        <textarea id="custNote" rows="3"
+                            placeholder="Sở thích mẫu giấy, các lưu ý đặc biệt..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn-crm-cancel" onclick="closeCustomerModal()">Hủy bỏ</button>
+                <button class="btn-crm-save" onclick="saveCustomer()">
+                    <span>💾 Lưu thông tin</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Add/Edit Modal (Modern Design) -->
+    <div id="orderModal" class="modal" style="display: none;">
+        <div class="modal-content customer-form-modal" style="max-width: 700px !important;">
+            <div class="crm-modal-header">
+                <h2 id="orderModalTitle">➕ TẠO ĐƠN HÀNG MỚI</h2>
+                <span class="close" onclick="closeOrderModal()">&times;</span>
+            </div>
+            <div class="crm-modal-body">
+                <form id="orderForm">
+                    <input type="hidden" id="orderId">
+
+                    <span class="form-section-title">Thông tin chung</span>
+                    <div class="crm-grid">
+                        <div class="crm-input-group">
+                            <label>Mã đơn hàng</label>
+                            <input type="text" id="orderCode" disabled placeholder="Tự động">
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Ngày tạo</label>
+                            <input type="text" id="orderDate" disabled>
+                        </div>
+                        <div class="crm-input-group crm-grid-full">
+                            <label>Chọn khách hàng *</label>
+                            <select id="orderCustomerId" required>
+                                <option value="">-- Chọn khách hàng --</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="height: 25px;"></div>
+
+                    <span class="form-section-title">Nội dung sản xuất & Thanh toán</span>
+                    <div class="crm-grid">
+                        <div class="crm-input-group crm-grid-full">
+                            <label>Nội dung in ấn *</label>
+                            <textarea id="orderItems" rows="3"
+                                placeholder="Ví dụ: 50 cuốn catalogue, 10 hộp namecard..." required></textarea>
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Tổng thành tiền (đ) *</label>
+                            <input type="number" id="orderTotal" placeholder="0" required>
+                        </div>
+                        <div class="crm-input-group">
+                            <label>Trạng thái</label>
+                            <select id="orderStatus">
+                                <option value="PENDING">⏳ Đang chờ</option>
+                                <option value="PRINTING">🖨️ Đang in</option>
+                                <option value="DONE">✅ Xong</option>
+                                <option value="DELIVERED">🚚 Đã giao</option>
+                                <option value="CANCELLED">❌ Đã hủy</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="crm-modal-footer">
+                <button class="btn-crm-cancel" onclick="closeOrderModal()">Hủy bỏ</button>
+                <button class="btn-crm-save" onclick="saveOrder()">
+                    <span>💾 Lưu đơn hàng</span>
+                </button>
+            </div>
+        </div>
+        <!-- Order Settings Modal (New) -->
+        <div id="orderSettingsModal" class="modal" style="display: none;">
+            <div class="modal-content customer-form-modal" style="max-width: 600px !important;">
+                <div class="crm-modal-header">
+                    <h2>⚙️ CÀI ĐẶT ĐƠN HÀNG</h2>
+                    <span class="close" onclick="closeOrderSettingsModal()">&times;</span>
+                </div>
+                <div class="crm-modal-body">
+                    <span class="form-section-title">Cài đặt chung</span>
+                    <div class="crm-input-group"
+                        style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                        <label>Mã đơn hàng</label>
+                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">Cấu trúc mã tự sinh, bộ đếm bắt
+                            đầu, cho phép sửa tay.</p>
+
+                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
+                            <div class="crm-input-group">
+                                <label style="font-size: 0.8rem;">Cấu trúc mã</label>
+                                <input type="text" id="setOrderStruct" placeholder="DH{count,2} - 2026">
+                                <small color="#64748b">Sử dụng tag {count} hoặc {count,n} để định dạng số nhảy.</small>
+                            </div>
+
+                            <div class="crm-input-group">
+                                <label style="font-size: 0.8rem;">Bộ đếm tự động bắt đầu từ</label>
+                                <input type="number" id="setOrderStart" value="150">
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Cho phép chỉnh sửa
+                                    mã</label>
+                                <label class="crm-switch">
+                                    <input type="checkbox" id="setOrderAllowEdit" checked>
+                                    <span class="crm-slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <span class="form-section-title">Người phụ trách & Giá</span>
+                    <div class="crm-input-group" style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Người phụ trách mặc
+                                định</label>
+                            <select style="width: 200px;">
+                                <option value="creator">Người tạo đơn hàng</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Tắt tùy chỉnh giá sản
+                                phẩm</label>
+                            <label class="crm-switch">
+                                <input type="checkbox">
+                                <span class="crm-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="crm-modal-footer">
+                    <button class="btn-crm-cancel" onclick="closeOrderSettingsModal()">Hủy bỏ</button>
+                    <button class="btn-crm-save" onclick="saveOrderSettings()">
+                        <span>💾 Lưu cài đặt</span>
+                    </button>
+                </div>
+            </div>
+        </div>
 </body>
 
 </html>

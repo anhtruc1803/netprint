@@ -1,0 +1,218 @@
+/* 
+    NETPRINT - ORDER MANAGEMENT PREMIUM STYLES
+*/
+
+:root {
+    --order-pending: #f59e0b;
+    --order-printing: #3b82f6;
+    --order-done: #10b981;
+    --order-delivered: #6366f1;
+    --order-cancelled: #ef4444;
+}
+
+.order-management-wrapper {
+    padding: 1rem;
+    background: #f5f7fb;
+    min-height: calc(100vh - 100px);
+    border-radius: 12px;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-printing {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-done {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-delivered {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Order Table Specifics */
+.order-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    color: #206bc4;
+}
+
+.order-customer-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-cust-name {
+    font-weight: 700;
+    color: #1d273b;
+}
+
+.order-cust-phone {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.order-price {
+    font-weight: 800;
+    color: #1a202c;
+}
+
+/* Floating Action Button or Header Button */
+.crm-btn-add-order {
+    background: linear-gradient(135deg, #206bc4 0%, #1555a3 100%);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(32, 107, 196, 0.25);
+    transition: all 0.3s;
+}
+
+.crm-btn-add-order:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(32, 107, 196, 0.35);
+}
+
+/* Order Modal Customizations */
+.order-form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+}
+
+.order-items-list {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.order-summary-panel {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
+}
+
+.summary-total {
+    border-top: 2px dashed #e2e8f0;
+    margin-top: 15px;
+    padding-top: 15px;
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: #206bc4;
+}
+
+/* Thêm bổ sung cho Settings Modal */
+#orderSettingsModal .form-section-title {
+    margin-top: 5px;
+    margin-bottom: 15px;
+}
+
+#orderSettingsModal small {
+    display: block;
+    margin-top: 4px;
+    color: #94a3b8;
+    font-size: 0.75rem;
+}
+
+#orderSettingsModal input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--crm-primary);
+}
+
+.crm-btn-icon[title="Cài đặt mã đơn"] {
+    background: #f1f5f9;
+    border-radius: 8px;
+    padding: 8px;
+    width: 38px;
+    height: 38px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+}
+
+.crm-btn-icon[title="Cài đặt mã đơn"]:hover {
+    background: #e2e8f0;
+    transform: rotate(45deg);
+}
+
+/* Kiểu Switch cho Cài đặt */
+.crm-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+}
+
+.crm-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.crm-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.crm-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.crm-slider {
+    background-color: var(--crm-primary);
+}
+
+input:checked+.crm-slider:before {
+    transform: translateX(22px);
+}

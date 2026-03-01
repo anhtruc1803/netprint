@@ -11,22 +11,37 @@ let currentUser = null;
 function handleUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
     const tabParam = urlParams.get('tab');
+    const subParam = urlParams.get('sub'); // sub-tab: 'calc' hoặc 'history'
 
     if (tabParam) {
         console.log('=== URL PARAMETER DETECTED ===');
-        console.log('Tab parameter:', tabParam);
+        console.log('Tab parameter:', tabParam, '| Sub:', subParam);
 
         // Đợi một chút để đảm bảo DOM đã sẵn sàng
         setTimeout(() => {
             if (tabParam === 'paper') {
-                showSubTab('paper', 'calc', null);
+                showSubTab('paper', subParam || 'calc', null);
                 console.log('Switched to Paper tab from URL parameter');
             } else if (tabParam === 'catalogue') {
-                showSubTab('catalogue', 'calc', null);
+                showSubTab('catalogue', subParam || 'calc', null);
                 console.log('Switched to Catalogue tab from URL parameter');
             } else if (tabParam === 'largeformat') {
-                showSubTab('largeformat', 'calc', null);
+                showSubTab('largeformat', subParam || 'calc', null);
                 console.log('Switched to LargeFormat tab from URL parameter');
+            } else if (tabParam === 'customers') {
+                showTab('customers-tab');
+                initCustomerModule();
+                console.log('Switched to Customers tab from URL parameter');
+            } else if (tabParam === 'orders') {
+                showTab('orders-tab');
+                initOrderModule();
+                console.log('Switched to Orders tab from URL parameter');
+            } else if (tabParam === 'settings') {
+                showTab('users');
+                if (subParam === 'account' && typeof showSettingsTab === 'function') {
+                    setTimeout(() => showSettingsTab('account'), 100);
+                }
+                console.log('Switched to Settings tab from URL parameter');
             }
         }, 300);
 
@@ -34,6 +49,141 @@ function handleUrlParameters() {
     }
     return false; // Không có parameter
 }
+
+// Mở tab trình duyệt mới với tab chỉ định
+function openInNewTab(tabName, subTab) {
+    const baseUrl = window.location.origin + window.location.pathname;
+    let newUrl = baseUrl + '?tab=' + tabName;
+    if (subTab) {
+        newUrl += '&sub=' + subTab;
+    }
+    window.open(newUrl, '_blank');
+}
+
+// Xử lý click menu: Ctrl+Click hoặc Middle-Click = mở tab mới, Click thường = chuyển tab tại chỗ
+function handleMenuClick(event, tabName, normalAction) {
+    // Ctrl+Click hoặc Meta+Click (Mac) hoặc Middle-Click → mở tab mới
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        openInNewTab(tabName);
+        return;
+    }
+    // Click thường → chạy hành vi mặc định
+    event.preventDefault();
+    if (typeof normalAction === 'function') {
+        normalAction();
+    }
+}
+
+// Xử lý click sub-tab: Ctrl+Click = mở tab mới với sub-tab chỉ định
+function handleSubTabClick(event, mainTab, subTab, normalAction) {
+    if (event.ctrlKey || event.metaKey || event.button === 1) {
+        event.preventDefault();
+        event.stopPropagation();
+        openInNewTab(mainTab, subTab);
+        return;
+    }
+    event.preventDefault();
+    if (typeof normalAction === 'function') {
+        normalAction();
+    }
+}
+
+// ========================================
+// CUSTOM CONTEXT MENU (Chuột phải → Mở tab mới)
+// ========================================
+(function initContextMenu() {
+    // Tạo context menu element
+    const menu = document.createElement('div');
+    menu.id = 'customContextMenu';
+    menu.innerHTML = `
+        <div class="ctx-menu-item" id="ctxOpenNewTab">
+            <span>🔗</span> Mở trong tab mới
+        </div>
+    `;
+    menu.style.cssText = `
+        display: none;
+        position: fixed;
+        z-index: 99999;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.08);
+        padding: 6px;
+        min-width: 200px;
+        font-family: inherit;
+    `;
+    document.addEventListener('DOMContentLoaded', () => document.body.appendChild(menu));
+
+    // Style cho mục menu
+    const style = document.createElement('style');
+    style.textContent = `
+        #customContextMenu .ctx-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.15s ease;
+        }
+        #customContextMenu .ctx-menu-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+    `;
+    document.addEventListener('DOMContentLoaded', () => document.head.appendChild(style));
+
+    // Map phần tử → tab info
+    function getTabInfo(el) {
+        // Tìm element gần nhất có data-tab
+        const target = el.closest('[data-newtab]');
+        if (target) {
+            const tab = target.getAttribute('data-newtab');
+            const sub = target.getAttribute('data-newsub') || '';
+            return { tab, sub };
+        }
+        return null;
+    }
+
+    // Hiển thị menu
+    let currentTabInfo = null;
+    document.addEventListener('contextmenu', function (e) {
+        const info = getTabInfo(e.target);
+        if (info) {
+            e.preventDefault();
+            currentTabInfo = info;
+            menu.style.display = 'block';
+
+            // Vị trí menu
+            const x = e.clientX;
+            const y = e.clientY;
+            const menuW = menu.offsetWidth || 200;
+            const menuH = menu.offsetHeight || 50;
+            menu.style.left = (x + menuW > window.innerWidth ? x - menuW : x) + 'px';
+            menu.style.top = (y + menuH > window.innerHeight ? y - menuH : y) + 'px';
+        }
+    });
+
+    // Click vào "Mở trong tab mới"
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('#ctxOpenNewTab') && currentTabInfo) {
+            openInNewTab(currentTabInfo.tab, currentTabInfo.sub || undefined);
+            currentTabInfo = null;
+        }
+        menu.style.display = 'none';
+    });
+
+    // Ẩn menu khi cuộn hoặc nhấn Escape
+    document.addEventListener('scroll', () => menu.style.display = 'none');
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') menu.style.display = 'none';
+    });
+})();
 
 // ===== DEFAULT SETTINGS =====
 // Version cho settings - tăng lên khi có thay đổi
@@ -524,6 +674,11 @@ function showTab(tabId) {
         content.classList.add('active');
         content.style.display = 'block';
 
+        // Cập nhật tiêu đề chính dựa trên tabId
+        if (typeof updateMainTitle === 'function') {
+            updateMainTitle(tabId);
+        }
+
         // If users tab, load settings
         if (tabId === 'users') {
             loadUsers();
@@ -738,10 +893,11 @@ function savePaperSettings(silent = false) {
         });
     }
 
-    // Kiểm tra giá in 1 mặt
-    const printOneSide = PAPER_SETTINGS.printOptions.find(p => p.id === 1);
-    if (!printOneSide || !printOneSide.tiers || printOneSide.tiers.length === 0) {
-        errors.push('Cần cài đặt giá in 1 mặt với ít nhất 1 mốc số lượng');
+    // Kiểm tra giá in: ưu tiên printPricingBySize (cấu trúc mới), fallback printOptions (cũ)
+    const hasPrintPricingBySize = PAPER_SETTINGS.printPricingBySize && Object.keys(PAPER_SETTINGS.printPricingBySize).length > 0;
+    const printOneSide = PAPER_SETTINGS.printOptions?.find(p => p.id === 1);
+    if (!hasPrintPricingBySize && (!printOneSide || !printOneSide.tiers || printOneSide.tiers.length === 0)) {
+        errors.push('Cần cài đặt giá in với ít nhất 1 mốc số lượng');
     }
 
     // Kiểm tra cán màng
@@ -1018,7 +1174,7 @@ function showSubTab(section, tabName, btn) {
 }
 
 // Update main title based on active section
-function updateMainTitle(section) {
+function updateMainTitle(sectionOrId) {
     const mainTitle = document.getElementById('mainTitle');
     if (!mainTitle) return;
 
@@ -1027,10 +1183,24 @@ function updateMainTitle(section) {
         'catalogue': 'TÍNH GIÁ CATALOGUE',
         'largeformat': 'TÍNH GIÁ IN KHỔ LỚN',
         'label': 'TÍNH GIÁ TEM NHÃN',
-        'offset': 'TÍNH GIÁ OFFSET'
+        'offset': 'TÍNH GIÁ OFFSET',
+        'customers': 'QUẢN LÝ KHÁCH HÀNG',
+        'customers-tab': 'QUẢN LÝ KHÁCH HÀNG',
+        'orders': 'QUẢN LÝ ĐƠN HÀNG',
+        'orders-tab': 'QUẢN LÝ ĐƠN HÀNG',
+        'quotes': 'QUẢN LÝ BÁO GIÁ',
+        'quote-management-tab': 'QUẢN LÝ BÁO GIÁ',
+        'users': 'CÀI ĐẶT HỆ THỐNG',
+        'paper-calculator': 'TÍNH GIÁ IN NHANH'
     };
 
-    mainTitle.textContent = titles[section] || 'TÍNH GIÁ IN NHANH';
+    // Tìm tiêu đề tương ứng, nếu không có thì thử bỏ đuôi -tab
+    let title = titles[sectionOrId];
+    if (!title && typeof sectionOrId === 'string') {
+        title = titles[sectionOrId.replace('-tab', '')];
+    }
+
+    mainTitle.textContent = title || 'GIAO DIỆN QUẢN LÝ';
 }
 
 // Khôi phục tab đã lưu từ localStorage khi refresh trang
@@ -2331,8 +2501,6 @@ function calculatePaper() {
     // ===== 3. LẤY DỮ LIỆU TỪ SETTINGS (CẤU TRÚC MỚI) =====
     // Sử dụng helper functions từ paper_helpers.js
     const paper = getPaperById(paperTypeId);
-    // Lấy giá in 1 mặt (luôn dùng id = 1)
-    const printOneSide = PAPER_SETTINGS.printOptions.find(p => p.id === 1);
     // Lấy thông tin cán màng từ cấu trúc mới (laminationPricing theo khổ giấy)
     // Sẽ được lấy chi tiết sau khi có paper.printSizeId
     const cust = PAPER_SETTINGS.customerTypes.find(c => c.id === custId);
@@ -2341,7 +2509,6 @@ function calculatePaper() {
     // Chỉ yêu cầu chọn loại giấy nếu không dùng chế độ nhập giá tay
     const isUsingCustomPrice = typeof isCustomPriceEnabled === 'function' && isCustomPriceEnabled();
     if (!paper && !isUsingCustomPrice) return alert('⚠️ Vui lòng chọn loại giấy!');
-    if (!printOneSide || !printOneSide.tiers) return alert('⚠️ Vui lòng cài đặt giá in 1 mặt!');
     if (!cust) return alert('⚠️ Vui lòng chọn loại khách hàng!');
 
     // printId = 1: In 1 mặt, printId = 2: In 2 mặt (tính mốc theo số tờ 1 mặt tương đương)
@@ -2416,17 +2583,41 @@ function calculatePaper() {
         return paperObj ? findTierWithMin(paperObj.tiers || [], sheets) : null;
     })();
 
-    // Giá in: tính theo mốc số lượng
-    // QUY CHUẨN: In 2 mặt tính theo số tờ 1 mặt tương đương
-    // Ví dụ: 300 tờ 2 mặt = 600 tờ 1 mặt → tìm mốc theo 600 tờ
+    // Giá in: tính theo mốc số lượng — SỬ DỤNG CẤU TRÚC MỚI (printPricingBySize)
+    // Lấy key khổ giấy để tra cứu giá in theo khổ
+    const printSizeKey = `${printSheetW}x${printSheetH}`;
     let sheetsForTier = sheets;
+    let printPricePerSheet = 0;
+    let printTier = null;
+
     if (isTwoSided) {
-        // Chuyển đổi số tờ 2 mặt sang số tờ 1 mặt tương đương để tìm mốc giá
-        sheetsForTier = sheets * 2;
+        // In 2 mặt: dùng get2SidePrintPriceBySize (có fallback tự động nếu giá = 0)
+        printPricePerSheet = (typeof get2SidePrintPriceBySize === 'function')
+            ? get2SidePrintPriceBySize(printSizeKey, sheets)
+            : getPrintPriceBySize(printSizeKey, sheets, true);
+        sheetsForTier = sheets * 2; // Để hiển thị quy đổi mốc
+    } else {
+        // In 1 mặt: dùng getPrintPriceBySize
+        printPricePerSheet = (typeof getPrintPriceBySize === 'function')
+            ? getPrintPriceBySize(printSizeKey, sheets)
+            : findTierPrice(PAPER_SETTINGS.printOptions?.find(p => p.id === 1)?.tiers || [], sheets);
     }
-    const printPricePerSheet = findTierPrice(printOneSide.tiers, sheetsForTier);
-    const printTier = findTierWithMin(printOneSide.tiers, sheetsForTier);
-    // Giá = số tờ thực tế × đơn giá (đã tìm đúng mốc)
+
+    // Tìm tier hiện tại để hiển thị chi tiết
+    const printSizeData = PAPER_SETTINGS.printPricingBySize?.[printSizeKey];
+    if (printSizeData) {
+        const activeTiers = isTwoSided
+            ? (printSizeData.twoSide?.tiers?.length ? printSizeData.twoSide.tiers : printSizeData.oneSide?.tiers || [])
+            : (printSizeData.oneSide?.tiers || []);
+        const lookupQty = isTwoSided && (!printSizeData.twoSide?.tiers?.length) ? sheets * 2 : sheets;
+        printTier = findTierWithMin(activeTiers, lookupQty);
+    } else {
+        // Fallback: dùng printOptions cũ nếu printPricingBySize chưa có
+        const fallbackTiers = PAPER_SETTINGS.printOptions?.find(p => p.id === 1)?.tiers || [];
+        printTier = findTierWithMin(fallbackTiers, isTwoSided ? sheets * 2 : sheets);
+    }
+
+    // Giá = số tờ thực tế × đơn giá (đã tìm đúng mốc theo khổ giấy)
     const printCost = Math.round(sheets * printPricePerSheet);
 
     // Giá cán màng: SỬ DỤNG CẤU TRÚC MỚI (Khổ giấy → Loại cán màng → Tiers)
