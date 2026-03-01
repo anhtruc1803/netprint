@@ -175,7 +175,8 @@ function _renderPaperCard(paper) {
   // Mini badges for collapsed view
   const miniBadges = tiers.map(t => {
     const qty = t.max === 999999 ? '∞' : `≤${_fmt(t.max)}`;
-    return `<span class="sp-mini-badge">${qty}: ${_fmt(t.price)}đ</span>`;
+    const unit = t.unit === 'per_m2' ? 'đ/m²' : t.unit === 'per_lot' ? 'đ/lô' : 'đ/tờ';
+    return `<span class="sp-mini-badge">${qty}: ${_fmt(t.price)}${unit}</span>`;
   }).join('');
 
   // Tier editor for expanded view
@@ -184,15 +185,20 @@ function _renderPaperCard(paper) {
     const tierRows = tiers.map((t, i) => {
       const minQty = i === 0 ? 1 : (tiers[i - 1].max + 1);
       const isLast = t.max === 999999;
+      const unit = t.unit || 'per_sheet';
       return `
-        <div class="sp-tier-grid-row">
+        <div class="sp-tier-grid-row" style="grid-template-columns: 75px 75px 100px 90px 36px;">
           <input type="number" value="${minQty}" readonly>
           <input type="number" value="${isLast ? '' : t.max}" placeholder="${isLast ? '∞' : 'Max'}"
             ${isLast ? 'readonly' : ''}
             onchange="spUpdateTierMax(${sizeId},${paper.id},${i},this.value)">
           <input type="number" value="${t.price}" placeholder="Giá" min="0"
             onchange="spUpdateTierPrice(${sizeId},${paper.id},${i},this.value)">
-          <span class="sp-tier-unit">đ/tờ</span>
+          <select onchange="spUpdateTierUnit(${sizeId},${paper.id},${i},this.value)" style="padding:6px 4px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;">
+            <option value="per_sheet" ${unit === 'per_sheet' ? 'selected' : ''}>đ/tờ</option>
+            <option value="per_m2" ${unit === 'per_m2' ? 'selected' : ''}>đ/m²</option>
+            <option value="per_lot" ${unit === 'per_lot' ? 'selected' : ''}>đ/lô</option>
+          </select>
           <button class="sp-tier-mini-del" ${tiers.length <= 1 ? 'disabled' : ''}
             onclick="spDeleteTier(${sizeId},${paper.id},${i})">✕</button>
         </div>`;
@@ -200,8 +206,8 @@ function _renderPaperCard(paper) {
 
     tierEditor = `
       <div class="sp-tier-grid">
-        <div class="sp-tier-grid-header">
-          <span>Từ</span><span>Đến</span><span>Giá</span><span></span><span></span>
+        <div class="sp-tier-grid-header" style="grid-template-columns: 75px 75px 100px 90px 36px;">
+          <span>Từ</span><span>Đến</span><span>Giá</span><span>Đơn vị</span><span></span>
         </div>
         ${tierRows}
         <button class="sp-tier-add-btn" onclick="spAddTier(${sizeId},${paper.id})">➕ Thêm mốc giá</button>
@@ -293,7 +299,7 @@ function spUpdateSizeDim(sizeId, field, value) {
       const isLarge = size.w > 480 || size.h > 480;
       PAPER_SETTINGS.printPricingBySize[newKey] = {
         ...old,
-        sizeInfo: { ...old.sizeInfo, id: newKey, width: size.w, height: size.h, name: `Khổ ${formatMmToCm(size.w)}×${formatMmToCm(size.h)}${isLarge ? ' (Lớn)' : ''}` }
+        sizeInfo: { ...old.sizeInfo, id: newKey, width: size.w, height: size.h, name: `Khổ ${size.w}×${size.h}${isLarge ? ' (Lớn)' : ''} mm` }
       };
     }
   }
@@ -399,6 +405,15 @@ function spUpdateTierPrice(sizeId, paperId, tierIdx, value) {
   savePaperSettings(true);
 }
 
+function spUpdateTierUnit(sizeId, paperId, tierIdx, value) {
+  const pricing = PAPER_SETTINGS.paperPricing.find(p => p.printSizeId === sizeId);
+  const paper = pricing?.papers.find(p => p.id === paperId);
+  if (!paper || !paper.tiers[tierIdx]) return;
+  paper.tiers[tierIdx].unit = value;
+  savePaperSettings(true);
+  _refreshPaperContent();
+}
+
 function spDeleteTier(sizeId, paperId, tierIdx) {
   const pricing = PAPER_SETTINGS.paperPricing.find(p => p.printSizeId === sizeId);
   const paper = pricing?.papers.find(p => p.id === paperId);
@@ -485,6 +500,7 @@ function _renderPrintMain() {
     const rows = tiers.map((t, i) => {
       const minQty = i === 0 ? 1 : (tiers[i - 1].max + 1);
       const isLast = t.max === 999999;
+      const unit = t.unit || 'per_sheet';
       return `
         <tr>
           <td><input type="number" value="${minQty}" readonly></td>
@@ -492,7 +508,13 @@ function _renderPrintMain() {
             ${isLast ? 'readonly' : ''} onchange="spUpdatePrintTierMax('${key}','${side}',${i},this.value)"></td>
           <td><input type="number" value="${t.price}" min="0"
             onchange="spUpdatePrintTierPrice('${key}','${side}',${i},this.value)"></td>
-          <td style="font-size:12px;color:#64748b;">đ/tờ</td>
+          <td>
+            <select onchange="spUpdatePrintTierUnit('${key}','${side}',${i},this.value)" style="padding:6px 4px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;">
+              <option value="per_sheet" ${unit === 'per_sheet' ? 'selected' : ''}>đ/tờ</option>
+              <option value="per_m2" ${unit === 'per_m2' ? 'selected' : ''}>đ/m²</option>
+              <option value="per_lot" ${unit === 'per_lot' ? 'selected' : ''}>đ/lô</option>
+            </select>
+          </td>
           <td>${tiers.length > 1 ? `<button class="sp-tier-mini-del" onclick="spDeletePrintTier('${key}','${side}',${i})">✕</button>` : ''}</td>
         </tr>`;
     }).join('');
@@ -546,6 +568,18 @@ function spUpdatePrintTierPrice(key, side, idx, value) {
   if (!tiers?.[idx]) return;
   tiers[idx].price = parseInt(value) || 0;
   savePaperSettings(true);
+}
+
+function spUpdatePrintTierUnit(key, side, idx, value) {
+  const sizeData = PAPER_SETTINGS.printPricingBySize?.[key];
+  if (!sizeData) return;
+  if (side === 'twoSide' && !sizeData.twoSide) sizeData.twoSide = { name: 'In 2 mặt', tiers: [{ max: 999999, price: 0 }] };
+  const tiers = sizeData[side]?.tiers;
+  if (!tiers?.[idx]) return;
+  tiers[idx].unit = value;
+  savePaperSettings(true);
+  const main = document.getElementById('spPrintMain');
+  if (main) main.innerHTML = _renderPrintMain();
 }
 
 function spAddPrintTier(key, side) {

@@ -3,13 +3,13 @@
 
 // Cấu hình khổ giấy mặc định
 const DEFAULT_PRINT_SIZES = [
-    { id: 'A3', name: 'Khổ A3 (32.5×43)', width: 325, height: 430 },
-    { id: '33x43', name: 'Khổ 33×43', width: 330, height: 430 },
-    { id: '33x48', name: 'Khổ 33×48', width: 330, height: 480 },
-    { id: '33x65', name: 'Khổ 33×65 (Lớn)', width: 330, height: 650, isLargeFormat: true },
-    { id: '43x65', name: 'Khổ 43×65 (Lớn)', width: 430, height: 650, isLargeFormat: true },
-    { id: '35x50', name: 'Khổ 35×50 (Lớn)', width: 350, height: 500, isLargeFormat: true },
-    { id: '50x70', name: 'Khổ 50×70 (Lớn)', width: 500, height: 700, isLargeFormat: true }
+    { id: 'A3', name: 'Khổ A3 (325×430)', width: 325, height: 430 },
+    { id: '330x430', name: 'Khổ 330×430', width: 330, height: 430 },
+    { id: '330x480', name: 'Khổ 330×480', width: 330, height: 480 },
+    { id: '330x650', name: 'Khổ 330×650 (Lớn)', width: 330, height: 650, isLargeFormat: true },
+    { id: '430x650', name: 'Khổ 430×650 (Lớn)', width: 430, height: 650, isLargeFormat: true },
+    { id: '350x500', name: 'Khổ 350×500 (Lớn)', width: 350, height: 500, isLargeFormat: true },
+    { id: '500x700', name: 'Khổ 500×700 (Lớn)', width: 500, height: 700, isLargeFormat: true }
 ];
 
 // Giá in mặc định cho khổ nhỏ
@@ -57,7 +57,7 @@ function initPrintPricingBySize() {
                 PAPER_SETTINGS.printPricingBySize[sizeKey] = {
                     sizeInfo: {
                         id: sizeKey,
-                        name: `Khổ ${formatMmToCm(size.w)}×${formatMmToCm(size.h)}${isLargeFormat ? ' (Lớn)' : ''}`,
+                        name: `Khổ ${size.w}×${size.h}${isLargeFormat ? ' (Lớn)' : ''} mm`,
                         width: size.w,
                         height: size.h,
                         isLargeFormat: isLargeFormat,
@@ -75,7 +75,7 @@ function initPrintPricingBySize() {
         });
     } else if (Object.keys(PAPER_SETTINGS.printPricingBySize).length === 0) {
         // Fallback: nếu chưa có printSizes và chưa có pricing, tạo khổ mặc định A3
-        const defaultSize = { id: 'A3', name: 'Khổ A3 (32.5×43)', width: 325, height: 430 };
+        const defaultSize = { id: 'A3', name: 'Khổ A3 (325×430 mm)', width: 325, height: 430 };
         PAPER_SETTINGS.printPricingBySize[defaultSize.id] = {
             sizeInfo: defaultSize,
             oneSide: {
@@ -313,7 +313,7 @@ function addNewPrintSize() {
     const parts = cleanId.toLowerCase().replace('x', '×').split('×');
     let width = 0, height = 0;
     if (parts.length === 2) {
-        width = parseInt(parts[0]) * 10; // cm → mm
+        width = parseInt(parts[0]) * 10; // input → mm
         height = parseInt(parts[1]) * 10;
     }
 

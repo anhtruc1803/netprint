@@ -267,7 +267,7 @@
 /* ========== TIER ROW ========== */
 .tier-row {
     display: grid;
-    grid-template-columns: 65px 24px 65px 24px 90px 28px 28px;
+    grid-template-columns: 65px 24px 65px 24px 90px 70px 28px;
     gap: 6px;
     align-items: center;
     background: #f8f9fc;

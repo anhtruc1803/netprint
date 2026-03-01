@@ -82,7 +82,7 @@ function _renderProcCard(proc) {
                 const isLast = t.max === 999999;
                 const currentUnit = t.unit || proc.unit || determineDefaultUnit(proc);
                 return `
-                    <div class="sp-tier-grid-row" style="grid-template-columns: 75px 75px 100px 100px 36px;">
+                    <div class="sp-tier-grid-row" style="grid-template-columns: 75px 75px 100px 90px 36px;">
                         <input type="number" value="${minQty}" ${i === 0 ? 'readonly' : ''}
                             ${i > 0 ? `onchange="updateProcTierMin(${proc.id},${i},this.value)"` : ''}>
                         <input type="number" value="${isLast ? '' : t.max}" placeholder="${isLast ? '∞' : 'Max'}"
@@ -90,14 +90,12 @@ function _renderProcCard(proc) {
                             onchange="updateProcTierMax(${proc.id},${i},this.value)">
                         <input type="number" value="${t.price}" placeholder="Giá" min="0"
                             onchange="updateProcTier(${proc.id},${i},'price',this.value)">
-                        <div style="display:flex;gap:2px;">
-                            <button type="button" class="sp-unit-btn ${currentUnit === 'per_lot' ? 'active' : ''}"
-                                onclick="updateProcTier(${proc.id},${i},'unit','per_lot')">Lô</button>
-                            <button type="button" class="sp-unit-btn ${currentUnit === 'per_item' ? 'active' : ''}"
-                                onclick="updateProcTier(${proc.id},${i},'unit','per_item')">SP</button>
-                            <button type="button" class="sp-unit-btn ${currentUnit === 'per_sheet' ? 'active' : ''}"
-                                onclick="updateProcTier(${proc.id},${i},'unit','per_sheet')">Tờ</button>
-                        </div>
+                        <select onchange="updateProcTier(${proc.id},${i},'unit',this.value)" style="padding:6px 4px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;">
+                            <option value="per_sheet" ${currentUnit === 'per_sheet' ? 'selected' : ''}>đ/tờ</option>
+                            <option value="per_item" ${currentUnit === 'per_item' ? 'selected' : ''}>đ/sp</option>
+                            <option value="per_lot" ${currentUnit === 'per_lot' ? 'selected' : ''}>đ/lô</option>
+                            <option value="per_m2" ${currentUnit === 'per_m2' ? 'selected' : ''}>đ/m²</option>
+                        </select>
                         <button class="sp-tier-mini-del" ${tiers.length <= 1 ? 'disabled' : ''}
                             onclick="deleteProcTier(${proc.id},${i})">✕</button>
                     </div>`;
@@ -105,7 +103,7 @@ function _renderProcCard(proc) {
 
             tierEditor = `
                 <div class="sp-tier-grid">
-                    <div class="sp-tier-grid-header" style="grid-template-columns: 75px 75px 100px 100px 36px;">
+                    <div class="sp-tier-grid-header" style="grid-template-columns: 75px 75px 100px 90px 36px;">
                         <span>Từ</span><span>Đến</span><span>Giá</span><span>Đơn vị</span><span></span>
                     </div>
                     ${tierRows}

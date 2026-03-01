@@ -82,7 +82,7 @@ function renderPaperSizesSidebar() {
 
     return PAPER_SETTINGS.printSizes.map(size => {
         const isActive = size.id === selectedPrintSizeId;
-        const sizeLabel = `${(size.w / 10).toFixed(1)} x ${(size.h / 10).toFixed(1)} cm`;
+        const sizeLabel = `${size.w} x ${size.h} mm`;
         return `
             <div class="sidebar-item ${isActive ? 'active' : ''}" 
                  onclick="selectPrintSize(${size.id})">
@@ -108,7 +108,7 @@ function renderPaperTypesMainContent() {
     if (!size) return '<p>Không tìm thấy khổ giấy</p>';
 
     const pricing = PAPER_SETTINGS.paperPricing.find(p => p.printSizeId === selectedPrintSizeId) || { papers: [] };
-    const sizeLabel = `${(size.w / 10).toFixed(1)} x ${(size.h / 10).toFixed(1)} cm`;
+    const sizeLabel = `${size.w} x ${size.h} mm`;
 
     return `
         <!-- Header với thông tin khổ giấy -->
@@ -268,7 +268,7 @@ function addPrintSizeNew() {
     PAPER_SETTINGS.printPricingBySize[sizeKey] = {
         sizeInfo: {
             id: sizeKey,
-            name: `Khổ ${defaultW / 10}×${defaultH / 10}${isLargeFormat ? ' (Lớn)' : ''}`,
+            name: `Khổ ${defaultW}×${defaultH}${isLargeFormat ? ' (Lớn)' : ''} mm`,
             width: defaultW,
             height: defaultH,
             isLargeFormat: isLargeFormat,
@@ -680,6 +680,7 @@ function renderPaperPricingSettings() {
                 const minQty = tierIdx === 0 ? 1 : (paper.tiers[tierIdx - 1].max + 1);
                 const isLastTier = tier.max === 999999;
                 const isFirstTier = tierIdx === 0;
+                const tierUnit = tier.unit || 'per_sheet';
                 return `
                                         <div class="tier-row" onclick="event.stopPropagation()">
                                             <input type="number" 
@@ -707,7 +708,12 @@ function renderPaperPricingSettings() {
                                                 onclick="event.stopPropagation()"
                                                 onblur="updatePaperTier(${size.id}, ${paper.id}, ${tierIdx}, 'price', this.value)"
                                                 onchange="updatePaperTier(${size.id}, ${paper.id}, ${tierIdx}, 'price', this.value)">
-                                            <span class="tier-unit">đ</span>
+                                            <select class="tier-unit-select" onclick="event.stopPropagation()"
+                                                onchange="updatePaperTier(${size.id}, ${paper.id}, ${tierIdx}, 'unit', this.value)">
+                                                <option value="per_sheet" ${tierUnit === 'per_sheet' ? 'selected' : ''}>đ/tờ</option>
+                                                <option value="per_m2" ${tierUnit === 'per_m2' ? 'selected' : ''}>đ/m²</option>
+                                                <option value="per_lot" ${tierUnit === 'per_lot' ? 'selected' : ''}>đ/lô</option>
+                                            </select>
                                             ${paper.tiers.length > 1 ? `
                                                 <button type="button" class="btn-tier-del" onclick="event.stopPropagation(); deletePaperTier(${size.id}, ${paper.id}, ${tierIdx})" title="Xóa mốc">×</button>
                                             ` : '<span class="tier-placeholder"></span>'}

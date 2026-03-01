@@ -1,28 +1,33 @@
 // ===== HELPER FUNCTIONS - CẤU TRÚC MỚI =====
 
 /**
- * Format kích thước giấy từ mm sang cm, bỏ số thập phân .0 nếu là số nguyên
- * Ví dụ: 325 → "32.5", 430 → "43", 330 → "33"
+ * Format kích thước giấy (mm), bỏ số thập phân .0 nếu là số nguyên
+ * Ví dụ: 325 → "325", 430 → "430", 330 → "330"
  */
+function formatSizeValue(mm) {
+    if (mm === null || mm === undefined) return '0';
+    return mm % 1 === 0 ? mm.toFixed(0) : mm.toString();
+}
+
+// Alias cũ để backward-compatible
 function formatMmToCm(mm) {
-    const cm = mm / 10;
-    return cm % 1 === 0 ? cm.toFixed(0) : cm.toFixed(1);
+    return formatSizeValue(mm);
 }
 
 /**
- * Format tên khổ giấy chuẩn: "Khổ (W × H) cm"
+ * Format tên khổ giấy chuẩn: "Khổ (W × H) mm"
  * @param {Object} size - { w: mm, h: mm }
- * @returns {string} ví dụ: "Khổ (32.5 × 43) cm"
+ * @returns {string} ví dụ: "Khổ (325 × 430) mm"
  */
 function formatSizeName(size) {
-    return `Khổ (${formatMmToCm(size.w)} × ${formatMmToCm(size.h)}) cm`;
+    return `Khổ (${formatSizeValue(size.w)} × ${formatSizeValue(size.h)}) mm`;
 }
 
 /**
- * Format tên ngắn (không có "Khổ"): "32.5 × 43 cm"
+ * Format tên ngắn (không có "Khổ"): "325 × 430 mm"
  */
 function formatSizeShort(size) {
-    return `${formatMmToCm(size.w)} × ${formatMmToCm(size.h)} cm`;
+    return `${formatSizeValue(size.w)} × ${formatSizeValue(size.h)} mm`;
 }
 
 /**
