@@ -14,7 +14,10 @@
     <link rel="stylesheet" href="paper_history.css">
     <link rel="stylesheet" href="customer_management.css">
     <link rel="stylesheet" href="order_management.css">
+    <link rel="stylesheet" href="product_management.css">
     <link rel="stylesheet" href="modern_theme.css">
+    <link rel="stylesheet" href="offset_calculator.css">
+    <link rel="stylesheet" href="mui_theme.css">
 </head>
 
 <body>
@@ -161,6 +164,15 @@
                         </div>
                         <span class="menu-label">In Khổ Lớn</span>
                     </a>
+                    <a class="menu-item" href="?tab=offset" data-newtab="offset"
+                        onmousedown="handleMenuClick(event, 'offset', function(){ goToHome(); showSubTab('offset','calc', null); })"
+                        onclick="event.preventDefault()" title="In Offset (Ctrl+Click = mở tab mới)"
+                        data-tags="in offset,offset,kẽm" data-context="offset">
+                        <div class="menu-icon" style="background: #fff3e0; color: #ff9800;">
+                            <span style="font-size: 24px;">⭐</span>
+                        </div>
+                        <span class="menu-label">In Offset</span>
+                    </a>
                 </div>
             </div>
 
@@ -183,6 +195,14 @@
                             <span style="font-size: 24px;">💬</span>
                         </div>
                         <span class="menu-label">Khách hàng</span>
+                    </a>
+                    <a class="menu-item" href="?tab=products" data-newtab="products"
+                        onmousedown="handleMenuClick(event, 'products', function(){ showTab('products-tab'); initProductModule(); })"
+                        onclick="event.preventDefault()" title="Quản lý sản phẩm (Ctrl+Click = mở tab mới)">
+                        <div class="menu-icon" style="background: #e0f7fa; color: #00bcd4;">
+                            <span style="font-size: 24px;">🏷️</span>
+                        </div>
+                        <span class="menu-label">Sản phẩm</span>
                     </a>
                 </div>
             </div>
@@ -210,10 +230,11 @@
                         <div class="dropdown-user-info">
                             <span id="userDisplay"></span>
                         </div>
-                        <button class="dropdown-item admin-only" data-newtab="settings"
-                            onmousedown="handleMenuClick(event, 'settings', function(){ showTab('users'); closeHamburgerMenu(); })">
+                        <a class="dropdown-item admin-only" href="?tab=settings" data-newtab="settings"
+                            onmousedown="handleMenuClick(event, 'settings', function(){ showTab('users'); closeHamburgerMenu(); })"
+                            onclick="event.preventDefault()">
                             ⚙️ Cài đặt
-                        </button>
+                        </a>
                         <button class="dropdown-item" onclick="goBack(); closeHamburgerMenu();">
                             ← Quay lại
                         </button>
@@ -1130,6 +1151,521 @@
             </div>
         </section>
 
+        <!-- ==================== OFFSET CALCULATOR ==================== -->
+        <section id="offset-calculator" class="tab-content" style="display:none;">
+            <!-- Sub tabs header -->
+            <div class="sub-tabs-header">
+                <div class="sub-tabs-left">
+                    <button class="sub-tab active"
+                        onmousedown="handleSubTabClick(event, 'offset', 'calc', function(){ showSubTab('offset', 'calc', event.target); })">⭐
+                        Tính Giá
+                        Offset</button>
+                </div>
+                <div class="sub-tabs-right">
+                    <button class="sub-tab"
+                        onmousedown="handleSubTabClick(event, 'offset', 'history', function(){ showSubTab('offset', 'history', event.target); })">📋
+                        Lịch Sử Tính
+                        Giá</button>
+                </div>
+            </div>
+
+            <!-- ========== TAB: TÍNH GIÁ OFFSET ========== -->
+            <div id="offset-calc" class="sub-content active">
+                <!-- Top Info Bar -->
+                <div class="offset-top-bar">
+                    <div class="top-group">
+                        <label>📝 Tên đơn hàng</label>
+                        <input type="text" id="offsetOrderName" placeholder="VD: TEM F & S"
+                            oninput="recalculateOffset()">
+                    </div>
+                    <div class="top-group">
+                        <label>📦 Số lượng SP</label>
+                        <input type="number" id="offsetQuantity" value="0" min="0" oninput="recalculateOffset()">
+                    </div>
+                </div>
+
+                <!-- 2-Column Grid for 6 Modules -->
+                <div class="offset-grid">
+                    <!-- ===== MODULE 1: GIẤY IN ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header paper-header">
+                            <span>📄 GIẤY IN</span>
+                            <span class="offset-card-subtotal" id="offsetPaperSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body">
+                            <div class="offset-row">
+                                <label>Loại giấy</label>
+                                <select id="offsetPaperType"></select>
+                            </div>
+                            <div class="offset-row" id="offsetCustomPaperNameRow" style="display:none;">
+                                <label>Tên giấy</label>
+                                <input type="text" id="offsetCustomPaperName" placeholder="Nhập tên giấy...">
+                            </div>
+                            <div class="offset-row">
+                                <label>Kích thước tờ</label>
+                                <select id="offsetSheetSize"></select>
+                            </div>
+                            <div class="offset-row" id="offsetCustomSizeRow" style="display:none;">
+                                <label>KT Tuỳ chọn</label>
+                                <div style="display:flex; gap:6px; align-items:center;">
+                                    <input type="number" id="offsetCustomW" placeholder="Dài (cm)" min="0" step="0.5"
+                                        style="width:80px;" oninput="recalculateOffset()">
+                                    <span>×</span>
+                                    <input type="number" id="offsetCustomH" placeholder="Rộng (cm)" min="0" step="0.5"
+                                        style="width:80px;" oninput="recalculateOffset()">
+                                </div>
+                            </div>
+                            <div class="offset-row">
+                                <label>Số lượng tờ</label>
+                                <input type="number" id="offsetSheetCount" value="0" min="0"
+                                    oninput="recalculateOffset()">
+                            </div>
+                            <div class="offset-row">
+                                <label>Đơn giá/tờ (đ)</label>
+                                <input type="number" id="offsetPaperPrice" value="1200" min="0" step="100"
+                                    oninput="recalculateOffset()">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MODULE 2: IN ẤN ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header print-header">
+                            <span>🖨️ IN ẤN</span>
+                            <span class="offset-card-subtotal" id="offsetPrintSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body">
+                            <div class="offset-row">
+                                <label>Khổ in</label>
+                                <span class="offset-auto-value" id="offsetPrintSheetSize">—</span>
+                            </div>
+                            <div class="offset-row">
+                                <label>Số lượng tờ</label>
+                                <span class="offset-auto-value" id="offsetPrintSheetCount">0</span>
+                            </div>
+                            <div class="offset-row">
+                                <label>Số màu in</label>
+                                <input type="number" id="offsetPrintColors" value="4" min="1" max="8"
+                                    oninput="recalculateOffset()">
+                            </div>
+                            <div class="offset-row">
+                                <label>Kẽm in</label>
+                                <span class="offset-auto-value offset-highlight" id="offsetPlatePrice">0</span>
+                            </div>
+                            <div class="offset-row">
+                                <label>Tiền in</label>
+                                <span class="offset-auto-value offset-highlight" id="offsetPrintPrice">0</span>
+                            </div>
+                            <div class="offset-info-badge">
+                                <span>💡 Giá in theo mốc SL tờ (tiered pricing)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MODULE 3: KHUÔN ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header mold-header">
+                            <span>🔲 KHUÔN</span>
+                            <span class="offset-card-subtotal" id="offsetMoldSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body" id="offsetMoldsGroup">
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('molds','be',this); recalculateOffset()">
+                                    <span>Khuôn bế</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('molds','epKim',this); recalculateOffset()">
+                                    <span>Khuôn ép kim</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('molds','thucNoi',this); recalculateOffset()">
+                                    <span>Khuôn thúc nổi</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('molds','dapChim',this); recalculateOffset()">
+                                    <span>Khuôn dập chìm</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('molds','khac',this); recalculateOffset()">
+                                    <span>Khuôn khác</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MODULE 4: GIA CÔNG THÀNH PHẨM ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header finishing-header">
+                            <span>✂️ GIA CÔNG TP</span>
+                            <span class="offset-card-subtotal" id="offsetFinishingSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body" id="offsetFinishingGroup">
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','canMang',this); recalculateOffset()">
+                                    <span>Cán màng</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','catXen',this); recalculateOffset()">
+                                    <span>Cắt xén</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','be',this); recalculateOffset()">
+                                    <span>Bế</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','epKim',this); recalculateOffset()">
+                                    <span>Ép kim</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','thucNoi',this); recalculateOffset()">
+                                    <span>Thúc nổi</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','dapChim',this); recalculateOffset()">
+                                    <span>Dập chìm</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','dan',this); recalculateOffset()">
+                                    <span>Dán</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','boi',this); recalculateOffset()">
+                                    <span>Bồi</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('finishing','dongCuon',this); recalculateOffset()">
+                                    <span>Đóng cuốn</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MODULE 5: VẬN CHUYỂN ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header shipping-header">
+                            <span>🚛 VẬN CHUYỂN</span>
+                            <span class="offset-card-subtotal" id="offsetShippingSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body" id="offsetShippingGroup">
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('shipping','vatTu',this); recalculateOffset()">
+                                    <span>VC vật tư</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('shipping','giaoMau',this); recalculateOffset()">
+                                    <span>Giao mẫu</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('shipping','giaoHang1',this); recalculateOffset()">
+                                    <span>Giao hàng lần 1</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('shipping','giaoHang2',this); recalculateOffset()">
+                                    <span>Giao hàng lần 2</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('shipping','giaoHang3',this); recalculateOffset()">
+                                    <span>Giao hàng lần 3</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="50000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== MODULE 6: PHÁT SINH ===== -->
+                    <div class="offset-card">
+                        <div class="offset-card-header extra-header">
+                            <span>⚡ PHÁT SINH</span>
+                            <span class="offset-card-subtotal" id="offsetExtrasSubtotal">0</span>
+                        </div>
+                        <div class="offset-card-body" id="offsetExtrasList">
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('extras','canVan',this); recalculateOffset()">
+                                    <span>Cán vận</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('extras','danSuppo',this); recalculateOffset()">
+                                    <span>Dán Suppo</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                            <div class="offset-check-item">
+                                <label class="offset-check-label">
+                                    <input type="checkbox"
+                                        onchange="toggleOffsetCheckItem('extras','khay',this); recalculateOffset()">
+                                    <span>Khay</span>
+                                </label>
+                                <div class="offset-check-value">
+                                    <input type="number" value="0" min="0" step="1000" disabled
+                                        oninput="recalculateOffset()">
+                                    <span class="offset-unit">đ</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="offset-card-footer">
+                            <button type="button" class="btn-add-offset-item" onclick="addOffsetExtraItem()">
+                                <span>＋</span> Thêm mục phát sinh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== MODULE 7: TỔNG HỢP + LỢI NHUẬN ===== -->
+                <div class="offset-summary">
+                    <div class="offset-summary-header">
+                        <span>💰 TỔNG HỢP CHI PHÍ</span>
+                    </div>
+
+                    <!-- Cost Breakdown -->
+                    <div class="offset-cost-breakdown">
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">📄 Giấy</span>
+                            <span class="offset-cost-value" id="offsetSumPaper">0</span>
+                        </div>
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">🖨️ In ấn</span>
+                            <span class="offset-cost-value" id="offsetSumPrint">0</span>
+                        </div>
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">🔲 Khuôn</span>
+                            <span class="offset-cost-value" id="offsetSumMold">0</span>
+                        </div>
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">✂️ Gia công</span>
+                            <span class="offset-cost-value" id="offsetSumFinishing">0</span>
+                        </div>
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">🚛 Vận chuyển</span>
+                            <span class="offset-cost-value" id="offsetSumShipping">0</span>
+                        </div>
+                        <div class="offset-cost-item">
+                            <span class="offset-cost-label">⚡ Phát sinh</span>
+                            <span class="offset-cost-value" id="offsetSumExtras">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Grand Total -->
+                    <div class="offset-grand-total">
+                        <span>TỔNG CHI PHÍ</span>
+                        <span id="offsetGrandTotal" class="offset-grand-total-value">0</span>
+                        <span class="offset-currency">đ</span>
+                    </div>
+
+                    <!-- Profit Table -->
+                    <table class="offset-profit-table">
+                        <thead>
+                            <tr>
+                                <th>Hệ số</th>
+                                <th>Tổng tiền</th>
+                                <th>Lợi nhuận</th>
+                                <th>Đơn giá/SP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offsetProfitTableBody">
+                            <!-- Rendered by JS -->
+                        </tbody>
+                    </table>
+
+                    <!-- Custom Margins -->
+                    <div class="offset-custom-margins">
+                        <div class="margin-row">
+                            <label>Hệ số tuỳ chỉnh:</label>
+                            <div id="offsetCustomMarginsList" class="margin-inputs-row"></div>
+                            <button type="button" class="btn-add-offset-item" onclick="addOffsetMargin()"
+                                style="margin-left: 8px;">
+                                <span>＋</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="offset-actions">
+                    <button type="button" class="btn-offset-calc" onclick="recalculateOffset()">🧮 Tính lại</button>
+                    <button type="button" class="btn-offset-reset" onclick="resetOffsetCalculator()">🔄 Làm mới</button>
+                </div>
+            </div>
+
+            <!-- ========== TAB: LỊCH SỬ ========== -->
+            <div id="offset-history" class="sub-content">
+                <div class="card">
+                    <h2>📋 Lịch Sử Tính Giá Offset</h2>
+                    <div class="history-controls">
+                        <input type="text" id="offsetHistorySearch" placeholder="🔍 Tìm kiếm...">
+                        <button class="btn-danger" onclick="clearOffsetHistory()">🗑️ Xóa Tất Cả</button>
+                    </div>
+                    <div id="offsetHistoryList" class="history-list">
+                        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <span style="font-size: 48px;">📭</span>
+                            <p style="margin-top: 12px; font-weight: 600;">Chưa có lịch sử tính giá Offset</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- USER MANAGEMENT -->
         <section id="users" class="tab-content" style="display:none;">
             <!-- Menu Tabs -->
@@ -1291,7 +1827,13 @@
 
         </section>
         <section id="customers-tab" class="tab-content" style="display:none;">
-            <!-- Nội dung từ customer_management.js -->
+            <!-- Content loaded via initCustomerModule() -->
+        </section>
+
+        <section id="products-tab" class="tab-content" style="display:none;">
+            <!-- Content loaded via initProductModule() -->
+        </section>
+        <!-- Nội dung từ customer_management.js -->
         </section>
 
         <!-- ==================== ORDER MANAGEMENT ==================== -->
@@ -1362,207 +1904,80 @@
     <script src="backup_restore.js?v=20260130100000"></script>
     <script src="customer_management.js"></script>
     <script src="order_management.js"></script>
+    <script src="product_management.js"></script>
+    <script src="offset_calculator.js?v=20260302120000"></script>
+</body>
 
-    <!-- Customer Add/Edit Modal (Modern Design) -->
-    <div id="customerModal" class="modal" style="display: none;">
-        <div class="modal-content customer-form-modal">
-            <div class="crm-modal-header">
-                <h2 id="customerModalTitle">➕ THÊM KHÁCH HÀNG</h2>
-                <span class="close" onclick="closeCustomerModal()">&times;</span>
-            </div>
-            <div class="crm-modal-body">
-                <form id="customerForm">
-                    <input type="hidden" id="customerId">
+<!-- Customer form is now rendered inline by customer_management.js (full page) -->
 
-                    <span class="form-section-title">Thông tin cơ bản</span>
-                    <div class="crm-grid">
-                        <div class="crm-input-group">
-                            <label>Mã khách hàng</label>
-                            <input type="text" id="custCode" disabled placeholder="Tự động">
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Loại khách</label>
-                            <select id="custType">
-                                <option value="Khách lẻ">👤 Khách lẻ</option>
-                                <option value="Đại lí cấp 1">🥇 Đại lí cấp 1</option>
-                                <option value="Đại lí cấp 2">🥈 Đại lí cấp 2</option>
-                                <option value="Hàng gấp">⚡ Hàng gấp</option>
-                            </select>
-                        </div>
-                        <div class="crm-input-group crm-grid-full">
-                            <label>Tên khách hàng *</label>
-                            <input type="text" id="custName" placeholder="Nhập họ tên hoặc tên công ty" required>
-                        </div>
-                    </div>
 
-                    <div style="height: 25px;"></div>
+<!-- Order Add/Edit Modal (Modern Design) -->
 
-                    <span class="form-section-title">Thông tin liên hệ & Tài chính</span>
-                    <div class="crm-grid">
-                        <div class="crm-input-group">
-                            <label>Số điện thoại *</label>
-                            <input type="text" id="custPhone" placeholder="09xxxxxxx" required>
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Email</label>
-                            <input type="email" id="custEmail" placeholder="example@gmail.com">
-                        </div>
-                        <div class="crm-input-group crm-grid-full">
-                            <label>Địa chỉ</label>
-                            <input type="text" id="custAddress" placeholder="Số nhà, tên đường, khu vực...">
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Công nợ ban đầu (đ)</label>
-                            <input type="number" id="custDebt" value="0">
-                        </div>
-                    </div>
+<!-- Order Settings Modal (New) -->
+<div id="orderSettingsModal" class="modal" style="display: none;">
+    <div class="modal-content customer-form-modal" style="max-width: 600px !important;">
+        <div class="crm-modal-header">
+            <h2>⚙️ CÀI ĐẶT ĐƠN HÀNG</h2>
+            <span class="close" onclick="closeOrderSettingsModal()">&times;</span>
+        </div>
+        <div class="crm-modal-body">
+            <span class="form-section-title">Cài đặt chung</span>
+            <div class="crm-input-group"
+                style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <label>Mã đơn hàng</label>
+                <p style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">Cấu trúc mã tự sinh, bộ đếm bắt
+                    đầu, cho phép sửa tay.</p>
 
-                    <div style="height: 25px;"></div>
-
-                    <span class="form-section-title">Ghi chú khác</span>
+                <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
                     <div class="crm-input-group">
-                        <textarea id="custNote" rows="3"
-                            placeholder="Sở thích mẫu giấy, các lưu ý đặc biệt..."></textarea>
+                        <label style="font-size: 0.8rem;">Cấu trúc mã</label>
+                        <input type="text" id="setOrderStruct" placeholder="DH{count,2} - 2026">
+                        <small color="#64748b">Sử dụng tag {count} hoặc {count,n} để định dạng số nhảy.</small>
                     </div>
-                </form>
+
+                    <div class="crm-input-group">
+                        <label style="font-size: 0.8rem;">Bộ đếm tự động bắt đầu từ</label>
+                        <input type="number" id="setOrderStart" value="150">
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Cho phép chỉnh sửa
+                            mã</label>
+                        <label class="crm-switch">
+                            <input type="checkbox" id="setOrderAllowEdit" checked>
+                            <span class="crm-slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="crm-modal-footer">
-                <button class="btn-crm-cancel" onclick="closeCustomerModal()">Hủy bỏ</button>
-                <button class="btn-crm-save" onclick="saveCustomer()">
-                    <span>💾 Lưu thông tin</span>
-                </button>
+
+            <span class="form-section-title">Người phụ trách & Giá</span>
+            <div class="crm-input-group" style="background: #f8fafc; padding: 15px; border-radius: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Người phụ trách mặc
+                        định</label>
+                    <select style="width: 200px;">
+                        <option value="creator">Người tạo đơn hàng</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Tắt tùy chỉnh giá sản
+                        phẩm</label>
+                    <label class="crm-switch">
+                        <input type="checkbox">
+                        <span class="crm-slider"></span>
+                    </label>
+                </div>
             </div>
+        </div>
+        <div class="crm-modal-footer">
+            <button class="btn-crm-cancel" onclick="closeOrderSettingsModal()">Hủy bỏ</button>
+            <button class="btn-crm-save" onclick="saveOrderSettings()">
+                <span>💾 Lưu cài đặt</span>
+            </button>
         </div>
     </div>
-
-    <!-- Order Add/Edit Modal (Modern Design) -->
-    <div id="orderModal" class="modal" style="display: none;">
-        <div class="modal-content customer-form-modal" style="max-width: 700px !important;">
-            <div class="crm-modal-header">
-                <h2 id="orderModalTitle">➕ TẠO ĐƠN HÀNG MỚI</h2>
-                <span class="close" onclick="closeOrderModal()">&times;</span>
-            </div>
-            <div class="crm-modal-body">
-                <form id="orderForm">
-                    <input type="hidden" id="orderId">
-
-                    <span class="form-section-title">Thông tin chung</span>
-                    <div class="crm-grid">
-                        <div class="crm-input-group">
-                            <label>Mã đơn hàng</label>
-                            <input type="text" id="orderCode" disabled placeholder="Tự động">
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Ngày tạo</label>
-                            <input type="text" id="orderDate" disabled>
-                        </div>
-                        <div class="crm-input-group crm-grid-full">
-                            <label>Chọn khách hàng *</label>
-                            <select id="orderCustomerId" required>
-                                <option value="">-- Chọn khách hàng --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style="height: 25px;"></div>
-
-                    <span class="form-section-title">Nội dung sản xuất & Thanh toán</span>
-                    <div class="crm-grid">
-                        <div class="crm-input-group crm-grid-full">
-                            <label>Nội dung in ấn *</label>
-                            <textarea id="orderItems" rows="3"
-                                placeholder="Ví dụ: 50 cuốn catalogue, 10 hộp namecard..." required></textarea>
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Tổng thành tiền (đ) *</label>
-                            <input type="number" id="orderTotal" placeholder="0" required>
-                        </div>
-                        <div class="crm-input-group">
-                            <label>Trạng thái</label>
-                            <select id="orderStatus">
-                                <option value="PENDING">⏳ Đang chờ</option>
-                                <option value="PRINTING">🖨️ Đang in</option>
-                                <option value="DONE">✅ Xong</option>
-                                <option value="DELIVERED">🚚 Đã giao</option>
-                                <option value="CANCELLED">❌ Đã hủy</option>
-                            </select>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="crm-modal-footer">
-                <button class="btn-crm-cancel" onclick="closeOrderModal()">Hủy bỏ</button>
-                <button class="btn-crm-save" onclick="saveOrder()">
-                    <span>💾 Lưu đơn hàng</span>
-                </button>
-            </div>
-        </div>
-        <!-- Order Settings Modal (New) -->
-        <div id="orderSettingsModal" class="modal" style="display: none;">
-            <div class="modal-content customer-form-modal" style="max-width: 600px !important;">
-                <div class="crm-modal-header">
-                    <h2>⚙️ CÀI ĐẶT ĐƠN HÀNG</h2>
-                    <span class="close" onclick="closeOrderSettingsModal()">&times;</span>
-                </div>
-                <div class="crm-modal-body">
-                    <span class="form-section-title">Cài đặt chung</span>
-                    <div class="crm-input-group"
-                        style="background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
-                        <label>Mã đơn hàng</label>
-                        <p style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">Cấu trúc mã tự sinh, bộ đếm bắt
-                            đầu, cho phép sửa tay.</p>
-
-                        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 15px;">
-                            <div class="crm-input-group">
-                                <label style="font-size: 0.8rem;">Cấu trúc mã</label>
-                                <input type="text" id="setOrderStruct" placeholder="DH{count,2} - 2026">
-                                <small color="#64748b">Sử dụng tag {count} hoặc {count,n} để định dạng số nhảy.</small>
-                            </div>
-
-                            <div class="crm-input-group">
-                                <label style="font-size: 0.8rem;">Bộ đếm tự động bắt đầu từ</label>
-                                <input type="number" id="setOrderStart" value="150">
-                            </div>
-
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Cho phép chỉnh sửa
-                                    mã</label>
-                                <label class="crm-switch">
-                                    <input type="checkbox" id="setOrderAllowEdit" checked>
-                                    <span class="crm-slider"></span>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <span class="form-section-title">Người phụ trách & Giá</span>
-                    <div class="crm-input-group" style="background: #f8fafc; padding: 15px; border-radius: 12px;">
-                        <div
-                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Người phụ trách mặc
-                                định</label>
-                            <select style="width: 200px;">
-                                <option value="creator">Người tạo đơn hàng</option>
-                            </select>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <label style="font-size: 0.85rem; font-weight: 700; color: #4a5568;">Tắt tùy chỉnh giá sản
-                                phẩm</label>
-                            <label class="crm-switch">
-                                <input type="checkbox">
-                                <span class="crm-slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div>
-                <div class="crm-modal-footer">
-                    <button class="btn-crm-cancel" onclick="closeOrderSettingsModal()">Hủy bỏ</button>
-                    <button class="btn-crm-save" onclick="saveOrderSettings()">
-                        <span>💾 Lưu cài đặt</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+</div>
 </body>
 
 </html>

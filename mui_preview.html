@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetPrint — MUI Theme Preview</title>
+    <link rel="stylesheet" href="mui_theme.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--mui-bg-neutral);
+            color: var(--mui-text-primary);
+            line-height: 1.57;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+
+        .demo-section {
+            margin-bottom: 48px;
+        }
+
+        .demo-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--mui-secondary);
+            background: var(--mui-secondary-lighter);
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+
+        .demo-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .color-swatch {
+            width: 64px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            align-items: center;
+        }
+
+        .color-group span {
+            font-size: 10px;
+            color: var(--mui-text-disabled);
+        }
+
+        hr.demo-divider {
+            border: none;
+            border-top: 1px dashed var(--mui-divider);
+            margin: 40px 0;
+        }
+
+        .demo-hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+
+        .demo-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
+        }
+
+        .demo-hero h1 span {
+            color: var(--mui-secondary);
+        }
+
+        .demo-hero p {
+            color: var(--mui-text-secondary);
+            font-size: 1rem;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="demo-container">
+
+        <!-- HERO -->
+        <div class="demo-hero">
+            <h1>🎨 <span>NetPrint</span> MUI Theme</h1>
+            <p>Preview tất cả components trước khi áp vào code CRM. Phong cách Material UI / Minimal UI Kit v7.5</p>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ COLORS ============ -->
+        <div class="demo-section">
+            <div class="demo-label">🎨 Color Palette</div>
+            <div class="demo-row">
+                <div class="color-group">
+                    <div class="color-swatch"
+                        style="background: var(--mui-primary-lighter); color: var(--mui-primary-dark)">Lighter</div>
+                    <span>Primary</span>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-primary-light)">Light</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-primary)">Main</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-primary-dark)">Dark</div>
+                </div>
+                <div style="width:24px"></div>
+                <div class="color-group">
+                    <div class="color-swatch"
+                        style="background: var(--mui-secondary-lighter); color: var(--mui-secondary-dark)">Lighter</div>
+                    <span>Secondary</span>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-secondary-light)">Light</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-secondary)">Main</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-secondary-dark)">Dark</div>
+                </div>
+            </div>
+            <div class="demo-row">
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-success); width:72px;">Success</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-info); width:72px;">Info</div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch"
+                        style="background: var(--mui-warning); width:72px; color: var(--mui-warning-contrast);">Warning
+                    </div>
+                </div>
+                <div class="color-group">
+                    <div class="color-swatch" style="background: var(--mui-error); width:72px;">Error</div>
+                </div>
+            </div>
+            <div class="demo-row" style="margin-top: 8px;">
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-100); color: #666; width:48px; height:32px; font-size:8px;">100
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-200); color: #666; width:48px; height:32px; font-size:8px;">200
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-300); color: #666; width:48px; height:32px; font-size:8px;">300
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-400); color: #fff; width:48px; height:32px; font-size:8px;">400
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-500); color: #fff; width:48px; height:32px; font-size:8px;">500
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-600); color: #fff; width:48px; height:32px; font-size:8px;">600
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-700); color: #fff; width:48px; height:32px; font-size:8px;">700
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-800); color: #fff; width:48px; height:32px; font-size:8px;">800
+                </div>
+                <div class="color-swatch"
+                    style="background: var(--mui-grey-900); color: #fff; width:48px; height:32px; font-size:8px;">900
+                </div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ STAT CARDS ============ -->
+        <div class="demo-section">
+            <div class="demo-label">📊 Stat Cards (Dashboard)</div>
+            <div class="mui-stats-row">
+                <div class="mui-stat-card">
+                    <div class="mui-stat-icon secondary">📦</div>
+                    <div class="mui-stat-content">
+                        <div class="mui-stat-label">Tổng sản phẩm</div>
+                        <div class="mui-stat-value">156</div>
+                        <span class="mui-stat-trend up">↑ 12% so với tháng trước</span>
+                    </div>
+                </div>
+                <div class="mui-stat-card">
+                    <div class="mui-stat-icon info">📋</div>
+                    <div class="mui-stat-content">
+                        <div class="mui-stat-label">Đơn hàng</div>
+                        <div class="mui-stat-value">42</div>
+                        <span class="mui-stat-trend up">↑ 8% tháng này</span>
+                    </div>
+                </div>
+                <div class="mui-stat-card">
+                    <div class="mui-stat-icon warning">⏳</div>
+                    <div class="mui-stat-content">
+                        <div class="mui-stat-label">Đang xử lý</div>
+                        <div class="mui-stat-value">7</div>
+                        <span class="mui-stat-trend down">↓ Cần hoàn thành</span>
+                    </div>
+                </div>
+                <div class="mui-stat-card">
+                    <div class="mui-stat-icon success">💰</div>
+                    <div class="mui-stat-content">
+                        <div class="mui-stat-label">Doanh thu</div>
+                        <div class="mui-stat-value">45,600,000đ</div>
+                        <span class="mui-stat-trend up">↑ 18% so với tháng trước</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ BUTTONS ============ -->
+        <div class="demo-section">
+            <div class="demo-label">🔘 Buttons</div>
+            <div class="demo-row">
+                <button class="mui-btn mui-btn-primary">＋ Tạo đơn hàng</button>
+                <button class="mui-btn mui-btn-error">🗑️ Xóa</button>
+                <button class="mui-btn mui-btn-success">✅ Hoàn thành</button>
+                <button class="mui-btn mui-btn-outlined">Hủy bỏ</button>
+                <button class="mui-btn mui-btn-soft">Sửa đơn</button>
+                <button class="mui-btn mui-btn-text">Xem tất cả →</button>
+            </div>
+            <div class="demo-row">
+                <button class="mui-btn mui-btn-primary mui-btn-sm">Small</button>
+                <button class="mui-btn mui-btn-primary">Default</button>
+                <button class="mui-btn mui-btn-primary mui-btn-lg">Large</button>
+                <button class="mui-btn mui-btn-primary" disabled>Disabled</button>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ CHIPS / BADGES ============ -->
+        <div class="demo-section">
+            <div class="demo-label">🏷️ Chips / Status Badges</div>
+            <div class="demo-row">
+                <span class="mui-chip mui-chip-default"><span class="mui-chip-icon">📝</span> Nháp</span>
+                <span class="mui-chip mui-chip-warning"><span class="mui-chip-icon">⏳</span> Đang chờ</span>
+                <span class="mui-chip mui-chip-info"><span class="mui-chip-icon">🖨️</span> Đang in</span>
+                <span class="mui-chip mui-chip-success"><span class="mui-chip-icon">✅</span> Xong</span>
+                <span class="mui-chip mui-chip-secondary"><span class="mui-chip-icon">🚚</span> Đã giao</span>
+                <span class="mui-chip mui-chip-error"><span class="mui-chip-icon">❌</span> Đã hủy</span>
+            </div>
+            <div class="demo-row" style="margin-top: 8px;">
+                <span class="mui-chip mui-chip-primary"><span class="mui-chip-icon">💰</span> Báo giá</span>
+                <span class="mui-chip mui-chip-info"><span class="mui-chip-icon">📤</span> Đã gửi</span>
+                <span class="mui-chip mui-chip-success"><span class="mui-chip-icon">🤝</span> Chấp nhận</span>
+                <span class="mui-chip mui-chip-error"><span class="mui-chip-icon">👎</span> Từ chối</span>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ INPUT FIELDS ============ -->
+        <div class="demo-section">
+            <div class="demo-label">📝 Input Fields</div>
+            <div class="mui-card">
+                <div class="mui-card-header">
+                    <h3 class="mui-card-title">Thông tin sản phẩm</h3>
+                </div>
+                <div class="mui-card-content">
+                    <div class="mui-form-grid">
+                        <div class="mui-input-group">
+                            <label class="mui-label">Mã sản phẩm <span class="required">*</span></label>
+                            <input type="text" class="mui-input" value="NP_1004" placeholder="Mã tự sinh">
+                        </div>
+                        <div class="mui-input-group">
+                            <label class="mui-label">Tên sản phẩm <span class="required">*</span></label>
+                            <input type="text" class="mui-input" placeholder="Ví dụ: Catalogue A4 Couche 150">
+                        </div>
+                        <div class="mui-input-group">
+                            <label class="mui-label">Đơn vị tính <span class="required">*</span></label>
+                            <select class="mui-select">
+                                <option>Tờ</option>
+                                <option>Hộp</option>
+                                <option>Cuốn</option>
+                                <option>Bộ</option>
+                                <option>Cái</option>
+                                <option>m²</option>
+                            </select>
+                        </div>
+                        <div class="mui-input-group">
+                            <label class="mui-label">Giá bán (VNĐ) <span class="required">*</span></label>
+                            <input type="number" class="mui-input" value="15000" placeholder="0">
+                        </div>
+                        <div class="mui-input-group full">
+                            <label class="mui-label">Mô tả / Quy cách</label>
+                            <textarea class="mui-textarea"
+                                placeholder="Ví dụ: Kích thước 21x29.7cm, Giấy C150, Cán màng mờ..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="mui-card-actions">
+                    <button class="mui-btn mui-btn-outlined">Hủy bỏ</button>
+                    <button class="mui-btn mui-btn-primary">💾 Lưu sản phẩm</button>
+                </div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ TABLE — 1OFFICE STYLE ============ -->
+        <div class="demo-section">
+            <div class="demo-label">📋 Danh sách đơn hàng bán — 1Office Style</div>
+
+            <!-- 1Office Order List Card -->
+            <div class="o1-order-list">
+                <!-- Page Title Bar -->
+                <div class="o1-title-bar">
+                    <div class="o1-title-left">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--mui-text-secondary)"
+                            stroke-width="1.5">
+                            <rect x="3" y="3" width="7" height="7" rx="1" />
+                            <rect x="14" y="3" width="7" height="7" rx="1" />
+                            <rect x="3" y="14" width="7" height="7" rx="1" />
+                            <rect x="14" y="14" width="7" height="7" rx="1" />
+                        </svg>
+                        <h2 class="o1-page-title">Danh sách đơn hàng bán</h2>
+                    </div>
+                    <div class="o1-title-right">
+                        <button class="o1-icon-btn" title="Tìm kiếm">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                        </button>
+                        <button class="o1-icon-btn" title="Thông báo">🔔</button>
+                        <div class="mui-avatar"
+                            style="background: var(--mui-primary); width:32px; height:32px; font-size:0.75rem;">P</div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="o1-tabs">
+                    <button class="o1-tab active">Đơn hàng bán</button>
+                    <button class="o1-tab">Đơn gửi lại</button>
+                    <button class="o1-tab">Đã duyệt Dự trù</button>
+                </div>
+
+                <!-- Toolbar -->
+                <div class="o1-toolbar">
+                    <div class="o1-toolbar-left">
+                        <button class="o1-filter-btn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                            </svg>
+                        </button>
+                        <span class="o1-record-count">Hiển thị 1 - 50 / <strong>354</strong> bản ghi</span>
+                        <span class="o1-separator">|</span>
+                        <span class="o1-page-label">Trang</span>
+                        <div class="o1-mini-pagination">
+                            <button class="o1-mini-page active">01</button>
+                            <span>~</span>
+                            <button class="o1-mini-page">08</button>
+                        </div>
+                    </div>
+                    <div class="o1-toolbar-right">
+                        <button class="o1-action-btn">📥 Tải Mẫu</button>
+                        <button class="o1-action-btn">📤 Import</button>
+                        <button class="o1-action-btn primary">＋ Tạo Đơn</button>
+                        <button class="o1-action-btn">⚙ Chọn thêm cộng</button>
+                        <button class="o1-action-btn">⚙️ Cài đặt</button>
+                    </div>
+                </div>
+
+                <!-- Data Table -->
+                <div class="o1-table-wrap">
+                    <table class="o1-table">
+                        <thead>
+                            <tr>
+                                <th class="col-cb"><input type="checkbox"></th>
+                                <th>Ngày bán</th>
+                                <th>Mã đơn hàng</th>
+                                <th>Khách hàng</th>
+                                <th>Người tạo</th>
+                                <th class="col-number">Giá trị đơn hàng</th>
+                                <th class="col-number">Đã thu</th>
+                                <th>Trạng thái</th>
+                                <th>Trang thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">19/02/2026</td>
+                                <td class="o1-code">DH170 - 2026 - TAG TRỤ DECAL - RƯỢU NGOẠI</td>
+                                <td class="o1-customer">CHI TRIỆU - GIAO DƯƠNG</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">9,200,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status green">Đang sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">19/02/2026</td>
+                                <td class="o1-code">DH170 - 2026 - TAG TRỤ DECAL IN PHANG</td>
+                                <td class="o1-customer">CÔNG TY TNHH THREATS</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">2,000,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status green">Đang sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">19/02/2026</td>
+                                <td class="o1-code">DH169 - 2026 - HỘP HŨ TUNG TẨM VÀ Ô TÔ</td>
+                                <td class="o1-customer">ANH TAI - TAI - SAI HÀC</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">62,400,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status green">Đang sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">14/02/2026</td>
+                                <td class="o1-code">DH168 - 2026 - TEM SIMBA64</td>
+                                <td class="o1-customer">CHÍ DƯƠNG</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">400,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status green">Đang sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">14/02/2026</td>
+                                <td class="o1-code">DH161 - 1206 - THÊM NHÃN BỘ 3</td>
+                                <td class="o1-customer">A MINH – CÔNG TY MACO VIỆT</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">218,563</td>
+                                <td class="col-number">0</td>
+                                <td>Hoàn thành đơn hàng</td>
+                                <td><span class="o1-status blue">Hoàn thành đơn hàng</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">14/02/2026</td>
+                                <td class="o1-code">DH166 - 2026 - HỘ GIẤY IN ĐEN CHỮ M 4 MÀU - NHÃ</td>
+                                <td class="o1-customer">Công ty SP Công nghệ Vương Phẩm Tuyệt</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">999,882</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status green">Đang sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">13/02/2026</td>
+                                <td class="o1-code">DH165 - 2026 HỘP CARTON K4 TV A DECAL CB CÓ DECAL CUA</td>
+                                <td class="o1-customer">CHỊ TIỆP GAMPUCHIA</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">5,200,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status orange">Lưng sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">13/02/2026</td>
+                                <td class="o1-code">DH164 - 2026 - HỘP CARTON K1 TV IN BÊN 1 DT CM</td>
+                                <td class="o1-customer">A MINH AC</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">2,000,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status orange">Lưng sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">10/02/2026</td>
+                                <td class="o1-code">DH163 - 2026 - GIẤY IN ĐEN (CẦN) TỰ - NGOẠI GOLD</td>
+                                <td class="o1-customer">CÔNG TY TNHH QUỐC PHỦ VĨNH</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">404,462</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status orange">Lưng sản xuất</span></td>
+                            </tr>
+                            <tr>
+                                <td class="col-cb"><input type="checkbox"></td>
+                                <td class="o1-date">10/02/2026</td>
+                                <td class="o1-code">DH162 - 2026 - TEM A LA MAISON</td>
+                                <td class="o1-customer">CÔ THỰC ĐỜN</td>
+                                <td class="o1-creator">
+                                    <div class="o1-avatar">P</div>
+                                </td>
+                                <td class="col-number">340,000</td>
+                                <td class="col-number">0</td>
+                                <td>—</td>
+                                <td><span class="o1-status orange">Lưng sản xuất</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ DETAIL VIEW ============ -->
+        <div class="demo-section">
+            <div class="demo-label">📄 Chi tiết đơn hàng</div>
+
+            <!-- Page Header -->
+            <div class="mui-page-header">
+                <div>
+                    <div class="mui-breadcrumb">
+                        <a href="#">Dashboard</a>
+                        <span class="mui-breadcrumb-sep">›</span>
+                        <a href="#">Đơn hàng</a>
+                        <span class="mui-breadcrumb-sep">›</span>
+                        <span>DH152</span>
+                    </div>
+                    <h2 class="mui-page-title">DH152 — IN CATALOGUE A4 COUCHE 150</h2>
+                </div>
+                <div class="demo-row">
+                    <button class="mui-btn mui-btn-soft">✏️ Sửa</button>
+                    <button class="mui-btn mui-btn-outlined"
+                        style="color: var(--mui-error); border-color: rgba(231,76,60,0.5);">🗑️ Xóa</button>
+                </div>
+            </div>
+
+            <!-- Items Table Card -->
+            <div class="mui-card" style="margin-bottom: 24px;">
+                <div class="mui-card-header">
+                    <h3 class="mui-card-title">Nội dung đơn hàng</h3>
+                </div>
+                <div style="padding: 0 24px;">
+                    <table class="mui-table">
+                        <thead>
+                            <tr>
+                                <th style="width:50px;">STT</th>
+                                <th>Sản phẩm / Dịch vụ</th>
+                                <th style="width:80px;">Đơn vị</th>
+                                <th class="col-number" style="width:120px;">Đơn giá</th>
+                                <th class="col-number" style="width:80px;">SL</th>
+                                <th class="col-number" style="width:140px;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>
+                                    <div style="font-weight:600;">Catalogue A4</div>
+                                    <div style="font-size:12px; color:var(--mui-text-disabled); margin-top:2px;">🔧
+                                        Couche 150gsm, cán mờ 2 mặt, 16 trang</div>
+                                </td>
+                                <td>Cuốn</td>
+                                <td class="col-number">15,000</td>
+                                <td class="col-number">100</td>
+                                <td class="col-number" style="font-weight:600;">1,500,000</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mui-summary">
+                    <div class="mui-summary-row">
+                        <span class="mui-summary-label">Tổng tiền trước thuế</span>
+                        <span class="mui-summary-value">1,500,000</span>
+                    </div>
+                    <div class="mui-summary-row">
+                        <span class="mui-summary-label">Tiền thuế (10%)</span>
+                        <span class="mui-summary-value">150,000</span>
+                    </div>
+                    <div class="mui-summary-row total">
+                        <span class="mui-summary-label">Tổng tiền sau thuế</span>
+                        <span class="mui-summary-value">1,650,000</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Info Card -->
+            <div class="mui-card">
+                <div class="mui-card-header">
+                    <h3 class="mui-card-title">Thông tin chung</h3>
+                </div>
+                <div class="mui-detail-grid">
+                    <div>
+                        <div class="mui-detail-label">Mã đơn hàng</div>
+                        <div class="mui-detail-value bold">DH152</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Khách hàng</div>
+                        <div class="mui-detail-value blue">KH_001 - Nguyễn Văn Anh</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Điện thoại</div>
+                        <div class="mui-detail-value red">0901234567</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Email</div>
+                        <div class="mui-detail-value">anhnv@gmail.com</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Địa chỉ</div>
+                        <div class="mui-detail-value">123 Quận 1, TP.HCM</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Ngày bán</div>
+                        <div class="mui-detail-value bold">05/03/2026</div>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Trạng thái</div>
+                        <span class="mui-chip mui-chip-warning"><span class="mui-chip-icon">⏳</span> Đang chờ</span>
+                    </div>
+                    <div>
+                        <div class="mui-detail-label">Giá trị đơn hàng</div>
+                        <div class="mui-detail-value red" style="font-weight:700; font-size:1rem;">1,650,000đ</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ AVATARS ============ -->
+        <div class="demo-section">
+            <div class="demo-label">👤 Avatars</div>
+            <div class="demo-row">
+                <div class="mui-avatar-sm mui-avatar" style="background:#3498DB;">NA</div>
+                <div class="mui-avatar" style="background:#27AE60;">TB</div>
+                <div class="mui-avatar mui-avatar-lg" style="background:#E74C3C;">AB</div>
+                <div class="mui-avatar mui-avatar-xl" style="background:#F39C12; color:var(--mui-warning-contrast);">PD
+                </div>
+                <div class="mui-avatar" style="background: var(--mui-secondary);">P</div>
+            </div>
+        </div>
+
+        <hr class="demo-divider">
+
+        <!-- ============ DIALOG DEMO ============ -->
+        <div class="demo-section">
+            <div class="demo-label">📦 Dialog / Modal</div>
+            <button class="mui-btn mui-btn-primary"
+                onclick="document.getElementById('demoDialog').classList.add('active')">Mở Dialog Demo</button>
+        </div>
+
+        <!-- Dialog -->
+        <div class="mui-dialog-overlay" id="demoDialog"
+            onclick="if(event.target===this)this.classList.remove('active')">
+            <div class="mui-dialog" style="max-width:480px;">
+                <div class="mui-dialog-header">
+                    <h3 class="mui-dialog-title">Tạo mới sản phẩm</h3>
+                    <button class="mui-dialog-close"
+                        onclick="document.getElementById('demoDialog').classList.remove('active')">✕</button>
+                </div>
+                <div class="mui-dialog-body">
+                    <div class="mui-input-group">
+                        <label class="mui-label">Tên sản phẩm <span class="required">*</span></label>
+                        <input type="text" class="mui-input" placeholder="Ví dụ: Catalogue A4 Couche 150">
+                    </div>
+                    <div class="mui-form-grid">
+                        <div class="mui-input-group">
+                            <label class="mui-label">Đơn vị</label>
+                            <select class="mui-select">
+                                <option>Tờ</option>
+                                <option>Hộp</option>
+                                <option selected>Cuốn</option>
+                            </select>
+                        </div>
+                        <div class="mui-input-group">
+                            <label class="mui-label">Giá bán</label>
+                            <input type="number" class="mui-input" placeholder="0">
+                        </div>
+                    </div>
+                </div>
+                <div class="mui-dialog-actions">
+                    <button class="mui-btn mui-btn-outlined"
+                        onclick="document.getElementById('demoDialog').classList.remove('active')">Hủy bỏ</button>
+                    <button class="mui-btn mui-btn-primary">💾 Lưu sản phẩm</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="height:60px;"></div>
+
+    </div>
+</body>
+
+</html>
