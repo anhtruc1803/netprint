@@ -4,6 +4,7 @@ import Box from '@mui/material/Box';
 import Tab from '@mui/material/Tab';
 import Card from '@mui/material/Card';
 import Tabs from '@mui/material/Tabs';
+import Button from '@mui/material/Button';
 
 import { paths } from 'src/routes/paths';
 import { RouterLink } from 'src/routes/components';
@@ -79,6 +80,17 @@ export function UserProfileView() {
           { name: 'Người dùng', href: paths.dashboard.user.root },
           { name: user?.displayName },
         ]}
+        action={
+          <Button
+            component={RouterLink}
+            href={paths.dashboard.user.account}
+            variant="contained"
+            color="primary"
+            startIcon={<Iconify icon="solar:pen-bold" />}
+          >
+            Sửa hồ sơ
+          </Button>
+        }
         sx={{ mb: { xs: 3, md: 5 } }}
       />
 

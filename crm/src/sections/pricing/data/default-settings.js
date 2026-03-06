@@ -39,21 +39,6 @@ export const DEFAULT_PAPER_SETTINGS = {
 };
 
 export const DEFAULT_CATALOGUE_SETTINGS = {
-    papers: [
-        { id: 1, name: 'C120', price: 600 }, { id: 2, name: 'C150', price: 700 },
-        { id: 3, name: 'C200', price: 1000 }, { id: 4, name: 'C250', price: 1400 },
-        { id: 5, name: 'C300', price: 1700 }, { id: 6, name: 'I 250', price: 1150 },
-        { id: 7, name: 'I 300', price: 1550 }, { id: 8, name: 'FO 80', price: 380 },
-        { id: 9, name: 'FO 100', price: 420 }, { id: 10, name: 'FO 120', price: 600 },
-        { id: 11, name: 'FO 150', price: 900 }, { id: 12, name: 'FO 250', price: 1800 },
-        { id: 13, name: 'FO 300', price: 2200 }, { id: 14, name: 'D 300', price: 1300 },
-        { id: 15, name: 'Kraft trắng 100', price: 1000 }, { id: 16, name: 'Kraft trắng 150', price: 1500 },
-        { id: 17, name: 'Kraft trắng 250 - NGA', price: 2400 },
-        { id: 18, name: 'B300', price: 2500 },
-        { id: 19, name: 'Econo White 120', price: 2000 }, { id: 20, name: 'Econo White 150', price: 2500 },
-        { id: 21, name: 'Econo White 190', price: 3000 }, { id: 22, name: 'Econo White 250', price: 4000 },
-        { id: 23, name: 'Econo White 300', price: 5000 },
-    ],
     printPrice: 4000,
     laminations: [
         { id: 1, name: 'Không cán màng', tiers: [{ max: 999999, price: 0 }] },
@@ -94,6 +79,8 @@ export function loadPaperSettings() {
 export function savePaperSettings(settings) {
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+        // Dispatch event so calculators auto-refresh
+        window.dispatchEvent(new CustomEvent('netprint-settings-changed', { detail: { type: 'paper', settings } }));
     } catch (e) {
         console.error('Error saving paper settings:', e);
     }
@@ -103,7 +90,10 @@ export function loadCatalogueSettings() {
     try {
         const saved = localStorage.getItem(CAT_STORAGE_KEY);
         if (saved) {
-            return { ...DEFAULT_CATALOGUE_SETTINGS, ...JSON.parse(saved) };
+            const parsed = JSON.parse(saved);
+            // Remove legacy papers — catalogue now uses shared paperSettings
+            delete parsed.papers;
+            return { ...DEFAULT_CATALOGUE_SETTINGS, ...parsed };
         }
     } catch (e) {
         console.error('Error loading catalogue settings:', e);
@@ -114,7 +104,55 @@ export function loadCatalogueSettings() {
 export function saveCatalogueSettings(settings) {
     try {
         localStorage.setItem(CAT_STORAGE_KEY, JSON.stringify(settings));
+        window.dispatchEvent(new CustomEvent('netprint-settings-changed', { detail: { type: 'catalogue', settings } }));
     } catch (e) {
         console.error('Error saving catalogue settings:', e);
     }
 }
+
+// ===== React Hook: auto-sync settings =====
+import { useState, useEffect, useCallback } from 'react';
+
+/**
+ * Hook that auto-reloads paper settings whenever they change
+ * Use this instead of useMemo(() => loadPaperSettings(), [])
+ */
+export function usePaperSettings() {
+    const [settings, setSettings] = useState(() => loadPaperSettings());
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.detail?.type === 'paper') {
+                setSettings(loadPaperSettings());
+            }
+        };
+        window.addEventListener('netprint-settings-changed', handler);
+        return () => window.removeEventListener('netprint-settings-changed', handler);
+    }, []);
+
+    const reload = useCallback(() => setSettings(loadPaperSettings()), []);
+
+    return { settings, reload };
+}
+
+/**
+ * Hook that auto-reloads catalogue settings whenever they change
+ */
+export function useCatalogueSettings() {
+    const [settings, setSettings] = useState(() => loadCatalogueSettings());
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.detail?.type === 'catalogue') {
+                setSettings(loadCatalogueSettings());
+            }
+        };
+        window.addEventListener('netprint-settings-changed', handler);
+        return () => window.removeEventListener('netprint-settings-changed', handler);
+    }, []);
+
+    const reload = useCallback(() => setSettings(loadCatalogueSettings()), []);
+
+    return { settings, reload };
+}
+

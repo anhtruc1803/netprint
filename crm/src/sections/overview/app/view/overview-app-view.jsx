@@ -1,203 +1,148 @@
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import Card from '@mui/material/Card';
 import Button from '@mui/material/Button';
-import { useTheme } from '@mui/material/styles';
+import Typography from '@mui/material/Typography';
+
+import { paths } from 'src/routes/paths';
+import { RouterLink } from 'src/routes/components';
 
 import { DashboardContent } from 'src/layouts/dashboard';
-import { SeoIllustration } from 'src/assets/illustrations';
-import { _appAuthors, _appRelated, _appFeatured, _appInvoices, _appInstalled } from 'src/_mock';
 
-import { svgColorClasses } from 'src/components/svg-color';
+import { Iconify } from 'src/components/iconify';
 
 import { useMockedUser } from 'src/auth/hooks';
 
-import { AppWidget } from '../app-widget';
-import { AppWelcome } from '../app-welcome';
-import { AppFeatured } from '../app-featured';
-import { AppTopAuthors } from '../app-top-authors';
-import { AppTopRelated } from '../app-top-related';
-import { AppNewInvoices } from '../app-new-invoices';
-import { AppAreaInstalled } from '../app-area-installed';
-import { AppWidgetSummary } from '../app-widget-summary';
-import { AppCurrentDownload } from '../app-current-download';
-import { AppTopInstalledCountries } from '../app-top-installed-countries';
+// ----------------------------------------------------------------------
+
+const QUICK_LINKS = [
+  {
+    title: 'Tính giá In Nhanh',
+    icon: 'solar:calculator-bold-duotone',
+    href: paths.dashboard.pricing.calculator,
+    color: '#2065D1',
+    description: 'Tính giá in ấn nhanh chóng',
+  },
+  {
+    title: 'Tính giá Catalogue',
+    icon: 'solar:book-bold-duotone',
+    href: paths.dashboard.pricing.catalogue,
+    color: '#E4520B',
+    description: 'Tính giá catalogue, tờ rơi',
+  },
+  {
+    title: 'Đơn hàng',
+    icon: 'solar:bag-bold-duotone',
+    href: paths.dashboard.order.root,
+    color: '#00A76F',
+    description: 'Quản lý đơn hàng',
+  },
+  {
+    title: 'Sản phẩm',
+    icon: 'solar:box-bold-duotone',
+    href: paths.dashboard.product.root,
+    color: '#7635DC',
+    description: 'Quản lý sản phẩm',
+  },
+  {
+    title: 'Cài đặt giá',
+    icon: 'solar:settings-bold-duotone',
+    href: paths.dashboard.pricing.settings,
+    color: '#637381',
+    description: 'Cấu hình giá giấy, cán màng',
+  },
+  {
+    title: 'Người dùng',
+    icon: 'solar:users-group-rounded-bold-duotone',
+    href: paths.dashboard.user.list,
+    color: '#00B8D9',
+    description: 'Quản lý nhân viên',
+  },
+];
 
 // ----------------------------------------------------------------------
 
 export function OverviewAppView() {
   const { user } = useMockedUser();
 
-  const theme = useTheme();
-
   return (
     <DashboardContent maxWidth="xl">
       <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 8 }}>
-          <AppWelcome
-            title={`Welcome back 👋 \n ${user?.displayName}`}
-            description="If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything."
-            img={<SeoIllustration hideBackground />}
-            action={
-              <Button variant="contained" color="primary">
-                Go now
-              </Button>
-            }
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AppFeatured list={_appFeatured} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AppWidgetSummary
-            title="Total active users"
-            percent={2.6}
-            total={18765}
-            chart={{
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [15, 18, 12, 51, 68, 11, 39, 37],
+        {/* Welcome Banner */}
+        <Grid size={{ xs: 12 }}>
+          <Card
+            sx={{
+              p: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'linear-gradient(135deg, #1A2980 0%, #26D0CE 100%)',
+              color: 'white',
+              borderRadius: 2,
             }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AppWidgetSummary
-            title="Total installed"
-            percent={0.2}
-            total={4876}
-            chart={{
-              colors: [theme.palette.info.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [20, 41, 63, 33, 28, 35, 50, 46],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 4 }}>
-          <AppWidgetSummary
-            title="Total downloads"
-            percent={-0.1}
-            total={678}
-            chart={{
-              colors: [theme.palette.error.main],
-              categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-              series: [18, 19, 31, 8, 16, 37, 12, 33],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AppCurrentDownload
-            title="Current download"
-            subheader="Downloaded by operating system"
-            chart={{
-              series: [
-                { label: 'Mac', value: 12244 },
-                { label: 'Window', value: 53345 },
-                { label: 'iOS', value: 44313 },
-                { label: 'Android', value: 78343 },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 8 }}>
-          <AppAreaInstalled
-            title="Area installed"
-            subheader="(+43%) than last year"
-            chart={{
-              categories: [
-                'Jan',
-                'Feb',
-                'Mar',
-                'Apr',
-                'May',
-                'Jun',
-                'Jul',
-                'Aug',
-                'Sep',
-                'Oct',
-                'Nov',
-                'Dec',
-              ],
-              series: [
-                {
-                  name: '2022',
-                  data: [
-                    { name: 'Asia', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                    { name: 'Europe', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                    { name: 'Americas', data: [12, 10, 18, 22, 20, 12, 8, 21, 20, 14, 15, 16] },
-                  ],
-                },
-                {
-                  name: '2023',
-                  data: [
-                    { name: 'Asia', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                    { name: 'Europe', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                    { name: 'Americas', data: [6, 18, 14, 9, 20, 6, 22, 19, 8, 22, 8, 17] },
-                  ],
-                },
-                {
-                  name: '2024',
-                  data: [
-                    { name: 'Asia', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                    { name: 'Europe', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                    { name: 'Americas', data: [6, 20, 15, 18, 7, 24, 6, 10, 12, 17, 18, 10] },
-                  ],
-                },
-              ],
-            }}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, lg: 8 }}>
-          <AppNewInvoices
-            title="New Invoices"
-            tableData={_appInvoices}
-            headCells={[
-              { id: 'id', label: 'Invoice ID' },
-              { id: 'category', label: 'Category' },
-              { id: 'price', label: 'Price' },
-              { id: 'status', label: 'Status' },
-              { id: '' },
-            ]}
-          />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AppTopRelated title="Related applications" list={_appRelated} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AppTopInstalledCountries title="Top installed countries" list={_appInstalled} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <AppTopAuthors title="Top authors" list={_appAuthors} />
-        </Grid>
-
-        <Grid size={{ xs: 12, md: 6, lg: 4 }}>
-          <Box sx={{ gap: 3, display: 'flex', flexDirection: 'column' }}>
-            <AppWidget
-              title="Conversion"
-              total={38566}
-              icon="solar:user-rounded-bold"
-              chart={{ series: 48 }}
+          >
+            <Box>
+              <Typography variant="h4" sx={{ mb: 1 }}>
+                Xin chào, {user?.displayName} 👋
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.85 }}>
+                Chào mừng bạn đến với NetPrint CRM. Chọn chức năng bên dưới để bắt đầu.
+              </Typography>
+            </Box>
+            <Box
+              component="img"
+              src="/logo/logo-icon.png"
+              sx={{ width: 80, height: 80, objectFit: 'contain', display: { xs: 'none', md: 'block' } }}
             />
+          </Card>
+        </Grid>
 
-            <AppWidget
-              title="Applications"
-              total={55566}
-              icon="solar:letter-bold"
-              chart={{
-                series: 75,
-                colors: [theme.vars.palette.info.light, theme.vars.palette.info.main],
+        {/* Quick Links */}
+        {QUICK_LINKS.map((item) => (
+          <Grid key={item.title} size={{ xs: 12, sm: 6, md: 4 }}>
+            <Card
+              component={RouterLink}
+              href={item.href}
+              sx={{
+                p: 3,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                textDecoration: 'none',
+                color: 'inherit',
+                transition: 'all 0.2s ease-in-out',
+                cursor: 'pointer',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: (theme) => theme.customShadows?.z16 || '0 8px 16px rgba(0,0,0,0.1)',
+                },
               }}
-              sx={{ bgcolor: 'info.dark', [`& .${svgColorClasses.root}`]: { color: 'info.light' } }}
-            />
-          </Box>
-        </Grid>
+            >
+              <Box
+                sx={{
+                  width: 56,
+                  height: 56,
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  borderRadius: 1.5,
+                  bgcolor: `${item.color}14`,
+                }}
+              >
+                <Iconify icon={item.icon} width={28} sx={{ color: item.color }} />
+              </Box>
+              <Box>
+                <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                  {item.title}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.25 }}>
+                  {item.description}
+                </Typography>
+              </Box>
+            </Card>
+          </Grid>
+        ))}
       </Grid>
     </DashboardContent>
   );

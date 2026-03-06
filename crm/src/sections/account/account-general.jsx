@@ -22,16 +22,14 @@ import { useMockedUser } from 'src/auth/hooks';
 export const UpdateUserSchema = z.object({
   displayName: z.string().min(1, { error: 'Vui lòng nhập tên!' }),
   email: schemaUtils.email(),
-  photoURL: schemaUtils.file({ error: 'Vui lòng tải ảnh đại diện!' }),
-  phoneNumber: schemaUtils.phoneNumber({ isValid: isValidPhoneNumber }),
-  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Vui lòng chọn quốc gia!' }), {
-    error: 'Vui lòng chọn quốc gia!',
-  }),
-  address: z.string().min(1, { error: 'Vui lòng nhập địa chỉ!' }),
-  state: z.string().min(1, { error: 'Vui lòng nhập tỉnh/thành!' }),
-  city: z.string().min(1, { error: 'Vui lòng nhập thành phố!' }),
-  zipCode: z.string().min(1, { error: 'Vui lòng nhập mã bưu chính!' }),
-  about: z.string().min(1, { error: 'Vui lòng nhập giới thiệu!' }),
+  photoURL: z.any().optional(),
+  phoneNumber: z.string().optional().or(z.literal('')),
+  country: z.any().optional().nullable(),
+  address: z.string().optional().or(z.literal('')),
+  state: z.string().optional().or(z.literal('')),
+  city: z.string().optional().or(z.literal('')),
+  zipCode: z.string().optional().or(z.literal('')),
+  about: z.string().optional().or(z.literal('')),
   // Not required
   isPublic: z.boolean(),
 });
@@ -39,7 +37,7 @@ export const UpdateUserSchema = z.object({
 // ----------------------------------------------------------------------
 
 export function AccountGeneral() {
-  const { user } = useMockedUser();
+  const { user, updateUser } = useMockedUser();
 
   const currentUser = {
     displayName: user?.displayName,
@@ -84,6 +82,18 @@ export function AccountGeneral() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Convert avatar File to base64 for localStorage storage
+      let photoURL = data.photoURL;
+      if (photoURL instanceof File) {
+        photoURL = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(photoURL);
+        });
+      }
+
+      updateUser({ ...data, photoURL });
       toast.success('Cập nhật thành công!');
       console.info('DATA', data);
     } catch (error) {

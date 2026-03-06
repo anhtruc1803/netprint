@@ -28,6 +28,8 @@ const Page403 = lazy(() => import('src/pages/error/403'));
 const Page404 = lazy(() => import('src/pages/error/404'));
 // Blank
 const BlankPage = lazy(() => import('src/pages/blank'));
+// NetPrint
+const NetPrintIndexPage = lazy(() => import('src/pages/netprintindex'));
 
 // ----------------------------------------------------------------------
 
@@ -108,6 +110,10 @@ export const mainRoutes = [
           { path: '404', element: <Page404 /> },
           { path: '403', element: <Page403 /> },
         ],
+      },
+      {
+        path: 'netprintindex',
+        element: <NetPrintIndexPage />,
       },
     ],
   },

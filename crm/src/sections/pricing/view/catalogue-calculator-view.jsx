@@ -3,10 +3,15 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
 import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
+import Badge from '@mui/material/Badge';
 import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import Drawer from '@mui/material/Drawer';
 import Select from '@mui/material/Select';
 import Divider from '@mui/material/Divider';
+import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
@@ -147,8 +152,25 @@ function PaperRow({ item, index, papers, laminations, onUpdate, onRemove, canRem
 
 export function CatalogueCalculatorView() {
     const theme = useTheme();
-    const catSettings = useMemo(() => loadCatalogueSettings(), []);
-    const paperSettings = useMemo(() => loadPaperSettings(), []);
+    const [catSettings, setCatSettings] = useState(() => loadCatalogueSettings());
+    const [paperSettings, setPaperSettings] = useState(() => loadPaperSettings());
+
+    // Auto-sync when settings changed from Cài đặt giá
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.detail?.type === 'paper') {
+                setPaperSettings(loadPaperSettings());
+            } else if (e.detail?.type === 'catalogue') {
+                setCatSettings(loadCatalogueSettings());
+            }
+        };
+        window.addEventListener('netprint-settings-changed', handler);
+        return () => window.removeEventListener('netprint-settings-changed', handler);
+    }, []);
+
+    // Use shared settings for laminations & customer types (synced with Cài đặt giá)
+    const sharedLaminations = paperSettings.laminations || catSettings.laminations;
+    const sharedCustomerTypes = paperSettings.customerTypes || catSettings.customerTypes;
 
     // Form state
     const [catSize, setCatSize] = useState('A4');
@@ -158,7 +180,7 @@ export function CatalogueCalculatorView() {
     const [qty, setQty] = useState('');
     const [bindId, setBindId] = useState(catSettings.bindings[0]?.id || 1);
     const [printSizeId, setPrintSizeId] = useState('');
-    const [custId, setCustId] = useState(catSettings.customerTypes[0]?.id || 1);
+    const [custId, setCustId] = useState(sharedCustomerTypes[0]?.id || 1);
 
     const [coverPapers, setCoverPapers] = useState([
         { paperId: '', printSides: 1, laminationId: 1, showCustomPrice: false, customPrice: '' }
@@ -171,17 +193,39 @@ export function CatalogueCalculatorView() {
     const [showDetail, setShowDetail] = useState(true);
     const [error, setError] = useState('');
 
+    // History & Preview state
+    const [priceHistory, setPriceHistory] = useState(() => {
+        try { return JSON.parse(localStorage.getItem('netprint_cat_history') || '[]'); } catch { return []; }
+    });
+    const [historyOpen, setHistoryOpen] = useState(false);
+    const [historySearch, setHistorySearch] = useState('');
+    const [previewEntry, setPreviewEntry] = useState(null);
+
     const numQty = Number(qty) || 0;
     const isCustomSize = catSize === 'custom';
 
     // Get print sizes from paper settings
     const printSizes = paperSettings.printSizes || [];
 
-    // Get papers for selected print size
+    // Get papers for selected print size — synced from Cài đặt giá
     const availablePapers = useMemo(() => {
-        if (!printSizeId) return catSettings.papers || [];
-        return getPapersForSize(paperSettings, parseInt(printSizeId));
-    }, [printSizeId, paperSettings, catSettings.papers]);
+        if (printSizeId) {
+            return getPapersForSize(paperSettings, parseInt(printSizeId));
+        }
+        // No print size selected: combine all papers from all print sizes
+        const allPapers = [];
+        const seen = new Set();
+        (paperSettings.paperPricing || []).forEach(pp => {
+            (pp.papers || []).forEach(p => {
+                const key = p.name || p.id;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    allPapers.push(p);
+                }
+            });
+        });
+        return allPapers;
+    }, [printSizeId, paperSettings]);
 
     // Auto-select print size based on catalogue size
     useEffect(() => {
@@ -233,14 +277,11 @@ export function CatalogueCalculatorView() {
     const getPaperPrice = useCallback((paperItem, papers) => {
         if (paperItem.showCustomPrice && paperItem.customPrice) return Number(paperItem.customPrice);
         if (!paperItem.paperId) return 0;
-        // From catalogue settings papers
-        const catPaper = catSettings.papers.find(p => p.id === paperItem.paperId);
-        if (catPaper) return catPaper.price;
         // From paper settings (tiers)
         const pp = papers.find(p => (p.id || p.name) === paperItem.paperId);
         if (pp?.tiers) return findTierPrice(pp.tiers, numQty);
         return 0;
-    }, [catSettings.papers, numQty]);
+    }, [numQty]);
 
     // Calculate
     const calculate = useCallback(() => {
@@ -258,8 +299,8 @@ export function CatalogueCalculatorView() {
             coverCost += totalCoverSheets * price;
             if (cp.printSides > 0) coverPrintCost += totalCoverSheets * printPrice * cp.printSides;
             if (cp.laminationId && cp.laminationId !== 1) {
-                const lam = catSettings.laminations.find(l => l.id === cp.laminationId);
-                if (lam?.tiers) coverLamCost += numQty * findTierPrice(lam.tiers, numQty);
+                const lam = sharedLaminations.find(l => l.id === cp.laminationId);
+                if (lam?.tiers) coverLamCost += totalCoverSheets * findTierPrice(lam.tiers, totalCoverSheets);
             }
         });
 
@@ -270,8 +311,8 @@ export function CatalogueCalculatorView() {
             innerCost += totalInnerSheets * price;
             if (ip.printSides > 0) innerPrintCost += totalInnerSheets * printPrice * ip.printSides;
             if (ip.laminationId && ip.laminationId !== 1) {
-                const lam = catSettings.laminations.find(l => l.id === ip.laminationId);
-                if (lam?.tiers) innerLamCost += numQty * findTierPrice(lam.tiers, numQty);
+                const lam = sharedLaminations.find(l => l.id === ip.laminationId);
+                if (lam?.tiers) innerLamCost += totalInnerSheets * findTierPrice(lam.tiers, totalInnerSheets);
             }
         });
 
@@ -281,7 +322,7 @@ export function CatalogueCalculatorView() {
 
         const totalCost = coverCost + coverPrintCost + coverLamCost + innerCost + innerPrintCost + innerLamCost + bindCost + totalExtraCosts;
         const costPerItem = totalCost / numQty;
-        const cust = catSettings.customerTypes.find(c => c.id === custId);
+        const cust = sharedCustomerTypes.find(c => c.id === custId);
         const profitPercent = cust?.profit || 25;
         const sellPerItem = Math.round(costPerItem * (1 + profitPercent / 100));
         const totalSell = sellPerItem * numQty;
@@ -301,7 +342,153 @@ export function CatalogueCalculatorView() {
                 { label: 'Chi phí khác', value: totalExtraCosts, icon: 'solar:tag-bold-duotone', color: 'secondary' },
             ].filter(r => r.value > 0),
         });
-    }, [numQty, pages, coverPapers, innerPapers, bindId, custId, catSettings, totalExtraCosts, availablePapers, getPaperPrice, isCustomSize, customW, customH, totalCoverSheets, totalInnerSheets]);
+
+        // Save to history
+        const sizePreset = CAT_SIZES.find(s => s.value === catSize);
+        const catW = isCustomSize ? (Number(customW) || 0) : sizePreset?.w || 0;
+        const catH = isCustomSize ? (Number(customH) || 0) : sizePreset?.h || 0;
+        const coverPaperNames = coverPapers.map(cp => {
+            const p = availablePapers.find(pp => (pp.id || pp.name) === cp.paperId);
+            return p?.name || '';
+        }).filter(Boolean).join(', ');
+        const innerPaperNames = innerPapers.map(ip => {
+            const p = availablePapers.find(pp => (pp.id || pp.name) === ip.paperId);
+            return p?.name || '';
+        }).filter(Boolean).join(', ');
+        const coverLamName = coverPapers.map(cp => {
+            const l = sharedLaminations.find(ll => ll.id === cp.laminationId);
+            return l?.id !== 1 ? l?.name : null;
+        }).filter(Boolean).join(', ') || 'Không cán';
+        const innerLamName = innerPapers.map(ip => {
+            const l = sharedLaminations.find(ll => ll.id === ip.laminationId);
+            return l?.id !== 1 ? l?.name : null;
+        }).filter(Boolean).join(', ') || 'Không cán';
+        const bindName = bind?.name || '';
+        const printSizeName = printSizes.find(s => String(s.id) === String(printSizeId))?.name || '';
+        const entry = {
+            id: Date.now(),
+            createdAt: new Date().toISOString(),
+            catSize: sizePreset?.label || 'Tuỳ chọn',
+            catW, catH, pages, qty: numQty,
+            coverPaperNames, innerPaperNames,
+            coverLamName, innerLamName,
+            bindName, printSizeName,
+            custName: cust?.name || '',
+            totalCoverSheets, totalInnerSheets,
+            sellPerItem, totalSell, totalCost,
+        };
+        setPriceHistory(prev => {
+            const updated = [entry, ...prev].slice(0, 50);
+            localStorage.setItem('netprint_cat_history', JSON.stringify(updated));
+            return updated;
+        });
+    }, [numQty, pages, coverPapers, innerPapers, bindId, custId, catSettings, totalExtraCosts, availablePapers, getPaperPrice, isCustomSize, customW, customH, totalCoverSheets, totalInnerSheets, sharedLaminations, sharedCustomerTypes]);
+
+    // ===== EXPORT =====
+    const handleExportQuotation = (ent) => {
+        const d = new Date(ent.createdAt);
+        const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<title>Thông tin tính giá Catalogue - NetPrint</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a202c; background: #fff; padding: 40px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 20px; border-bottom: 3px solid #e53935; }
+  .company-info { text-align: right; font-size: 13px; color: #718096; line-height: 1.7; }
+  .title { font-size: 22px; font-weight: 800; text-align: center; margin: 24px 0 8px; color: #1a202c; text-transform: uppercase; letter-spacing: 1px; }
+  .subtitle { text-align: center; color: #718096; font-size: 13px; margin-bottom: 28px; }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4a5568; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+  .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .info-item { background: #f7fafc; border-radius: 8px; padding: 12px 14px; }
+  .info-label { font-size: 11px; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .info-value { font-size: 15px; font-weight: 700; color: #1a202c; }
+  .price-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .price-card { border-radius: 10px; padding: 16px; text-align: center; }
+  .price-card.sell { background: linear-gradient(135deg, #e6f4ea, #c8e6c9); border: 1px solid #a5d6a7; }
+  .price-card.total { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border: 1px solid #90caf9; }
+  .price-card.qty { background: linear-gradient(135deg, #fff8e1, #ffecb3); border: 1px solid #ffe082; }
+  .price-card .plabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #4a5568; margin-bottom: 6px; }
+  .price-card .pvalue { font-size: 22px; font-weight: 900; color: #1a202c; }
+  .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; font-size: 12px; color: #a0aec0; }
+  .note { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px; font-size: 12px; color: #92400e; margin-top: 20px; }
+  @media print { body { padding: 20px; } }
+</style>
+</head>
+<body>
+<div class="header">
+  <div>
+    <img src="/logo/logo-full.png" alt="NetPrint" style="height:56px;object-fit:contain" />
+  </div>
+  <div class="company-info">
+    <div>Ngày tính giá: ${dateStr}</div>
+    <div>Mã tính giá: #TG${ent.id.toString().slice(-6)}</div>
+  </div>
+</div>
+
+<div class="title">Thông Tin Tính Giá Catalogue</div>
+<div class="subtitle">Kết quả tính toán tự động từ hệ thống NetPrint</div>
+
+<div class="section">
+  <div class="section-title">📋 Thông tin sản phẩm</div>
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Kích thước</div><div class="info-value">${ent.catSize} (${ent.catW}×${ent.catH})</div></div>
+    <div class="info-item"><div class="info-label">Số trang</div><div class="info-value">${ent.pages} trang</div></div>
+    <div class="info-item"><div class="info-label">Số lượng</div><div class="info-value">${Number(ent.qty).toLocaleString('vi-VN')} cuốn</div></div>
+    <div class="info-item"><div class="info-label">Đóng cuốn</div><div class="info-value">${ent.bindName}</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">📊 Thông tin giấy & in</div>
+  <div class="info-grid">
+    <div class="info-item"><div class="info-label">Giấy bìa</div><div class="info-value">${ent.coverPaperNames || '—'}</div></div>
+    <div class="info-item"><div class="info-label">Cán màng bìa</div><div class="info-value">${ent.coverLamName}</div></div>
+    <div class="info-item"><div class="info-label">Giấy ruột</div><div class="info-value">${ent.innerPaperNames || '—'}</div></div>
+    <div class="info-item"><div class="info-label">Cán màng ruột</div><div class="info-value">${ent.innerLamName}</div></div>
+    <div class="info-item"><div class="info-label">Khổ giấy in</div><div class="info-value">${ent.printSizeName || '—'}</div></div>
+    <div class="info-item"><div class="info-label">Tờ in bìa</div><div class="info-value">${Number(ent.totalCoverSheets).toLocaleString('vi-VN')} tờ</div></div>
+    <div class="info-item"><div class="info-label">Tờ in ruột</div><div class="info-value">${Number(ent.totalInnerSheets).toLocaleString('vi-VN')} tờ</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">💰 Đơn giá</div>
+  <div class="price-grid">
+    <div class="price-card qty"><div class="plabel">Số lượng</div><div class="pvalue">${Number(ent.qty).toLocaleString('vi-VN')} cuốn</div></div>
+    <div class="price-card sell"><div class="plabel">Đơn giá / cuốn</div><div class="pvalue">${Number(ent.sellPerItem).toLocaleString('vi-VN')}đ</div></div>
+    <div class="price-card total"><div class="plabel">Tổng tiền</div><div class="pvalue">${Number(ent.totalSell).toLocaleString('vi-VN')}đ</div></div>
+    <div class="price-card" style="background:linear-gradient(135deg,#f3e5f5,#e1bee7);border:1px solid #ce93d8"><div class="plabel">Loại khách</div><div class="pvalue" style="font-size:18px">${ent.custName || '—'}</div></div>
+  </div>
+</div>
+
+<div class="note">⚠️ Đây là kết quả tính giá tự động. Giá thực tế có thể thay đổi tùy theo điều kiện thực tế và số lượng đặt hàng.</div>
+
+<div class="footer">
+  <span>NetPrint — Tính toán chi phí in Catalogue chuyên nghiệp</span>
+  <span>Ngày tạo: ${dateStr}</span>
+</div>
+
+<script>window.onload = () => window.print();</script>
+</body></html>`;
+        const win = window.open('', '_blank');
+        win.document.write(html);
+        win.document.close();
+    };
+
+    // ===== HISTORY =====
+    const filteredHistory = priceHistory.filter(h => {
+        if (!historySearch) return true;
+        const q = historySearch.toLowerCase();
+        return (
+            (h.catSize || '').toLowerCase().includes(q) ||
+            (h.coverPaperNames || '').toLowerCase().includes(q) ||
+            String(h.qty).includes(q)
+        );
+    });
 
     // Suggested extra cost items
     const suggestedCosts = ['Khuôn bế', 'Ép kim', 'Ép nhũ', 'UV điểm/toàn phần', 'In phun', 'Vận chuyển'];
@@ -325,6 +512,14 @@ export function CatalogueCalculatorView() {
                         </Typography>
                     </Stack>
                 </Stack>
+                <Tooltip title="Lịch sử tính giá">
+                    <IconButton onClick={() => setHistoryOpen(true)}
+                        sx={{ bgcolor: alpha(theme.palette.primary.main, 0.08), '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.16) } }}>
+                        <Badge badgeContent={priceHistory.length} color="error" max={99}>
+                            <Iconify icon="solar:history-bold-duotone" width={24} />
+                        </Badge>
+                    </IconButton>
+                </Tooltip>
             </Stack>
 
             <Card sx={{ borderRadius: 3, boxShadow: theme.shadows[2], mb: 3 }}>
@@ -373,7 +568,7 @@ export function CatalogueCalculatorView() {
                             <InputLabel>Khổ giấy in</InputLabel>
                             <Select value={printSizeId} label="Khổ giấy in" onChange={e => setPrintSizeId(e.target.value)}>
                                 {printSizes.length > 0 ? printSizes.map(s => (
-                                    <MenuItem key={s.id} value={String(s.id)}>{s.name} ({s.w}×{s.h})</MenuItem>
+                                    <MenuItem key={s.id} value={String(s.id)}>{s.name}</MenuItem>
                                 )) : <MenuItem value="" disabled>Chưa có khổ giấy — Thêm ở Cài đặt giá</MenuItem>}
                             </Select>
                         </FormControl>
@@ -394,8 +589,8 @@ export function CatalogueCalculatorView() {
                     <Stack spacing={1.5} sx={{ mb: 2 }}>
                         {coverPapers.map((cp, idx) => (
                             <PaperRow key={idx} item={cp} index={idx}
-                                papers={availablePapers.length > 0 ? availablePapers : catSettings.papers}
-                                laminations={catSettings.laminations} onUpdate={updateCover}
+                                papers={availablePapers}
+                                laminations={sharedLaminations} onUpdate={updateCover}
                                 onRemove={(i) => setCoverPapers(coverPapers.filter((_, j) => j !== i))}
                                 canRemove={coverPapers.length > 1} />
                         ))}
@@ -408,8 +603,8 @@ export function CatalogueCalculatorView() {
                     <Stack spacing={1.5} sx={{ mb: 2 }}>
                         {innerPapers.map((ip, idx) => (
                             <PaperRow key={idx} item={ip} index={idx}
-                                papers={availablePapers.length > 0 ? availablePapers : catSettings.papers}
-                                laminations={catSettings.laminations} onUpdate={updateInner}
+                                papers={availablePapers}
+                                laminations={sharedLaminations} onUpdate={updateInner}
                                 onRemove={(i) => setInnerPapers(innerPapers.filter((_, j) => j !== i))}
                                 canRemove={innerPapers.length > 1} />
                         ))}
@@ -418,53 +613,53 @@ export function CatalogueCalculatorView() {
                     <Divider sx={{ my: 3 }} />
 
                     {/* CHI PHÍ KHÁC */}
-                    <SectionHeader icon="solar:tag-bold-duotone" title="CHI PHÍ KHÁC" color="secondary" theme={theme} />
-                    <Stack spacing={1.5} sx={{ mb: 2 }}>
-                        {extraCostItems.map((item, idx) => (
-                            <Stack key={idx} direction="row" spacing={1.5} alignItems="center">
-                                <TextField size="small" label="Tên" value={item.name} sx={{ flex: 1 }}
-                                    onChange={e => updateExtraCost(idx, 'name', e.target.value)} />
-                                <TextField size="small" label="Số tiền" type="number" value={item.amount} sx={{ width: 150 }}
-                                    InputProps={{ endAdornment: <InputAdornment position="end">đ</InputAdornment> }}
-                                    onChange={e => updateExtraCost(idx, 'amount', e.target.value)} />
-                                <IconButton size="small" color="error" onClick={() => removeExtraCost(idx)}>
-                                    <Iconify icon="solar:trash-bin-minimalistic-bold" width={18} />
-                                </IconButton>
-                            </Stack>
-                        ))}
-                        <Stack direction="row" spacing={1.5} alignItems="center">
-                            <FormControl size="small" sx={{ minWidth: 180 }}>
-                                <InputLabel>💡 Gợi ý chi phí</InputLabel>
-                                <Select value="" label="💡 Gợi ý chi phí"
-                                    onChange={e => {
-                                        if (e.target.value) setExtraCostItems([...extraCostItems, { name: e.target.value, amount: '' }]);
-                                    }}>
-                                    {suggestedCosts.map(s => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-                                </Select>
-                            </FormControl>
-                            <Button size="small" variant="contained" color="secondary"
-                                startIcon={<Iconify icon="mingcute:add-line" />}
-                                onClick={addExtraCost}>
-                                + Thêm
-                            </Button>
-                        </Stack>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1.5 }}>
+                        <SectionHeader icon="solar:wallet-bold-duotone" title="CHI PHÍ KHÁC" color="error" theme={theme} />
+                        <Button size="small" variant="soft" color="primary"
+                            startIcon={<Iconify icon="mingcute:add-line" />}
+                            onClick={addExtraCost}>
+                            Thêm
+                        </Button>
                     </Stack>
+                    {extraCostItems.map((item, idx) => (
+                        <Stack key={idx} direction="row" spacing={1.5} sx={{ mb: 1.5 }}>
+                            <TextField size="small" placeholder="Tên chi phí" value={item.name} sx={{ flex: 1 }}
+                                onChange={e => updateExtraCost(idx, 'name', e.target.value)} />
+                            <TextField size="small" placeholder="Số tiền" type="number" value={item.amount} sx={{ width: 160 }}
+                                InputProps={{ endAdornment: <InputAdornment position="end">đ</InputAdornment> }}
+                                onChange={e => updateExtraCost(idx, 'amount', e.target.value)} />
+                            <IconButton size="small" color="error" onClick={() => removeExtraCost(idx)}>
+                                <Iconify icon="solar:trash-bin-trash-bold" />
+                            </IconButton>
+                        </Stack>
+                    ))}
 
                     <Divider sx={{ my: 3 }} />
 
                     {/* LOẠI KHÁCH + TÍNH GIÁ */}
-                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center" justifyContent="center">
-                        <FormControl size="small" sx={{ minWidth: 180 }}>
-                            <InputLabel>Loại khách</InputLabel>
-                            <Select value={custId} label="Loại khách" onChange={e => setCustId(e.target.value)}>
-                                {catSettings.customerTypes.map(c => (
-                                    <MenuItem key={c.id} value={c.id}>{c.name} (+{c.profit}%)</MenuItem>
+                    <Stack direction="row" spacing={2.5} alignItems="center">
+                        <FormControl sx={{ minWidth: 200 }}>
+                            <InputLabel>Loại khách hàng</InputLabel>
+                            <Select value={custId} onChange={e => setCustId(e.target.value)} label="Loại khách hàng">
+                                {sharedCustomerTypes.map(c => (
+                                    <MenuItem key={c.id} value={c.id}>
+                                        <Typography variant="body2" fontWeight={600}>{c.name}</Typography>
+                                    </MenuItem>
                                 ))}
                             </Select>
                         </FormControl>
-                        <Button variant="contained" size="large" color="primary" onClick={calculate}
-                            startIcon={<Iconify icon="solar:calculator-bold" />}
-                            sx={{ px: 5, py: 1.5, borderRadius: 2, fontWeight: 800, fontSize: 16 }}>
+                        <Button variant="contained" size="large" onClick={calculate}
+                            startIcon={<Iconify icon="solar:calculator-bold-duotone" />}
+                            sx={{
+                                px: 5, py: 1.5, fontWeight: 800, fontSize: 16, borderRadius: 2,
+                                background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
+                                boxShadow: `0 8px 16px ${alpha(theme.palette.primary.main, 0.24)}`,
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                    transform: 'translateY(-2px)',
+                                    boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.36)}`,
+                                },
+                            }}>
                             Tính giá
                         </Button>
                     </Stack>
@@ -561,6 +756,222 @@ export function CatalogueCalculatorView() {
                     </Card>
                 )}
             </Collapse>
+
+            {/* ===== HISTORY DRAWER ===== */}
+            <Drawer anchor="right" open={historyOpen} onClose={() => setHistoryOpen(false)}
+                PaperProps={{ sx: { width: 420, bgcolor: '#f8fafc' } }}>
+                <Box sx={{ p: 3, bgcolor: 'primary.main', color: 'white' }}>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                            <Iconify icon="solar:history-bold-duotone" width={24} />
+                            <Typography variant="h6" fontWeight={800}>Lịch sử tính giá</Typography>
+                        </Stack>
+                        <IconButton onClick={() => setHistoryOpen(false)} sx={{ color: 'white' }}>
+                            <Iconify icon="mingcute:close-line" width={22} />
+                        </IconButton>
+                    </Stack>
+                    <TextField fullWidth size="small" placeholder="🔍 Tìm kiếm..." value={historySearch}
+                        onChange={e => setHistorySearch(e.target.value)}
+                        sx={{ mt: 2, bgcolor: 'white', borderRadius: 1, '& fieldset': { border: 'none' } }} />
+                </Box>
+                <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+                    {filteredHistory.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 6 }}>
+                            <Iconify icon="solar:archive-bold-duotone" width={48} sx={{ color: 'text.disabled', mb: 1 }} />
+                            <Typography color="text.secondary">Chưa có lịch sử</Typography>
+                        </Box>
+                    ) : filteredHistory.map((entry, idx) => {
+                        const d = new Date(entry.createdAt);
+                        const timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                        const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                        return (
+                            <Card key={entry.id} sx={{ mb: 1.5, borderRadius: 2, boxShadow: 'none', border: '1px solid #e2e8f0' }}>
+                                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                            <Chip label={`#${idx + 1}`} size="small" color="primary" sx={{ fontWeight: 700, height: 22 }} />
+                                            <Typography variant="body2" fontWeight={700}>{entry.catSize} ({entry.catW}×{entry.catH})</Typography>
+                                        </Stack>
+                                        <Typography variant="caption" color="text.secondary">{dateStr} {timeStr}</Typography>
+                                    </Stack>
+                                    <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>
+                                        <Chip label={`${entry.pages} trang`} size="small" variant="outlined" sx={{ height: 22, fontSize: 11 }} />
+                                        <Chip label={`${Number(entry.qty).toLocaleString('vi-VN')} cuốn`} size="small" variant="outlined" sx={{ height: 22, fontSize: 11 }} />
+                                        <Chip label={entry.bindName} size="small" variant="soft" color="error" sx={{ height: 22, fontSize: 11 }} />
+                                    </Stack>
+                                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: 1.5 }}>
+                                        <Typography variant="body2" fontWeight={800} color="success.dark">
+                                            {Number(entry.sellPerItem).toLocaleString('vi-VN')}đ / cuốn
+                                        </Typography>
+                                        <Stack direction="row" spacing={0.5}>
+                                            <Tooltip title="Xem trước">
+                                                <IconButton size="small" color="info" onClick={() => setPreviewEntry(entry)}>
+                                                    <Iconify icon="solar:eye-bold" width={18} />
+                                                </IconButton>
+                                            </Tooltip>
+                                            <Tooltip title="Xoá">
+                                                <IconButton size="small" color="error"
+                                                    onClick={() => setPriceHistory(prev => {
+                                                        const updated = prev.filter(h => h.id !== entry.id);
+                                                        localStorage.setItem('netprint_cat_history', JSON.stringify(updated));
+                                                        return updated;
+                                                    })}>
+                                                    <Iconify icon="solar:trash-bin-minimalistic-bold" width={18} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
+                </Box>
+            </Drawer>
+
+            {/* ===== PREVIEW DIALOG ===== */}
+            {(() => {
+                if (!previewEntry) return null;
+                const e = previewEntry;
+                const d = new Date(e.createdAt);
+                const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                return (
+                    <Dialog open onClose={() => setPreviewEntry(null)} maxWidth="md" fullWidth
+                        PaperProps={{ sx: { borderRadius: 3, overflow: 'hidden' } }}>
+                        {/* Header */}
+                        <Box sx={{ bgcolor: 'primary.main', color: 'white', px: 3, py: 2 }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Stack>
+                                    <Typography variant="subtitle1" fontWeight={800}>Xem trước thông tin tính giá</Typography>
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>Mã: #TG{String(e.id).slice(-6)} · {dateStr}</Typography>
+                                </Stack>
+                                <Stack direction="row" spacing={1}>
+                                    <Button variant="contained" size="small" color="inherit"
+                                        startIcon={<Iconify icon="solar:printer-bold" />}
+                                        onClick={() => handleExportQuotation(e)}
+                                        sx={{ bgcolor: 'white', color: 'primary.main', fontWeight: 700 }}>
+                                        In / PDF
+                                    </Button>
+                                    <IconButton onClick={() => setPreviewEntry(null)} sx={{ color: 'white' }}>
+                                        <Iconify icon="mingcute:close-line" width={22} />
+                                    </IconButton>
+                                </Stack>
+                            </Stack>
+                        </Box>
+
+                        {/* Body */}
+                        <Box sx={{ p: 4, bgcolor: '#f8fafc', maxHeight: '75vh', overflow: 'auto' }}>
+                            {/* Company header */}
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3, pb: 2.5, borderBottom: '3px solid #e53935' }}>
+                                <Box>
+                                    <Box component="img" src="/logo/logo-full.png" alt="NetPrint" sx={{ height: 52, objectFit: 'contain' }} />
+                                </Box>
+                                <Box sx={{ textAlign: 'right' }}>
+                                    <Typography variant="caption" color="text.secondary" display="block">Ngày tính giá: {dateStr}</Typography>
+                                    <Typography variant="caption" color="text.secondary" display="block">Mã tính giá: #TG{String(e.id).slice(-6)}</Typography>
+                                </Box>
+                            </Stack>
+
+                            {/* Title */}
+                            <Typography variant="h5" fontWeight={800} align="center" sx={{ mb: 0.5, textTransform: 'uppercase' }}>
+                                Thông Tin Tính Giá Catalogue
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary" align="center" sx={{ mb: 3 }}>
+                                Kết quả tính toán tự động từ hệ thống NetPrint
+                            </Typography>
+
+                            {/* Section 1: Product */}
+                            <Box sx={{ mb: 3 }}>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary"
+                                    sx={{ textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 1.5, pb: 0.75, borderBottom: '1px solid #e2e8f0' }}>
+                                    📋 Thông tin sản phẩm
+                                </Typography>
+                                <Grid container spacing={1.5}>
+                                    {[
+                                        { label: 'Kích thước', value: `${e.catSize} (${e.catW}×${e.catH})` },
+                                        { label: 'Số trang', value: `${e.pages} trang` },
+                                        { label: 'Số lượng', value: `${Number(e.qty).toLocaleString('vi-VN')} cuốn` },
+                                        { label: 'Đóng cuốn', value: e.bindName },
+                                    ].map((item, i) => (
+                                        <Grid item xs={3} key={i}>
+                                            <Box sx={{ bgcolor: '#f1f5f9', borderRadius: 2, p: 1.5 }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>{item.label}</Typography>
+                                                <Typography variant="body2" fontWeight={700}>{item.value}</Typography>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+
+                            {/* Section 2: Paper & Print */}
+                            <Box sx={{ mb: 3 }}>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary"
+                                    sx={{ textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 1.5, pb: 0.75, borderBottom: '1px solid #e2e8f0' }}>
+                                    📊 Thông tin giấy & in
+                                </Typography>
+                                <Grid container spacing={1.5}>
+                                    {[
+                                        { label: 'Giấy bìa', value: e.coverPaperNames || '—' },
+                                        { label: 'Cán màng bìa', value: e.coverLamName },
+                                        { label: 'Giấy ruột', value: e.innerPaperNames || '—' },
+                                        { label: 'Cán màng ruột', value: e.innerLamName },
+                                        { label: 'Khổ giấy in', value: e.printSizeName || '—' },
+                                        { label: 'Tờ in bìa', value: `${Number(e.totalCoverSheets).toLocaleString('vi-VN')} tờ` },
+                                        { label: 'Tờ in ruột', value: `${Number(e.totalInnerSheets).toLocaleString('vi-VN')} tờ` },
+                                    ].map((item, i) => (
+                                        <Grid item xs={3} key={i}>
+                                            <Box sx={{ bgcolor: '#f1f5f9', borderRadius: 2, p: 1.5 }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>{item.label}</Typography>
+                                                <Typography variant="body2" fontWeight={700}>{item.value}</Typography>
+                                            </Box>
+                                        </Grid>
+                                    ))}
+                                </Grid>
+                            </Box>
+
+                            {/* Section 3: Price */}
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="caption" fontWeight={700} color="text.secondary"
+                                    sx={{ textTransform: 'uppercase', letterSpacing: 1, display: 'block', mb: 1.5, pb: 0.75, borderBottom: '1px solid #e2e8f0' }}>
+                                    💰 Đơn giá
+                                </Typography>
+                                <Grid container spacing={1.5}>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ borderRadius: 2, p: 2.5, textAlign: 'center', bgcolor: '#fff8e1', border: '1px solid #ffe082' }}>
+                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Số lượng</Typography>
+                                            <Typography variant="h5" fontWeight={900} sx={{ mt: 0.5 }}>{Number(e.qty).toLocaleString('vi-VN')} cuốn</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ borderRadius: 2, p: 2.5, textAlign: 'center', bgcolor: '#e8f5e9', border: '1px solid #a5d6a7' }}>
+                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Đơn giá / cuốn</Typography>
+                                            <Typography variant="h5" fontWeight={900} color="success.dark" sx={{ mt: 0.5 }}>{Number(e.sellPerItem).toLocaleString('vi-VN')}đ</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ borderRadius: 2, p: 2.5, textAlign: 'center', bgcolor: '#e3f2fd', border: '1px solid #90caf9' }}>
+                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Tổng tiền</Typography>
+                                            <Typography variant="h5" fontWeight={900} color="info.dark" sx={{ mt: 0.5 }}>{Number(e.totalSell).toLocaleString('vi-VN')}đ</Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={3}>
+                                        <Box sx={{ borderRadius: 2, p: 2.5, textAlign: 'center', bgcolor: '#f3e5f5', border: '1px solid #ce93d8' }}>
+                                            <Typography variant="caption" fontWeight={700} color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>Loại khách</Typography>
+                                            <Typography variant="h6" fontWeight={900} color="purple" sx={{ mt: 0.5 }}>{e.custName || '—'}</Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+                            </Box>
+
+                            {/* Note */}
+                            <Box sx={{ bgcolor: '#fffbeb', border: '1px solid #fde68a', borderRadius: 2, p: 2 }}>
+                                <Typography variant="caption" color="warning.dark">
+                                    ⚠️ Đây là kết quả tính giá tự động. Giá thực tế có thể thay đổi tùy theo điều kiện thực tế và số lượng đặt hàng.
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Dialog>
+                );
+            })()}
         </DashboardContent>
     );
 }

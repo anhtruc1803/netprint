@@ -122,4 +122,17 @@ export const navData = [
       },
     ],
   },
+  /**
+   * Hệ thống
+   */
+  {
+    subheader: 'Hệ thống',
+    items: [
+      {
+        title: 'Quản lý tài khoản',
+        path: '/dashboard/account-management',
+        icon: ICONS.lock,
+      },
+    ],
+  },
 ];

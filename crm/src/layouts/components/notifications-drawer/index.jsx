@@ -22,9 +22,9 @@ import { NotificationItem } from './notification-item';
 // ----------------------------------------------------------------------
 
 const TABS = [
-  { value: 'all', label: 'Tất cả', count: 22 },
-  { value: 'unread', label: 'Chưa đọc', count: 12 },
-  { value: 'archived', label: 'Đã lưu trữ', count: 10 },
+  { value: 'all', label: 'Tất cả', count: 0 },
+  { value: 'unread', label: 'Chưa đọc', count: 0 },
+  { value: 'archived', label: 'Đã lưu trữ', count: 0 },
 ];
 
 // ----------------------------------------------------------------------

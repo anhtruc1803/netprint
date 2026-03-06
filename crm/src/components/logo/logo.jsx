@@ -41,9 +41,9 @@ export function Logo({ sx, disabled, className, href = '/', isSingle = true, ...
       className={mergeClasses([logoClasses.root, className])}
       sx={[
         {
-          width: 220,
-          height: 75,
-          ...(!isSingle && { width: 220, height: 68 }),
+          width: 180,
+          height: 60,
+          ...(!isSingle && { width: 180, height: 55 }),
           ...(disabled && { pointerEvents: 'none' }),
         },
         ...(Array.isArray(sx) ? sx : [sx]),

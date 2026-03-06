@@ -45,8 +45,8 @@ export function JwtSignInView() {
   const [errorMessage, setErrorMessage] = useState(null);
 
   const defaultValues = {
-    email: 'demo@minimals.cc',
-    password: '@2Minimal',
+    email: 'admin@netprint.vn',
+    password: 'Netprint@22',
   };
 
   const methods = useForm({

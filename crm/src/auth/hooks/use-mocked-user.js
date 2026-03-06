@@ -1,33 +1,55 @@
-import { _mock } from 'src/_mock';
-
-// To get the user from the <AuthContext/>, you can use
-
-// Change:
-// import { useMockedUser } from 'src/auth/hooks';
-// const { user } = useMockedUser();
-
-// To:
-// import { useAuthContext } from 'src/auth/hooks';
-// const { user } = useAuthContext();
+import { useState, useCallback } from 'react';
 
 // ----------------------------------------------------------------------
 
-export function useMockedUser() {
-  const user = {
-    id: '8864c717-587d-472a-929a-8e5f298024da-0',
-    displayName: 'Jaydon Frankie',
-    email: 'demo@minimals.cc',
-    photoURL: _mock.image.avatar(24),
-    phoneNumber: _mock.phoneNumber(1),
-    country: _mock.countryNames(1),
-    address: '90210 Broadway Blvd',
-    state: 'California',
-    city: 'San Francisco',
-    zipCode: '94116',
-    about: 'Praesent turpis. Phasellus viverra nulla ut metus varius laoreet. Phasellus tempus.',
-    role: 'admin',
-    isPublic: true,
-  };
+const STORAGE_KEY = 'netprint_user_profile';
 
-  return { user };
+const DEFAULT_USER = {
+  id: '1',
+  displayName: 'NetPrint Admin',
+  email: 'admin@netprint.vn',
+  photoURL: '',
+  phoneNumber: '',
+  country: 'Vietnam',
+  address: '',
+  state: 'Hồ Chí Minh',
+  city: '',
+  zipCode: '',
+  about: '',
+  role: 'admin',
+  isPublic: true,
+};
+
+function getStoredUser() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      return { ...DEFAULT_USER, ...JSON.parse(stored) };
+    }
+  } catch (e) {
+    console.error('Error reading user profile:', e);
+  }
+  return DEFAULT_USER;
+}
+
+export function saveUserProfile(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.error('Error saving user profile:', e);
+    return false;
+  }
+}
+
+export function useMockedUser() {
+  const [user, setUser] = useState(getStoredUser);
+
+  const updateUser = useCallback((data) => {
+    const updated = { ...user, ...data };
+    saveUserProfile(updated);
+    setUser(updated);
+  }, [user]);
+
+  return { user, updateUser };
 }

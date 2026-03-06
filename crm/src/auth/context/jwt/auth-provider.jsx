@@ -25,9 +25,15 @@ export function AuthProvider({ children }) {
       if (accessToken && isValidToken(accessToken)) {
         setSession(accessToken);
 
-        const res = await axios.get(endpoints.auth.me);
-
-        const { user } = res.data;
+        // Decode user from local JWT token payload
+        const parts = accessToken.split('.');
+        const payload = JSON.parse(atob(parts[1]));
+        const user = {
+          id: payload.sub,
+          email: payload.email,
+          displayName: payload.displayName || 'NetPrint Admin',
+          role: 'admin',
+        };
 
         setState({ user: { ...user, accessToken }, loading: false });
       } else {
