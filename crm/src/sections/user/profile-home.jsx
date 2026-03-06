@@ -40,14 +40,14 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         <Stack sx={{ width: 1 }}>
           {fNumber(info.totalFollowers)}
           <Box component="span" sx={{ color: 'text.secondary', typography: 'body2' }}>
-            Follower
+            Người theo dõi
           </Box>
         </Stack>
 
         <Stack sx={{ width: 1 }}>
           {fNumber(info.totalFollowing)}
           <Box component="span" sx={{ color: 'text.secondary', typography: 'body2' }}>
-            Following
+            Đang theo dõi
           </Box>
         </Stack>
       </Stack>
@@ -56,7 +56,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
 
   const renderAbout = () => (
     <Card>
-      <CardHeader title="About" />
+      <CardHeader title="Giới thiệu" />
 
       <Box
         sx={{
@@ -72,7 +72,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         <Box sx={{ gap: 2, display: 'flex', lineHeight: '24px' }}>
           <Iconify width={24} icon="mingcute:location-fill" />
           <span>
-            Live at
+            Sống tại
             <Link variant="subtitle2" color="inherit">
               &nbsp;{info.country}
             </Link>
@@ -87,7 +87,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         <Box sx={{ gap: 2, display: 'flex', lineHeight: '24px' }}>
           <Iconify width={24} icon="solar:case-minimalistic-bold" />
           <span>
-            {info.role} at
+            {info.role} tại
             <Link variant="subtitle2" color="inherit">
               &nbsp;{info.company}
             </Link>
@@ -97,7 +97,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         <Box sx={{ gap: 2, display: 'flex', lineHeight: '24px' }}>
           <Iconify width={24} icon="solar:case-minimalistic-bold" />
           <span>
-            Studied at
+            Học tại
             <Link variant="subtitle2" color="inherit">
               &nbsp;{info.school}
             </Link>
@@ -113,7 +113,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         multiline
         fullWidth
         rows={4}
-        placeholder="Share what you are thinking here..."
+        placeholder="Chia sẻ suy nghĩ của bạn..."
         inputProps={{ id: 'post-input' }}
         sx={[
           (theme) => ({
@@ -129,15 +129,15 @@ export function ProfileHome({ info, posts, sx, ...other }) {
         <Box sx={{ gap: 1, display: 'flex', alignItems: 'center' }}>
           <Fab size="small" color="inherit" variant="softExtended" onClick={handleAttach}>
             <Iconify icon="solar:gallery-wide-bold" width={24} sx={{ color: 'success.main' }} />
-            Image/Video
+            Ảnh/Video
           </Fab>
           <Fab size="small" color="inherit" variant="softExtended">
             <Iconify icon="solar:videocamera-record-bold" width={24} sx={{ color: 'error.main' }} />
-            Streaming
+            Phát trực tiếp
           </Fab>
         </Box>
 
-        <Button variant="contained">Post</Button>
+        <Button variant="contained">Đăng</Button>
       </Box>
 
       <input ref={fileRef} type="file" style={{ display: 'none' }} />
@@ -146,7 +146,7 @@ export function ProfileHome({ info, posts, sx, ...other }) {
 
   const renderSocials = () => (
     <Card>
-      <CardHeader title="Social" />
+      <CardHeader title="Mạng xã hội" />
 
       <Box sx={{ p: 3, gap: 2, display: 'flex', flexDirection: 'column', typography: 'body2' }}>
         {_socials.map((social) => (
@@ -166,10 +166,10 @@ export function ProfileHome({ info, posts, sx, ...other }) {
             {social.value === 'linkedin' && <Iconify icon="socials:linkedin" />}
 
             <Link color="inherit">
-              {social.value === 'facebook' && info.socialLinks.facebook}
-              {social.value === 'instagram' && info.socialLinks.instagram}
-              {social.value === 'linkedin' && info.socialLinks.linkedin}
-              {social.value === 'twitter' && info.socialLinks.twitter}
+              {social.value === 'facebook' && info?.socialLinks?.facebook}
+              {social.value === 'instagram' && info?.socialLinks?.instagram}
+              {social.value === 'linkedin' && info?.socialLinks?.linkedin}
+              {social.value === 'twitter' && info?.socialLinks?.twitter}
             </Link>
           </Box>
         ))}

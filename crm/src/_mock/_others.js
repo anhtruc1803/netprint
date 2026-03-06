@@ -70,32 +70,32 @@ export const _notifications = Array.from({ length: 9 }, (_, index) => ({
     index
   ],
   category: [
-    'Communication',
-    'Project UI',
-    'File manager',
-    'File manager',
-    'File manager',
-    'Order',
-    'Order',
-    'Communication',
-    'Communication',
+    'Liên lạc',
+    'Dự án',
+    'Quản lý file',
+    'Quản lý file',
+    'Quản lý file',
+    'Đơn hàng',
+    'Đơn hàng',
+    'Liên lạc',
+    'Liên lạc',
   ][index],
   isUnRead: _mock.boolean(index),
   createdAt: _mock.time(index),
   title:
-    (index === 0 && `<p><strong>Deja Brady</strong> sent you a friend request</p>`) ||
+    (index === 0 && `<p><strong>Deja Brady</strong> đã gửi lời mời kết bạn cho bạn</p>`) ||
     (index === 1 &&
-      `<p><strong>Jayvon Hull</strong> mentioned you in <strong><a href='#'>Minimal UI</a></strong></p>`) ||
+      `<p><strong>Jayvon Hull</strong> đã nhắc đến bạn trong <strong><a href='#'>Minimal UI</a></strong></p>`) ||
     (index === 2 &&
-      `<p><strong>Lainey Davidson</strong> added file to <strong><a href='#'>File manager</a></strong></p>`) ||
+      `<p><strong>Lainey Davidson</strong> đã thêm file vào <strong><a href='#'>Quản lý file</a></strong></p>`) ||
     (index === 3 &&
-      `<p><strong>Angelique Morse</strong> added new tags to <strong><a href='#'>File manager<a/></strong></p>`) ||
+      `<p><strong>Angelique Morse</strong> đã thêm nhãn mới vào <strong><a href='#'>Quản lý file</a></strong></p>`) ||
     (index === 4 &&
-      `<p><strong>Giana Brandt</strong> request a payment of <strong>$200</strong></p>`) ||
-    (index === 5 && `<p>Your order is placed waiting for shipping</p>`) ||
-    (index === 6 && `<p>Delivery processing your order is being shipped</p>`) ||
-    (index === 7 && `<p>You have new message 5 unread messages</p>`) ||
-    (index === 8 && `<p>You have new mail`) ||
+      `<p><strong>Giana Brandt</strong> yêu cầu thanh toán <strong>$200</strong></p>`) ||
+    (index === 5 && `<p>Đơn hàng của bạn đã được đặt, đang chờ vận chuyển</p>`) ||
+    (index === 6 && `<p>Đơn hàng đang được xử lý và vận chuyển</p>`) ||
+    (index === 7 && `<p>Bạn có tin nhắn mới, 5 tin nhắn chưa đọc</p>`) ||
+    (index === 8 && `<p>Bạn có thư mới`) ||
     '',
 }));
 

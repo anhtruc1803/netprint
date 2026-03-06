@@ -4,7 +4,7 @@ import { AccountGeneralView } from 'src/sections/account/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Account general settings | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Thông tin tài khoản | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
   return (

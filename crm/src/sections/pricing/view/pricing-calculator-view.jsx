@@ -617,27 +617,20 @@ export function PricingCalculatorView() {
 
     return (
         <DashboardContent maxWidth="lg">
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 4 }}>
-                <Stack direction="row" alignItems="center" spacing={2}>
-                    <Box sx={{
-                        width: 48, height: 48, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                        color: 'white', boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                    }}>
-                        <Iconify icon="solar:calculator-bold-duotone" width={26} />
-                    </Box>
-                    <Stack>
-                        <Typography variant="h4" fontWeight={800}>Tính Giá In Nhanh</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            Tính toán chi phí in ấn chuyên nghiệp
-                        </Typography>
-                    </Stack>
+            <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
+                <Box sx={{
+                    width: 48, height: 48, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    color: 'white', boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                }}>
+                    <Iconify icon="solar:calculator-bold-duotone" width={26} />
+                </Box>
+                <Stack>
+                    <Typography variant="h4" fontWeight={800}>Tính Giá In Nhanh</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                        Tính toán chi phí in ấn chuyên nghiệp
+                    </Typography>
                 </Stack>
-                <Button variant="outlined" color="inherit" startIcon={<Iconify icon="solar:settings-bold-duotone" />}
-                    onClick={() => setSettingsOpen(true)}
-                    sx={{ borderRadius: 1.5, fontWeight: 700, borderColor: 'divider', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}>
-                    Cài đặt giá
-                </Button>
             </Stack>
 
             {renderImpositionPreview}

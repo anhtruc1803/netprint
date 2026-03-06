@@ -22,9 +22,9 @@ import { NotificationItem } from './notification-item';
 // ----------------------------------------------------------------------
 
 const TABS = [
-  { value: 'all', label: 'All', count: 22 },
-  { value: 'unread', label: 'Unread', count: 12 },
-  { value: 'archived', label: 'Archived', count: 10 },
+  { value: 'all', label: 'Tất cả', count: 22 },
+  { value: 'unread', label: 'Chưa đọc', count: 12 },
+  { value: 'archived', label: 'Đã lưu trữ', count: 10 },
 ];
 
 // ----------------------------------------------------------------------
@@ -58,11 +58,11 @@ export function NotificationsDrawer({ data = [], sx, ...other }) {
       }}
     >
       <Typography variant="h6" sx={{ flexGrow: 1 }}>
-        Notifications
+        Thông báo
       </Typography>
 
       {!!totalUnRead && (
-        <Tooltip title="Mark all as read">
+        <Tooltip title="Đánh dấu tất cả đã đọc">
           <IconButton color="primary" onClick={handleMarkAllAsRead}>
             <Iconify icon="eva:done-all-fill" />
           </IconButton>
@@ -148,7 +148,7 @@ export function NotificationsDrawer({ data = [], sx, ...other }) {
 
         <Box sx={{ p: 1 }}>
           <Button fullWidth size="large">
-            View all
+            Xem tất cả
           </Button>
         </Box>
       </Drawer>

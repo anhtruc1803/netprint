@@ -13,11 +13,11 @@ export const DEFAULT_PAPER_SETTINGS = {
     ],
     laminationPricing: [],
     laminations: [
-        { id: 1, name: 'Không cán', tiers: [{ max: 999999, price: 0 }] },
-        { id: 2, name: 'Cán bóng 1 mặt', tiers: [{ max: 499, price: 600 }], pricePerM2: 2500 },
-        { id: 3, name: 'Cán bóng 2 mặt', tiers: [{ max: 499, price: 1200 }], pricePerM2: 5000 },
-        { id: 4, name: 'Cán mờ 1 mặt', tiers: [{ max: 499, price: 700 }], pricePerM2: 2700 },
-        { id: 5, name: 'Cán mờ 2 mặt', tiers: [{ max: 499, price: 1400 }], pricePerM2: 5400 },
+        { id: 1, name: 'Không cán', unit: 'per_sheet', tiers: [{ max: 999999, price: 0 }] },
+        { id: 2, name: 'Cán bóng 1 mặt', unit: 'per_sheet', tiers: [{ max: 499, price: 600 }], pricePerM2: 2500 },
+        { id: 3, name: 'Cán bóng 2 mặt', unit: 'per_sheet', tiers: [{ max: 499, price: 1200 }], pricePerM2: 5000 },
+        { id: 4, name: 'Cán mờ 1 mặt', unit: 'per_sheet', tiers: [{ max: 499, price: 700 }], pricePerM2: 2700 },
+        { id: 5, name: 'Cán mờ 2 mặt', unit: 'per_sheet', tiers: [{ max: 499, price: 1400 }], pricePerM2: 5400 },
     ],
     processing: [
         { id: 1, name: 'Cắt thành phẩm', tiers: [{ max: 100, price: 100 }, { max: 200, price: 100 }, { max: 300, price: 100 }, { max: 999999, price: 100 }], fixedTiers: [{ max: 100, fixed: 10000 }, { max: 200, fixed: 20000 }, { max: 300, fixed: 30000 }] },

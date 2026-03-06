@@ -15,21 +15,21 @@ import { Form } from 'src/components/hook-form';
 
 const NOTIFICATIONS = [
   {
-    subheader: 'Activity',
-    caption: 'Donec mi odio, faucibus at, scelerisque quis',
+    subheader: 'Hoạt động',
+    caption: 'Nhận thông báo về các hoạt động liên quan đến bạn',
     items: [
-      { id: 'activity_comments', label: 'Email me when someone comments onmy article' },
-      { id: 'activity_answers', label: 'Email me when someone answers on my form' },
-      { id: 'activityFollows', label: 'Email me hen someone follows me' },
+      { id: 'activity_comments', label: 'Gửi email khi có người bình luận vào bài viết' },
+      { id: 'activity_answers', label: 'Gửi email khi có người trả lời biểu mẫu' },
+      { id: 'activityFollows', label: 'Gửi email khi có người theo dõi tôi' },
     ],
   },
   {
-    subheader: 'Application',
-    caption: 'Donec mi odio, faucibus at, scelerisque quis',
+    subheader: 'Ứng dụng',
+    caption: 'Cập nhật và tin tức từ hệ thống',
     items: [
-      { id: 'application_news', label: 'News and announcements' },
-      { id: 'application_product', label: 'Weekly product updates' },
-      { id: 'application_blog', label: 'Weekly blog digest' },
+      { id: 'application_news', label: 'Tin tức và thông báo' },
+      { id: 'application_product', label: 'Cập nhật sản phẩm hàng tuần' },
+      { id: 'application_blog', label: 'Tổng hợp blog hàng tuần' },
     ],
   },
 ];
@@ -53,7 +53,7 @@ export function AccountNotifications({ sx, ...other }) {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      toast.success('Update success!');
+      toast.success('Cập nhật thành công!');
       console.info('DATA', data);
     } catch (error) {
       console.error(error);
@@ -137,7 +137,7 @@ export function AccountNotifications({ sx, ...other }) {
         ))}
 
         <Button type="submit" variant="contained" loading={isSubmitting} sx={{ ml: 'auto' }}>
-          Save changes
+          Lưu thay đổi
         </Button>
       </Card>
     </Form>

@@ -1,17 +1,17 @@
 import { CONFIG } from 'src/global-config';
 
-import { AccountSocialsView } from 'src/sections/account/view';
+import { PricingSettingsView } from 'src/sections/pricing/view/pricing-settings-view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Mạng xã hội | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Cài đặt giá | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
     return (
         <>
             <title>{metadata.title}</title>
 
-            <AccountSocialsView />
+            <PricingSettingsView />
         </>
     );
 }

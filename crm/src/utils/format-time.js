@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import 'dayjs/locale/vi';
 
 // ----------------------------------------------------------------------
 
@@ -25,6 +26,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(duration);
 dayjs.extend(relativeTime);
+dayjs.locale('vi');
 
 // ----------------------------------------------------------------------
 

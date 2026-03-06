@@ -94,7 +94,7 @@ export function UserListView() {
   const handleDeleteRows = useCallback(() => {
     const deleteRows = tableData.filter((row) => !table.selected.includes(row.id));
 
-    toast.success('Delete success!');
+    toast.success('Xóa thành công!');
 
     setTableData(deleteRows);
 

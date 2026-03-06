@@ -48,7 +48,7 @@ export function UserTableRow({ row, selected, editHref, onSelectRow, onDeleteRow
         <li>
           <MenuItem component={RouterLink} href={editHref} onClick={() => menuActions.onClose()}>
             <Iconify icon="solar:pen-bold" />
-            Edit
+            Sửa
           </MenuItem>
         </li>
 
@@ -60,7 +60,7 @@ export function UserTableRow({ row, selected, editHref, onSelectRow, onDeleteRow
           sx={{ color: 'error.main' }}
         >
           <Iconify icon="solar:trash-bin-trash-bold" />
-          Delete
+          Xóa
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -70,11 +70,11 @@ export function UserTableRow({ row, selected, editHref, onSelectRow, onDeleteRow
     <ConfirmDialog
       open={confirmDialog.value}
       onClose={confirmDialog.onFalse}
-      title="Delete"
-      content="Are you sure want to delete?"
+      title="Xóa"
+      content="Bạn có chắc muốn xóa?"
       action={
         <Button variant="contained" color="error" onClick={onDeleteRow}>
-          Delete
+          Xóa
         </Button>
       }
     />
@@ -138,7 +138,7 @@ export function UserTableRow({ row, selected, editHref, onSelectRow, onDeleteRow
 
         <TableCell>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <Tooltip title="Quick edit" placement="top" arrow>
+            <Tooltip title="Sửa nhanh" placement="top" arrow>
               <IconButton
                 color={quickEditForm.value ? 'inherit' : 'default'}
                 onClick={quickEditForm.onTrue}

@@ -28,22 +28,22 @@ import { ProfileFollowers } from '../profile-followers';
 const NAV_ITEMS = [
   {
     value: '',
-    label: 'Profile',
+    label: 'Hồ sơ',
     icon: <Iconify width={24} icon="solar:user-id-bold" />,
   },
   {
     value: 'followers',
-    label: 'Followers',
+    label: 'Người theo dõi',
     icon: <Iconify width={24} icon="solar:heart-bold" />,
   },
   {
     value: 'friends',
-    label: 'Friends',
+    label: 'Bạn bè',
     icon: <Iconify width={24} icon="solar:users-group-rounded-bold" />,
   },
   {
     value: 'gallery',
-    label: 'Gallery',
+    label: 'Thư viện',
     icon: <Iconify width={24} icon="solar:gallery-wide-bold" />,
   },
 ];
@@ -73,10 +73,10 @@ export function UserProfileView() {
   return (
     <DashboardContent>
       <CustomBreadcrumbs
-        heading="Profile"
+        heading="Hồ sơ"
         links={[
-          { name: 'Dashboard', href: paths.dashboard.root },
-          { name: 'User', href: paths.dashboard.user.root },
+          { name: 'Trang chủ', href: paths.dashboard.root },
+          { name: 'Người dùng', href: paths.dashboard.user.root },
           { name: user?.displayName },
         ]}
         sx={{ mb: { xs: 3, md: 5 } }}

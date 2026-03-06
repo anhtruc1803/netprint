@@ -64,7 +64,7 @@ export const navData = [
   {
     subheader: 'Tổng quan',
     items: [
-      { title: 'Bảng điều khiển', path: paths.dashboard.root, icon: ICONS.dashboard },
+      { title: 'Workplace', path: paths.dashboard.root, icon: ICONS.dashboard },
     ],
   },
   /**
@@ -117,6 +117,7 @@ export const navData = [
         children: [
           { title: 'In Nhanh', path: paths.dashboard.pricing.calculator },
           { title: 'In Catalogue', path: paths.dashboard.pricing.catalogue },
+          { title: 'Cài đặt giá', path: paths.dashboard.pricing.settings },
         ],
       },
     ],

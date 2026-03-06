@@ -1,25 +1,33 @@
+import { paths } from 'src/routes/paths';
 import { Iconify } from 'src/components/iconify';
 
 // ----------------------------------------------------------------------
 
 export const _account = [
-  { label: 'Trang chủ', href: '/', icon: <Iconify icon="solar:home-angle-bold-duotone" /> },
+  {
+    label: 'Trang chủ',
+    href: paths.dashboard.root,
+    icon: <Iconify icon="solar:home-angle-bold-duotone" />,
+  },
   {
     label: 'Hồ sơ',
-    href: '#',
-    icon: <Iconify icon="custom:profile-duotone" />,
+    href: paths.dashboard.user.profile,
+    icon: <Iconify icon="solar:user-circle-bold-duotone" />,
   },
   {
-    label: 'Dự án',
-    href: '#',
-    icon: <Iconify icon="solar:notes-bold-duotone" />,
-    info: '3',
+    label: 'Đơn hàng',
+    href: paths.dashboard.order.root,
+    icon: <Iconify icon="solar:cart-large-2-bold-duotone" />,
+    info: '5',
   },
   {
-    label: 'Gói dịch vụ',
-    href: '#',
-    icon: <Iconify icon="custom:invoice-duotone" />,
+    label: 'Bảo mật',
+    href: `${paths.dashboard.user.account}/change-password`,
+    icon: <Iconify icon="solar:shield-keyhole-bold-duotone" />,
   },
-  { label: 'Bảo mật', href: '#', icon: <Iconify icon="solar:shield-keyhole-bold-duotone" /> },
-  { label: 'Cài đặt tài khoản', href: '#', icon: <Iconify icon="solar:settings-bold-duotone" /> },
+  {
+    label: 'Cài đặt tài khoản',
+    href: paths.dashboard.user.account,
+    icon: <Iconify icon="solar:settings-bold-duotone" />,
+  },
 ];

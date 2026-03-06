@@ -51,17 +51,17 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
       <MenuList>
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:printer-minimalistic-bold" />
-          Print
+          In
         </MenuItem>
 
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:import-bold" />
-          Import
+          Nhập
         </MenuItem>
 
         <MenuItem onClick={() => menuActions.onClose()}>
           <Iconify icon="solar:export-bold" />
-          Export
+          Xuất
         </MenuItem>
       </MenuList>
     </CustomPopover>
@@ -80,10 +80,10 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
         }}
       >
         <FormControl sx={{ flexShrink: 0, width: { xs: 1, md: 200 } }}>
-          <InputLabel htmlFor="filter-role-select">Role</InputLabel>
+          <InputLabel htmlFor="filter-role-select">Vai trò</InputLabel>
           <Select
             multiple
-            label="Role"
+            label="Vai trò"
             value={currentFilters.role}
             onChange={handleFilterRole}
             renderValue={(selected) => selected.map((value) => value).join(', ')}
@@ -119,7 +119,7 @@ export function UserTableToolbar({ filters, options, onResetPage }) {
             fullWidth
             value={currentFilters.name}
             onChange={handleFilterName}
-            placeholder="Search..."
+            placeholder="Tìm kiếm..."
             slotProps={{
               input: {
                 startAdornment: (

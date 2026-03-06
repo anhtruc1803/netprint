@@ -24,19 +24,19 @@ import { Form, Field, schemaUtils } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const UserCreateSchema = z.object({
-  avatarUrl: schemaUtils.file({ error: 'Avatar is required!' }),
-  name: z.string().min(1, { error: 'Name is required!' }),
+  avatarUrl: schemaUtils.file({ error: 'Vui lòng tải ảnh đại diện!' }),
+  name: z.string().min(1, { error: 'Vui lòng nhập họ tên!' }),
   email: schemaUtils.email(),
   phoneNumber: schemaUtils.phoneNumber({ isValid: isValidPhoneNumber }),
-  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Country is required!' }), {
-    error: 'Country is required!',
+  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Vui lòng chọn quốc gia!' }), {
+    error: 'Vui lòng chọn quốc gia!',
   }),
-  address: z.string().min(1, { error: 'Address is required!' }),
-  company: z.string().min(1, { error: 'Company is required!' }),
-  state: z.string().min(1, { error: 'State is required!' }),
-  city: z.string().min(1, { error: 'City is required!' }),
-  role: z.string().min(1, { error: 'Role is required!' }),
-  zipCode: z.string().min(1, { error: 'Zip code is required!' }),
+  address: z.string().min(1, { error: 'Vui lòng nhập địa chỉ!' }),
+  company: z.string().min(1, { error: 'Vui lòng nhập công ty!' }),
+  state: z.string().min(1, { error: 'Vui lòng nhập tỉnh/thành!' }),
+  city: z.string().min(1, { error: 'Vui lòng nhập thành phố!' }),
+  role: z.string().min(1, { error: 'Vui lòng nhập vai trò!' }),
+  zipCode: z.string().min(1, { error: 'Vui lòng nhập mã bưu chính!' }),
   // Not required
   status: z.string(),
   isVerified: z.boolean(),
@@ -84,7 +84,7 @@ export function UserCreateEditForm({ currentUser }) {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       reset();
-      toast.success(currentUser ? 'Update success!' : 'Create success!');
+      toast.success(currentUser ? 'Cập nhật thành công!' : 'Tạo thành công!');
       router.push(paths.dashboard.user.list);
       console.info('DATA', data);
     } catch (error) {
@@ -125,8 +125,8 @@ export function UserCreateEditForm({ currentUser }) {
                       color: 'text.disabled',
                     }}
                   >
-                    Allowed *.jpeg, *.jpg, *.png, *.gif
-                    <br /> max size of {fData(3145728)}
+                    Cho phép *.jpeg, *.jpg, *.png, *.gif
+                    <br /> dung lượng tối đa {fData(3145728)}
                   </Typography>
                 }
               />
@@ -153,10 +153,10 @@ export function UserCreateEditForm({ currentUser }) {
                 label={
                   <>
                     <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                      Banned
+                      Khóa tài khoản
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      Apply disable account
+                      Vô hiệu hóa tài khoản người dùng
                     </Typography>
                   </>
                 }
@@ -175,10 +175,10 @@ export function UserCreateEditForm({ currentUser }) {
               label={
                 <>
                   <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                    Email verified
+                    Xác minh email
                   </Typography>
                   <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                    Disabling this will automatically send the user a verification email
+                    Tắt tùy chọn này sẽ tự động gửi email xác minh cho người dùng
                   </Typography>
                 </>
               }
@@ -188,7 +188,7 @@ export function UserCreateEditForm({ currentUser }) {
             {currentUser && (
               <Stack sx={{ mt: 3, alignItems: 'center', justifyContent: 'center' }}>
                 <Button variant="soft" color="error">
-                  Delete user
+                  Xóa người dùng
                 </Button>
               </Stack>
             )}
@@ -205,28 +205,28 @@ export function UserCreateEditForm({ currentUser }) {
                 gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
               }}
             >
-              <Field.Text name="name" label="Full name" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone name="phoneNumber" label="Phone number" defaultCountry="US" />
+              <Field.Text name="name" label="Họ tên" />
+              <Field.Text name="email" label="Địa chỉ email" />
+              <Field.Phone name="phoneNumber" label="Số điện thoại" defaultCountry="VN" />
 
               <Field.CountrySelect
                 fullWidth
                 name="country"
-                label="Country"
-                placeholder="Choose a country"
+                label="Quốc gia"
+                placeholder="Chọn quốc gia"
               />
 
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="address" label="Address" />
-              <Field.Text name="zipCode" label="Zip/code" />
-              <Field.Text name="company" label="Company" />
-              <Field.Text name="role" label="Role" />
+              <Field.Text name="state" label="Tỉnh/Thành phố" />
+              <Field.Text name="city" label="Quận/Huyện" />
+              <Field.Text name="address" label="Địa chỉ" />
+              <Field.Text name="zipCode" label="Mã bưu chính" />
+              <Field.Text name="company" label="Công ty" />
+              <Field.Text name="role" label="Vai trò" />
             </Box>
 
             <Stack sx={{ mt: 3, alignItems: 'flex-end' }}>
               <Button type="submit" variant="contained" loading={isSubmitting}>
-                {!currentUser ? 'Create user' : 'Save changes'}
+                {!currentUser ? 'Tạo người dùng' : 'Lưu thay đổi'}
               </Button>
             </Stack>
           </Card>

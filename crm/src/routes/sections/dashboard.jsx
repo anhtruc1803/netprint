@@ -34,6 +34,7 @@ const OrderCreatePage = lazy(() => import('src/pages/dashboard/order/new'));
 // Pricing
 const PricingCalculatorPage = lazy(() => import('src/pages/dashboard/pricing/calculator'));
 const CatalogueCalculatorPage = lazy(() => import('src/pages/dashboard/pricing/catalogue'));
+const PricingSettingsPage = lazy(() => import('src/pages/dashboard/pricing/settings'));
 // Invoice
 const InvoiceListPage = lazy(() => import('src/pages/dashboard/invoice/list'));
 const InvoiceDetailsPage = lazy(() => import('src/pages/dashboard/invoice/details'));
@@ -166,6 +167,7 @@ export const dashboardRoutes = [
           { index: true, element: <PricingCalculatorPage /> },
           { path: 'calculator', element: <PricingCalculatorPage /> },
           { path: 'catalogue', element: <CatalogueCalculatorPage /> },
+          { path: 'settings', element: <PricingSettingsPage /> },
         ],
       },
       {

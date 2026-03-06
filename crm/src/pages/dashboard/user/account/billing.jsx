@@ -4,14 +4,14 @@ import { AccountBillingView } from 'src/sections/account/view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Account billing settings | Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Thanh toán | Dashboard - ${CONFIG.appName}` };
 
 export default function Page() {
-  return (
-    <>
-      <title>{metadata.title}</title>
+    return (
+        <>
+            <title>{metadata.title}</title>
 
-      <AccountBillingView />
-    </>
-  );
+            <AccountBillingView />
+        </>
+    );
 }

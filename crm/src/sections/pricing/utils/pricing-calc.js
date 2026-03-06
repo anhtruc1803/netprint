@@ -274,39 +274,58 @@ export function getPrintPriceBySize(settings, sizeKey, sheets, isTwoSided = fals
 }
 
 /**
- * Tính giá cán màng theo cấu trúc mới (laminationPricing)
+ * Tính giá cán màng
+ * Hỗ trợ 3 đơn vị: per_lot (lô), per_sheet (tờ), per_m2 (m²)
+ * Ưu tiên cấu trúc laminationPricing (theo từng khổ giấy)
+ * Fallback về cấu trúc laminations cũ
  */
 export function calculateLaminationCost(settings, printSizeId, lamId, sheets, paperW, paperH) {
     if (!lamId || lamId <= 0) return 0;
-    if (!settings.laminationPricing || settings.laminationPricing.length === 0) {
-        // Fallback: cấu trúc laminations cũ
-        const lam = settings.laminations?.find(l => l.id === lamId);
-        if (!lam) return 0;
-        if (lam.pricePerM2 && sheets >= 500) {
-            const area = (paperW * paperH) / 1000000; // mm² → m²
-            return Math.round(sheets * area * lam.pricePerM2);
+
+    // Tìm lamination type để lấy unit mặc định
+    const lamType = settings.laminations?.find(l => l.id === lamId);
+    if (!lamType) return 0;
+    if (lamType.id === 1) return 0; // Không cán
+
+    // Ưu tiên: Tìm pricing theo khổ giấy cụ thể
+    if (settings.laminationPricing && settings.laminationPricing.length > 0) {
+        const pricing = settings.laminationPricing.find(
+            lp => lp.printSizeId === printSizeId && lp.lamId === lamId
+        );
+        if (pricing && pricing.tiers && pricing.tiers.length > 0) {
+            const tier = findTierWithMin(pricing.tiers, sheets);
+            if (!tier) return 0;
+
+            const unit = pricing.unit || lamType.unit || 'per_sheet';
+            if (unit === 'per_m2') {
+                const area = (paperW * paperH) / 1000000;
+                return Math.round(sheets * area * tier.price);
+            }
+            if (unit === 'per_lot') {
+                return Math.round(tier.price);
+            }
+            return Math.round(sheets * tier.price); // per_sheet
         }
-        return Math.round(sheets * findTierPrice(lam.tiers || [], sheets));
     }
 
-    // Cấu trúc mới
-    const pricing = settings.laminationPricing.find(
-        lp => lp.printSizeId === printSizeId && lp.lamId === lamId
-    );
-    if (!pricing || !pricing.tiers) return 0;
+    // Fallback: dùng cấu trúc laminations cũ
+    const unit = lamType.unit || 'per_sheet';
 
-    const tier = findTierWithMin(pricing.tiers, sheets);
-    if (!tier) return 0;
-
-    const unit = tier.unit || 'per_sheet';
     if (unit === 'per_m2') {
         const area = (paperW * paperH) / 1000000;
-        return Math.round(sheets * area * tier.price);
+        const price = lamType.pricePerM2 || findTierPrice(lamType.tiers || [], sheets);
+        return Math.round(sheets * area * price);
     }
     if (unit === 'per_lot') {
-        return Math.round(tier.price);
+        return Math.round(findTierPrice(lamType.tiers || [], sheets));
     }
-    return Math.round(sheets * tier.price); // per_sheet
+
+    // per_sheet - giữ logic cũ: số lượng lớn dùng m², nhỏ dùng đ/tờ
+    if (lamType.pricePerM2 && sheets >= 500) {
+        const area = (paperW * paperH) / 1000000;
+        return Math.round(sheets * area * lamType.pricePerM2);
+    }
+    return Math.round(sheets * findTierPrice(lamType.tiers || [], sheets));
 }
 
 /**

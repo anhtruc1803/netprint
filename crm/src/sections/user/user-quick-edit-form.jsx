@@ -20,18 +20,18 @@ import { Form, Field, schemaUtils } from 'src/components/hook-form';
 // ----------------------------------------------------------------------
 
 export const UserQuickEditSchema = z.object({
-  name: z.string().min(1, { error: 'Name is required!' }),
+  name: z.string().min(1, { error: 'Vui lòng nhập họ tên!' }),
   email: schemaUtils.email(),
   phoneNumber: schemaUtils.phoneNumber({ isValid: isValidPhoneNumber }),
-  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Country is required!' }), {
-    error: 'Country is required!',
+  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Vui lòng chọn quốc gia!' }), {
+    error: 'Vui lòng chọn quốc gia!',
   }),
-  state: z.string().min(1, { error: 'State is required!' }),
-  city: z.string().min(1, { error: 'City is required!' }),
-  address: z.string().min(1, { error: 'Address is required!' }),
-  zipCode: z.string().min(1, { error: 'Zip code is required!' }),
-  company: z.string().min(1, { error: 'Company is required!' }),
-  role: z.string().min(1, { error: 'Role is required!' }),
+  state: z.string().min(1, { error: 'Vui lòng nhập tỉnh/thành!' }),
+  city: z.string().min(1, { error: 'Vui lòng nhập thành phố!' }),
+  address: z.string().min(1, { error: 'Vui lòng nhập địa chỉ!' }),
+  zipCode: z.string().min(1, { error: 'Vui lòng nhập mã bưu chính!' }),
+  company: z.string().min(1, { error: 'Vui lòng nhập công ty!' }),
+  role: z.string().min(1, { error: 'Vui lòng nhập vai trò!' }),
   // Not required
   status: z.string(),
 });
@@ -74,9 +74,9 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
       onClose();
 
       toast.promise(promise, {
-        loading: 'Loading...',
-        success: 'Update success!',
-        error: 'Update error!',
+        loading: 'Đang xử lý...',
+        success: 'Cập nhật thành công!',
+        error: 'Lỗi cập nhật!',
       });
 
       await promise;
@@ -99,12 +99,12 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
         },
       }}
     >
-      <DialogTitle>Quick update</DialogTitle>
+      <DialogTitle>Cập nhật nhanh</DialogTitle>
 
       <Form methods={methods} onSubmit={onSubmit}>
         <DialogContent>
           <Alert variant="outlined" severity="info" sx={{ mb: 3 }}>
-            Account is waiting for confirmation
+            Tài khoản đang chờ xác nhận
           </Alert>
 
           <Box
@@ -115,7 +115,7 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
               gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
             }}
           >
-            <Field.Select name="status" label="Status">
+            <Field.Select name="status" label="Trạng thái">
               {USER_STATUS_OPTIONS.map((status) => (
                 <MenuItem key={status.value} value={status.value}>
                   {status.label}
@@ -125,32 +125,32 @@ export function UserQuickEditForm({ currentUser, open, onClose }) {
 
             <Box sx={{ display: { xs: 'none', sm: 'block' } }} />
 
-            <Field.Text name="name" label="Full name" />
-            <Field.Text name="email" label="Email address" />
-            <Field.Phone name="phoneNumber" label="Phone number" />
+            <Field.Text name="name" label="Họ tên" />
+            <Field.Text name="email" label="Địa chỉ email" />
+            <Field.Phone name="phoneNumber" label="Số điện thoại" />
 
             <Field.CountrySelect
               fullWidth
               name="country"
-              label="Country"
-              placeholder="Choose a country"
+              label="Quốc gia"
+              placeholder="Chọn quốc gia"
             />
 
-            <Field.Text name="state" label="State/region" />
-            <Field.Text name="city" label="City" />
-            <Field.Text name="address" label="Address" />
-            <Field.Text name="zipCode" label="Zip/code" />
-            <Field.Text name="company" label="Company" />
-            <Field.Text name="role" label="Role" />
+            <Field.Text name="state" label="Tỉnh/Thành phố" />
+            <Field.Text name="city" label="Quận/Huyện" />
+            <Field.Text name="address" label="Địa chỉ" />
+            <Field.Text name="zipCode" label="Mã bưu chính" />
+            <Field.Text name="company" label="Công ty" />
+            <Field.Text name="role" label="Vai trò" />
           </Box>
         </DialogContent>
 
         <DialogActions>
           <Button variant="outlined" onClick={onClose}>
-            Cancel
+            Hủy
           </Button>
           <Button type="submit" variant="contained" loading={isSubmitting}>
-            Update
+            Cập nhật
           </Button>
         </DialogActions>
       </Form>

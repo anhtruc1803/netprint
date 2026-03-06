@@ -19,17 +19,17 @@ export const ChangePassWordSchema = z
   .object({
     oldPassword: z
       .string()
-      .min(1, { error: 'Password is required!' })
-      .min(6, { error: 'Password must be at least 6 characters!' }),
-    newPassword: z.string().min(1, { error: 'New password is required!' }),
-    confirmNewPassword: z.string().min(1, { error: 'Confirm password is required!' }),
+      .min(1, { error: 'Vui lòng nhập mật khẩu!' })
+      .min(6, { error: 'Mật khẩu phải có ít nhất 6 ký tự!' }),
+    newPassword: z.string().min(1, { error: 'Vui lòng nhập mật khẩu mới!' }),
+    confirmNewPassword: z.string().min(1, { error: 'Vui lòng xác nhận mật khẩu!' }),
   })
   .refine((val) => val.oldPassword !== val.newPassword, {
-    error: 'New password must be different than old password',
+    error: 'Mật khẩu mới phải khác mật khẩu cũ',
     path: ['newPassword'],
   })
   .refine((val) => val.newPassword === val.confirmNewPassword, {
-    error: 'Passwords do not match!',
+    error: 'Mật khẩu xác nhận không khớp!',
     path: ['confirmNewPassword'],
   });
 
@@ -60,7 +60,7 @@ export function AccountChangePassword() {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       reset();
-      toast.success('Update success!');
+      toast.success('Cập nhật thành công!');
       console.info('DATA', data);
     } catch (error) {
       console.error(error);
@@ -80,7 +80,7 @@ export function AccountChangePassword() {
         <Field.Text
           name="oldPassword"
           type={showPassword.value ? 'text' : 'password'}
-          label="Old password"
+          label="Mật khẩu cũ"
           slotProps={{
             input: {
               endAdornment: (
@@ -98,7 +98,7 @@ export function AccountChangePassword() {
 
         <Field.Text
           name="newPassword"
-          label="New password"
+          label="Mật khẩu mới"
           type={showPassword.value ? 'text' : 'password'}
           slotProps={{
             input: {
@@ -115,7 +115,7 @@ export function AccountChangePassword() {
           }}
           helperText={
             <Box component="span" sx={{ gap: 0.5, display: 'flex', alignItems: 'center' }}>
-              <Iconify icon="solar:info-circle-bold" width={16} /> Password must be minimum 6+
+              <Iconify icon="solar:info-circle-bold" width={16} /> Mật khẩu tối thiểu 6 ký tự
             </Box>
           }
         />
@@ -123,7 +123,7 @@ export function AccountChangePassword() {
         <Field.Text
           name="confirmNewPassword"
           type={showPassword.value ? 'text' : 'password'}
-          label="Confirm new password"
+          label="Xác nhận mật khẩu mới"
           slotProps={{
             input: {
               endAdornment: (
@@ -140,7 +140,7 @@ export function AccountChangePassword() {
         />
 
         <Button type="submit" variant="contained" loading={isSubmitting} sx={{ ml: 'auto' }}>
-          Save changes
+          Lưu thay đổi
         </Button>
       </Card>
     </Form>

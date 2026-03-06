@@ -20,18 +20,18 @@ import { useMockedUser } from 'src/auth/hooks';
 // ----------------------------------------------------------------------
 
 export const UpdateUserSchema = z.object({
-  displayName: z.string().min(1, { error: 'Name is required!' }),
+  displayName: z.string().min(1, { error: 'Vui lòng nhập tên!' }),
   email: schemaUtils.email(),
-  photoURL: schemaUtils.file({ error: 'Avatar is required!' }),
+  photoURL: schemaUtils.file({ error: 'Vui lòng tải ảnh đại diện!' }),
   phoneNumber: schemaUtils.phoneNumber({ isValid: isValidPhoneNumber }),
-  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Country is required!' }), {
-    error: 'Country is required!',
+  country: schemaUtils.nullableInput(z.string().min(1, { error: 'Vui lòng chọn quốc gia!' }), {
+    error: 'Vui lòng chọn quốc gia!',
   }),
-  address: z.string().min(1, { error: 'Address is required!' }),
-  state: z.string().min(1, { error: 'State is required!' }),
-  city: z.string().min(1, { error: 'City is required!' }),
-  zipCode: z.string().min(1, { error: 'Zip code is required!' }),
-  about: z.string().min(1, { error: 'About is required!' }),
+  address: z.string().min(1, { error: 'Vui lòng nhập địa chỉ!' }),
+  state: z.string().min(1, { error: 'Vui lòng nhập tỉnh/thành!' }),
+  city: z.string().min(1, { error: 'Vui lòng nhập thành phố!' }),
+  zipCode: z.string().min(1, { error: 'Vui lòng nhập mã bưu chính!' }),
+  about: z.string().min(1, { error: 'Vui lòng nhập giới thiệu!' }),
   // Not required
   isPublic: z.boolean(),
 });
@@ -84,7 +84,7 @@ export function AccountGeneral() {
   const onSubmit = handleSubmit(async (data) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      toast.success('Update success!');
+      toast.success('Cập nhật thành công!');
       console.info('DATA', data);
     } catch (error) {
       console.error(error);
@@ -117,8 +117,8 @@ export function AccountGeneral() {
                     color: 'text.disabled',
                   }}
                 >
-                  Allowed *.jpeg, *.jpg, *.png, *.gif
-                  <br /> max size of {fData(3145728)}
+                  Cho phép *.jpeg, *.jpg, *.png, *.gif
+                  <br /> dung lượng tối đa {fData(3145728)}
                 </Typography>
               }
             />
@@ -126,12 +126,12 @@ export function AccountGeneral() {
             <Field.Switch
               name="isPublic"
               labelPlacement="start"
-              label="Public profile"
+              label="Hồ sơ công khai"
               sx={{ mt: 5 }}
             />
 
             <Button variant="soft" color="error" sx={{ mt: 3 }}>
-              Delete user
+              Xóa người dùng
             </Button>
           </Card>
         </Grid>
@@ -146,23 +146,23 @@ export function AccountGeneral() {
                 gridTemplateColumns: { xs: 'repeat(1, 1fr)', sm: 'repeat(2, 1fr)' },
               }}
             >
-              <Field.Text name="displayName" label="Name" />
-              <Field.Text name="email" label="Email address" />
-              <Field.Phone name="phoneNumber" label="Phone number" />
-              <Field.Text name="address" label="Address" />
+              <Field.Text name="displayName" label="Họ tên" />
+              <Field.Text name="email" label="Địa chỉ email" />
+              <Field.Phone name="phoneNumber" label="Số điện thoại" />
+              <Field.Text name="address" label="Địa chỉ" />
 
-              <Field.CountrySelect name="country" label="Country" placeholder="Choose a country" />
+              <Field.CountrySelect name="country" label="Quốc gia" placeholder="Chọn quốc gia" />
 
-              <Field.Text name="state" label="State/region" />
-              <Field.Text name="city" label="City" />
-              <Field.Text name="zipCode" label="Zip/code" />
+              <Field.Text name="state" label="Tỉnh/Thành phố" />
+              <Field.Text name="city" label="Quận/Huyện" />
+              <Field.Text name="zipCode" label="Mã bưu chính" />
             </Box>
 
             <Stack spacing={3} sx={{ mt: 3, alignItems: 'flex-end' }}>
-              <Field.Text name="about" multiline rows={4} label="About" />
+              <Field.Text name="about" multiline rows={4} label="Giới thiệu" />
 
               <Button type="submit" variant="contained" loading={isSubmitting}>
-                Save changes
+                Lưu thay đổi
               </Button>
             </Stack>
           </Card>

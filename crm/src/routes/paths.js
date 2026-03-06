@@ -157,6 +157,7 @@ export const paths = {
       root: `${ROOTS.DASHBOARD}/pricing`,
       calculator: `${ROOTS.DASHBOARD}/pricing/calculator`,
       catalogue: `${ROOTS.DASHBOARD}/pricing/catalogue`,
+      settings: `${ROOTS.DASHBOARD}/pricing/settings`,
     },
     job: {
       root: `${ROOTS.DASHBOARD}/job`,

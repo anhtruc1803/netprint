@@ -105,10 +105,10 @@ export function NotificationItem({ notification }) {
   const renderFriendAction = () => (
     <Box sx={{ gap: 1, mt: 1.5, display: 'flex' }}>
       <Button size="small" variant="contained">
-        Accept
+        Chấp nhận
       </Button>
       <Button size="small" variant="outlined">
-        Decline
+        Từ chối
       </Button>
     </Box>
   );
@@ -125,12 +125,12 @@ export function NotificationItem({ notification }) {
         }}
       >
         {readerContent(
-          `<p><strong>@Jaydon Frankie</strong> feedback by asking questions or just leave a note of appreciation.</p>`
+          `<p><strong>@Jaydon Frankie</strong> phản hồi bằng cách đặt câu hỏi hoặc để lại lời nhận đánh giá.</p>`
         )}
       </Box>
 
       <Button size="small" variant="contained" sx={{ alignSelf: 'flex-start' }}>
-        Reply
+        Trả lời
       </Button>
     </>
   );
@@ -170,7 +170,7 @@ export function NotificationItem({ notification }) {
       />
 
       <Button size="small" variant="outlined" sx={{ flexShrink: 0 }}>
-        Download
+        Tải xuống
       </Button>
     </Box>
   );
@@ -185,22 +185,22 @@ export function NotificationItem({ notification }) {
       }}
     >
       <Label variant="outlined" color="info">
-        Design
+        Thiết kế
       </Label>
       <Label variant="outlined" color="warning">
-        Dashboard
+        Bảng điều khiển
       </Label>
-      <Label variant="outlined">Design system</Label>
+      <Label variant="outlined">Hệ thống thiết kế</Label>
     </Box>
   );
 
   const renderPaymentAction = () => (
     <Box sx={{ gap: 1, mt: 1.5, display: 'flex' }}>
       <Button size="small" variant="contained">
-        Pay
+        Thanh toán
       </Button>
       <Button size="small" variant="outlined">
-        Decline
+        Từ chối
       </Button>
     </Box>
   );

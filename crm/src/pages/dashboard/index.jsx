@@ -1,17 +1,17 @@
 import { CONFIG } from 'src/global-config';
 
-import { OverviewAppView } from 'src/sections/overview/app/view';
+import { WorkplaceView } from 'src/sections/workplace/view/workplace-view';
 
 // ----------------------------------------------------------------------
 
-const metadata = { title: `Dashboard - ${CONFIG.appName}` };
+const metadata = { title: `Workplace - ${CONFIG.appName}` };
 
-export default function OverviewAppPage() {
+export default function WorkplacePage() {
   return (
     <>
       <title>{metadata.title}</title>
 
-      <OverviewAppView />
+      <WorkplaceView />
     </>
   );
 }

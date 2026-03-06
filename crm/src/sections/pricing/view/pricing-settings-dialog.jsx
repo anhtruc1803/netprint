@@ -58,7 +58,7 @@ function TierRow({ tier, index, isLast, onChange, onDelete, canDelete, unit = '�
 }
 
 // ===== MAIN COMPONENT =====
-export default function PricingSettingsDialog({ open, onClose, onSettingsChanged }) {
+export default function PricingSettingsDialog({ open, onClose, onSettingsChanged, embedded = false }) {
     const theme = useTheme();
     const [tab, setTab] = useState(0);
     const [settings, setSettings] = useState(() => loadPaperSettings());
@@ -105,6 +105,13 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     };
 
     // ===== LAMINATIONS =====
+    const UNIT_OPTIONS = [
+        { value: 'per_sheet', label: 'đ/tờ' },
+        { value: 'per_m2', label: 'đ/m²' },
+        { value: 'per_lot', label: 'đ/lô' },
+    ];
+    const getUnitLabel = (unit) => UNIT_OPTIONS.find(u => u.value === unit)?.label || 'đ/tờ';
+
     const updateLam = (id, field, value) => {
         const ns = {
             ...settings, laminations: settings.laminations.map(l =>
@@ -113,37 +120,211 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         };
         save(ns);
     };
-    const updateLamTier = (id, value) => {
-        const ns = {
-            ...settings, laminations: settings.laminations.map(l =>
-                l.id === id ? { ...l, tiers: [{ max: 499, price: parseInt(value) || 0 }] } : l
-            )
-        };
-        save(ns);
-    };
-    const updateLamM2 = (id, value) => {
-        const ns = {
-            ...settings, laminations: settings.laminations.map(l =>
-                l.id === id ? { ...l, pricePerM2: parseInt(value) || 0 } : l
-            )
-        };
-        save(ns);
-    };
     const addLam = () => {
         const ns = {
             ...settings, laminations: [...settings.laminations, {
-                id: Date.now(), name: 'Loại mới', tiers: [{ max: 499, price: 0 }], pricePerM2: 0
+                id: Date.now(), name: 'Loại mới', unit: 'per_sheet', tiers: [{ max: 499, price: 0 }], pricePerM2: 0
             }]
         };
         save(ns);
     };
     const deleteLam = (id) => {
         if (id === 1) return;
-        const ns = { ...settings, laminations: settings.laminations.filter(l => l.id !== id) };
+        const ns = {
+            ...settings,
+            laminations: settings.laminations.filter(l => l.id !== id),
+            laminationPricing: (settings.laminationPricing || []).filter(lp => lp.lamId !== id),
+        };
         save(ns);
     };
 
-    // ===== PROCESSING =====
+    // Laminiation pricing per print size
+    const lamPricing = settings.laminationPricing || [];
+
+    const getLamPricing = (printSizeId, lamId) =>
+        lamPricing.find(lp => lp.printSizeId === printSizeId && lp.lamId === lamId);
+
+    const setLamPricing = (printSizeId, lamId, data) => {
+        const existing = lamPricing.find(lp => lp.printSizeId === printSizeId && lp.lamId === lamId);
+        let newLP;
+        if (existing) {
+            newLP = lamPricing.map(lp =>
+                (lp.printSizeId === printSizeId && lp.lamId === lamId) ? { ...lp, ...data } : lp
+            );
+        } else {
+            newLP = [...lamPricing, { printSizeId, lamId, unit: 'per_sheet', tiers: [{ max: 999999, price: 0 }], ...data }];
+        }
+        save({ ...settings, laminationPricing: newLP });
+    };
+
+    const updateLamPricingTier = (printSizeId, lamId, tierIdx, field, value) => {
+        const pricing = getLamPricing(printSizeId, lamId);
+        if (!pricing) return;
+        const newTiers = pricing.tiers.map((t, i) => i === tierIdx ? { ...t, [field]: value } : t);
+        setLamPricing(printSizeId, lamId, { tiers: newTiers });
+    };
+
+    const addLamPricingTier = (printSizeId, lamId) => {
+        const pricing = getLamPricing(printSizeId, lamId);
+        if (!pricing) {
+            setLamPricing(printSizeId, lamId, { tiers: [{ max: 500, price: 0 }, { max: 999999, price: 0 }] });
+            return;
+        }
+        const lastT = pricing.tiers[pricing.tiers.length - 1];
+        const newMax = lastT.max === 999999 ? 500 : lastT.max + 200;
+        const newTiers = [...pricing.tiers];
+        newTiers.splice(newTiers.length - 1, 0, { max: newMax, price: lastT.price });
+        setLamPricing(printSizeId, lamId, { tiers: newTiers });
+    };
+
+    const deleteLamPricingTier = (printSizeId, lamId, tierIdx) => {
+        const pricing = getLamPricing(printSizeId, lamId);
+        if (!pricing) return;
+        setLamPricing(printSizeId, lamId, { tiers: pricing.tiers.filter((_, i) => i !== tierIdx) });
+    };
+
+    const removeLamPricing = (printSizeId, lamId) => {
+        save({ ...settings, laminationPricing: lamPricing.filter(lp => !(lp.printSizeId === printSizeId && lp.lamId === lamId)) });
+    };
+
+    // ===== TAB 2: CÁN MÀNG =====
+    const renderLaminations = () => (
+        <>
+            {/* Danh sách loại cán màng */}
+            <SettingSection icon="solar:layers-bold-duotone" title="Loại cán màng" color="warning" onAdd={addLam} addLabel="Thêm loại">
+                <Table size="small">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 700 }}>Tên</TableCell>
+                            <TableCell sx={{ fontWeight: 700 }} width={150}>Đơn vị mặc định</TableCell>
+                            <TableCell width={40} />
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {settings.laminations.map(l => (
+                            <TableRow key={l.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
+                                <TableCell>
+                                    <TextField size="small" variant="standard" value={l.name} fullWidth
+                                        onChange={e => updateLam(l.id, 'name', e.target.value)}
+                                        InputProps={{ disableUnderline: l.id === 1 }}
+                                        disabled={l.id === 1} />
+                                </TableCell>
+                                <TableCell>
+                                    {l.id !== 1 ? (
+                                        <TextField size="small" variant="standard" select value={l.unit || 'per_sheet'}
+                                            onChange={e => updateLam(l.id, 'unit', e.target.value)}
+                                            SelectProps={{ native: true }}
+                                            sx={{ width: 100 }}>
+                                            {UNIT_OPTIONS.map(u => (
+                                                <option key={u.value} value={u.value}>{u.label}</option>
+                                            ))}
+                                        </TextField>
+                                    ) : <Typography variant="body2" color="text.disabled">—</Typography>}
+                                </TableCell>
+                                <TableCell>
+                                    {l.id !== 1 && (
+                                        <IconButton size="small" color="error" onClick={() => deleteLam(l.id)}>
+                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+                                        </IconButton>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </SettingSection>
+
+            {/* Bảng giá theo khổ giấy */}
+            <SettingSection icon="solar:tuning-2-bold-duotone" title="Bảng giá cán theo khổ giấy" color="info">
+                {printSizes.length === 0 ? (
+                    <Typography variant="body2" color="text.disabled" sx={{ textAlign: 'center', py: 3 }}>
+                        Chưa có khổ in — Thêm khổ in ở tab &quot;Loại giấy&quot; trước
+                    </Typography>
+                ) : (
+                    <Stack spacing={2}>
+                        {printSizes.map(size => (
+                            <Paper key={size.id} variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: alpha(theme.palette.info.main, 0.3) }}>
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+                                    <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'info.main' }} />
+                                    <Typography variant="subtitle2" fontWeight={700}>
+                                        {size.name} ({size.w}×{size.h} mm)
+                                    </Typography>
+                                </Stack>
+
+                                {settings.laminations.filter(l => l.id !== 1).map(lam => {
+                                    const pricing = getLamPricing(size.id, lam.id);
+                                    const hasCustomPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
+                                    const unit = pricing?.unit || lam.unit || 'per_sheet';
+
+                                    return (
+                                        <Paper key={lam.id} variant="outlined" sx={{
+                                            p: 1.5, borderRadius: 1.5, mb: 1.5,
+                                            bgcolor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.04) : 'transparent',
+                                            borderColor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.3) : theme.palette.divider,
+                                        }}>
+                                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: hasCustomPricing ? 1 : 0 }}>
+                                                <Chip label="✨" size="small" variant="soft" sx={{ height: 24 }} />
+                                                <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
+                                                    {lam.name}
+                                                </Typography>
+
+                                                {/* Đơn vị */}
+                                                <TextField size="small" variant="outlined" select value={unit}
+                                                    onChange={e => setLamPricing(size.id, lam.id, { unit: e.target.value })}
+                                                    SelectProps={{ native: true }}
+                                                    sx={{ width: 95, '& .MuiInputBase-input': { py: 0.5, fontSize: 13 } }}>
+                                                    {UNIT_OPTIONS.map(u => (
+                                                        <option key={u.value} value={u.value}>{u.label}</option>
+                                                    ))}
+                                                </TextField>
+
+                                                {hasCustomPricing ? (
+                                                    <Stack direction="row" spacing={0.5}>
+                                                        <Tooltip title="Thêm mốc">
+                                                            <IconButton size="small" color="primary" onClick={() => addLamPricingTier(size.id, lam.id)}>
+                                                                <Iconify icon="mingcute:add-line" width={14} />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                        <Tooltip title="Xóa giá riêng">
+                                                            <IconButton size="small" color="error" onClick={() => removeLamPricing(size.id, lam.id)}>
+                                                                <Iconify icon="solar:trash-bin-minimalistic-bold" width={14} />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </Stack>
+                                                ) : (
+                                                    <Button size="small" variant="soft" color="warning"
+                                                        startIcon={<Iconify icon="mingcute:add-line" />}
+                                                        onClick={() => setLamPricing(size.id, lam.id, {
+                                                            unit: lam.unit || 'per_sheet',
+                                                            tiers: [{ max: 500, price: 0 }, { max: 999999, price: 0 }]
+                                                        })}
+                                                        sx={{ fontSize: 12 }}>
+                                                        Thêm giá
+                                                    </Button>
+                                                )}
+                                            </Stack>
+
+                                            {hasCustomPricing && (
+                                                <Box sx={{ pl: 1 }}>
+                                                    {pricing.tiers.map((tier, idx) => (
+                                                        <TierRow key={idx} tier={tier} index={idx}
+                                                            unit={getUnitLabel(unit)}
+                                                            onChange={(i, f, v) => updateLamPricingTier(size.id, lam.id, i, f, v)}
+                                                            onDelete={(i) => deleteLamPricingTier(size.id, lam.id, i)}
+                                                            canDelete={pricing.tiers.length > 1} />
+                                                    ))}
+                                                </Box>
+                                            )}
+                                        </Paper>
+                                    );
+                                })}
+                            </Paper>
+                        ))}
+                    </Stack>
+                )}
+            </SettingSection>
+        </>
+    );
     const updateProc = (id, field, value) => {
         const ns = {
             ...settings, processing: settings.processing.map(p =>
@@ -184,7 +365,7 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     const addProc = () => {
         const ns = {
             ...settings, processing: [...settings.processing, {
-                id: Date.now(), name: 'Gia công mới',
+                id: Date.now(), name: 'Gia công mới', unit: 'per_item',
                 tiers: [{ max: 100, price: 200 }, { max: 500, price: 100 }, { max: 999999, price: 50 }]
             }]
         };
@@ -437,85 +618,57 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         </SettingSection>
     );
 
-    // ===== TAB 2: CÁN MÀNG =====
-    const renderLaminations = () => (
-        <SettingSection icon="solar:layers-bold-duotone" title="Cán màng" color="warning" onAdd={addLam} addLabel="Thêm loại">
-            <Table size="small">
-                <TableHead>
-                    <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Tên</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }} align="right">&lt;500 tờ (đ/tờ)</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }} align="right">≥500 tờ (đ/m²)</TableCell>
-                        <TableCell width={40} />
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {settings.laminations.map(l => (
-                        <TableRow key={l.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
-                            <TableCell>
-                                <TextField size="small" variant="standard" value={l.name} fullWidth
-                                    onChange={e => updateLam(l.id, 'name', e.target.value)}
-                                    InputProps={{ disableUnderline: l.id === 1 }}
-                                    disabled={l.id === 1} />
-                            </TableCell>
-                            <TableCell align="right">
-                                {l.id !== 1 ? (
-                                    <TextField size="small" variant="standard" type="number" value={l.tiers?.[0]?.price || 0}
-                                        sx={{ width: 80 }} inputProps={{ style: { textAlign: 'right' } }}
-                                        onChange={e => updateLamTier(l.id, e.target.value)} />
-                                ) : <Typography variant="body2" color="text.disabled">—</Typography>}
-                            </TableCell>
-                            <TableCell align="right">
-                                {l.id !== 1 ? (
-                                    <TextField size="small" variant="standard" type="number" value={l.pricePerM2 || 0}
-                                        sx={{ width: 80 }} inputProps={{ style: { textAlign: 'right' } }}
-                                        onChange={e => updateLamM2(l.id, e.target.value)} />
-                                ) : <Typography variant="body2" color="text.disabled">—</Typography>}
-                            </TableCell>
-                            <TableCell>
-                                {l.id !== 1 && (
-                                    <IconButton size="small" color="error" onClick={() => deleteLam(l.id)}>
-                                        <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
-                                    </IconButton>
-                                )}
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
-        </SettingSection>
-    );
-
     // ===== TAB 3: GIA CÔNG =====
+    const PROC_UNIT_OPTIONS = [
+        { value: 'per_lot', label: 'đ/lô' },
+        { value: 'per_item', label: 'đ/sp' },
+        { value: 'per_sheet', label: 'đ/tờ' },
+    ];
+    const getProcUnitLabel = (unit) => PROC_UNIT_OPTIONS.find(u => u.value === unit)?.label || 'đ/sp';
+
     const renderProcessing = () => (
         <SettingSection icon="solar:scissors-bold-duotone" title="Gia công" color="error" onAdd={addProc} addLabel="Thêm gia công">
             <Stack spacing={2}>
-                {settings.processing.map(proc => (
-                    <Paper key={proc.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                            <TextField size="small" variant="standard" value={proc.name} sx={{ fontWeight: 700 }}
-                                onChange={e => updateProc(proc.id, 'name', e.target.value)} />
-                            <Stack direction="row" spacing={0.5}>
-                                <Tooltip title="Thêm mốc">
-                                    <IconButton size="small" color="primary" onClick={() => addProcTier(proc.id)}>
-                                        <Iconify icon="mingcute:add-line" width={16} />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="Xóa">
-                                    <IconButton size="small" color="error" onClick={() => deleteProc(proc.id)}>
-                                        <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
-                                    </IconButton>
-                                </Tooltip>
+                {settings.processing.map(proc => {
+                    const procUnit = proc.unit || 'per_item';
+                    return (
+                        <Paper key={proc.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                                <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
+                                    <TextField size="small" variant="standard" value={proc.name} sx={{ fontWeight: 700, flex: 1 }}
+                                        onChange={e => updateProc(proc.id, 'name', e.target.value)} />
+                                    <TextField size="small" variant="outlined" select value={procUnit}
+                                        onChange={e => updateProc(proc.id, 'unit', e.target.value)}
+                                        SelectProps={{ native: true }}
+                                        sx={{ width: 90, '& .MuiInputBase-input': { py: 0.5, fontSize: 13 } }}>
+                                        {PROC_UNIT_OPTIONS.map(u => (
+                                            <option key={u.value} value={u.value}>{u.label}</option>
+                                        ))}
+                                    </TextField>
+                                </Stack>
+                                <Stack direction="row" spacing={0.5}>
+                                    <Tooltip title="Thêm mốc">
+                                        <IconButton size="small" color="primary" onClick={() => addProcTier(proc.id)}>
+                                            <Iconify icon="mingcute:add-line" width={16} />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Xóa">
+                                        <IconButton size="small" color="error" onClick={() => deleteProc(proc.id)}>
+                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Stack>
                             </Stack>
-                        </Stack>
-                        {proc.tiers.map((tier, idx) => (
-                            <TierRow key={idx} tier={tier} index={idx}
-                                onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
-                                onDelete={(i) => deleteProcTier(proc.id, i)}
-                                canDelete={proc.tiers.length > 1} />
-                        ))}
-                    </Paper>
-                ))}
+                            {proc.tiers.map((tier, idx) => (
+                                <TierRow key={idx} tier={tier} index={idx}
+                                    unit={getProcUnitLabel(procUnit)}
+                                    onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
+                                    onDelete={(i) => deleteProcTier(proc.id, i)}
+                                    canDelete={proc.tiers.length > 1} />
+                            ))}
+                        </Paper>
+                    );
+                })}
             </Stack>
         </SettingSection>
     );
@@ -556,6 +709,44 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         </SettingSection>
     );
 
+    // ===== SHARED CONTENT =====
+    const renderContent = (
+        <>
+            <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable"
+                sx={{ px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
+                <Tab icon={<Iconify icon="solar:document-bold" width={18} />} iconPosition="start" label="Loại giấy" />
+                <Tab icon={<Iconify icon="solar:printer-bold" width={18} />} iconPosition="start" label="Giá in" />
+                <Tab icon={<Iconify icon="solar:layers-bold" width={18} />} iconPosition="start" label="Cán màng" />
+                <Tab icon={<Iconify icon="solar:scissors-bold" width={18} />} iconPosition="start" label="Gia công" />
+                <Tab icon={<Iconify icon="solar:users-group-rounded-bold" width={18} />} iconPosition="start" label="Loại khách" />
+            </Tabs>
+            <Box sx={{ px: 3, py: 2, maxHeight: embedded ? 'none' : 500, overflowY: embedded ? 'visible' : 'auto' }}>
+                <TabPanel value={tab} index={0}>{renderPaperTypes()}</TabPanel>
+                <TabPanel value={tab} index={1}>{renderPrintPricing()}</TabPanel>
+                <TabPanel value={tab} index={2}>{renderLaminations()}</TabPanel>
+                <TabPanel value={tab} index={3}>{renderProcessing()}</TabPanel>
+                <TabPanel value={tab} index={4}>{renderCustomerTypes()}</TabPanel>
+            </Box>
+            <Divider />
+            <Box sx={{ px: 3, py: 2 }}>
+                <Typography variant="caption" color="success.main">
+                    <Iconify icon="solar:check-circle-bold" width={16} sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                    Tự động lưu khi thay đổi
+                </Typography>
+            </Box>
+        </>
+    );
+
+    // ===== EMBEDDED MODE =====
+    if (embedded) {
+        return (
+            <Paper variant="outlined" sx={{ borderRadius: 3, overflow: 'hidden' }}>
+                {renderContent}
+            </Paper>
+        );
+    }
+
+    // ===== DIALOG MODE =====
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth
             PaperProps={{ sx: { borderRadius: 3, maxHeight: '85vh' } }}>
@@ -575,28 +766,9 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
             </DialogTitle>
             <Divider sx={{ mt: 2 }} />
             <DialogContent sx={{ p: 0 }}>
-                <Tabs value={tab} onChange={(_, v) => setTab(v)} variant="scrollable"
-                    sx={{ px: 3, borderBottom: `1px solid ${theme.palette.divider}` }}>
-                    <Tab icon={<Iconify icon="solar:document-bold" width={18} />} iconPosition="start" label="Loại giấy" />
-                    <Tab icon={<Iconify icon="solar:printer-bold" width={18} />} iconPosition="start" label="Giá in" />
-                    <Tab icon={<Iconify icon="solar:layers-bold" width={18} />} iconPosition="start" label="Cán màng" />
-                    <Tab icon={<Iconify icon="solar:scissors-bold" width={18} />} iconPosition="start" label="Gia công" />
-                    <Tab icon={<Iconify icon="solar:users-group-rounded-bold" width={18} />} iconPosition="start" label="Loại khách" />
-                </Tabs>
-                <Box sx={{ px: 3, py: 2, maxHeight: 500, overflowY: 'auto' }}>
-                    <TabPanel value={tab} index={0}>{renderPaperTypes()}</TabPanel>
-                    <TabPanel value={tab} index={1}>{renderPrintPricing()}</TabPanel>
-                    <TabPanel value={tab} index={2}>{renderLaminations()}</TabPanel>
-                    <TabPanel value={tab} index={3}>{renderProcessing()}</TabPanel>
-                    <TabPanel value={tab} index={4}>{renderCustomerTypes()}</TabPanel>
-                </Box>
+                {renderContent}
             </DialogContent>
-            <Divider />
             <DialogActions sx={{ px: 3, py: 2 }}>
-                <Typography variant="caption" color="success.main" sx={{ flex: 1 }}>
-                    <Iconify icon="solar:check-circle-bold" width={16} sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                    Tự động lưu khi thay đổi
-                </Typography>
                 <Button variant="contained" color="primary" onClick={onClose}
                     startIcon={<Iconify icon="solar:check-circle-bold" />}>
                     Đóng
