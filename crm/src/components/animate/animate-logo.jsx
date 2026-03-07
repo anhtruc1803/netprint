@@ -24,7 +24,7 @@ export function AnimateLogoZoom({ logo, slotProps, sx, ...other }) {
             disabled
             {...slotProps?.logo}
             sx={[
-              { width: 64, height: 64 },
+              { width: 140, height: 140 },
               ...(Array.isArray(slotProps?.logo?.sx) ? slotProps.logo.sx : [slotProps?.logo?.sx]),
             ]}
           />
@@ -55,8 +55,8 @@ export function AnimateLogoZoom({ logo, slotProps, sx, ...other }) {
 }
 
 const LogoZoomRoot = styled('div')(() => ({
-  width: 120,
-  height: 120,
+  width: 240,
+  height: 240,
   alignItems: 'center',
   position: 'relative',
   display: 'inline-flex',

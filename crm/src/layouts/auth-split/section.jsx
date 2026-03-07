@@ -9,6 +9,8 @@ import { RouterLink } from 'src/routes/components';
 
 import { CONFIG } from 'src/global-config';
 
+import { Logo } from 'src/components/logo';
+
 // ----------------------------------------------------------------------
 
 export function AuthSplitSection({
@@ -16,9 +18,9 @@ export function AuthSplitSection({
   method,
   methods,
   layoutQuery = 'md',
-  title = 'Manage the job',
+  title = 'Chào mừng trở lại',
   imgUrl = `${CONFIG.assetsDir}/assets/illustrations/illustration-dashboard.webp`,
-  subtitle = 'More effectively with optimized workflows.',
+  subtitle = 'Quản lý công việc hiệu quả hơn với hệ thống tối ưu.',
   ...other
 }) {
   return (
@@ -50,6 +52,11 @@ export function AuthSplitSection({
       ]}
       {...other}
     >
+      {/* Logo centered */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+        <Logo isSingle={false} sx={{ width: 280, height: 90 }} />
+      </Box>
+
       <div>
         <Typography variant="h3" sx={{ textAlign: 'center' }}>
           {title}
