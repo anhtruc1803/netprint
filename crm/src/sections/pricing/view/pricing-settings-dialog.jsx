@@ -1,13 +1,14 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Stack, Typography, Button, TextField, IconButton,
     Tabs, Tab, Chip, Divider, InputAdornment, Tooltip, Paper,
     Table, TableHead, TableRow, TableCell, TableBody,
-    alpha, useTheme,
+    Collapse,
 } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { Iconify } from 'src/components/iconify';
-import { loadPaperSettings, savePaperSettings } from '../data/default-settings';
+import { loadPaperSettings, savePaperSettings, loadCatalogueSettings, saveCatalogueSettings } from '../data/default-settings';
 
 // ===== TabPanel =====
 function TabPanel({ children, value, index, ...other }) {
@@ -39,21 +40,129 @@ function SettingSection({ icon, title, color, onAdd, addLabel, children }) {
 }
 
 // ===== Tier Row =====
-function TierRow({ tier, index, isLast, onChange, onDelete, canDelete, unit = 'đ/sp' }) {
+function TierRow({ tier, index, isLast, onChange, onDelete, canDelete, unit = 'đ/sp', unitOptions, onUnitChange, prevMax = 0 }) {
+    const theme = useTheme();
+    const min = prevMax + 1;
+    const isInfinity = tier.max === 999999;
+
     return (
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <Typography variant="caption" fontWeight={600} sx={{ minWidth: 24 }}>≤</Typography>
-            <TextField size="small" type="number" value={tier.max === 999999 ? '' : tier.max}
-                placeholder="∞" sx={{ width: 90 }}
-                onChange={e => onChange(index, 'max', e.target.value === '' ? 999999 : parseInt(e.target.value) || 0)} />
-            <Typography variant="caption" fontWeight={700} color="primary">→</Typography>
-            <TextField size="small" type="number" value={tier.price} sx={{ width: 100 }}
-                InputProps={{ endAdornment: <InputAdornment position="end"><Typography variant="caption">{unit}</Typography></InputAdornment> }}
-                onChange={e => onChange(index, 'price', parseInt(e.target.value) || 0)} />
-            <IconButton size="small" color="error" onClick={() => onDelete(index)} disabled={!canDelete}>
-                <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+        <Box sx={{
+            display: 'flex', alignItems: 'center', gap: 1.5, mb: 1,
+            p: 1, borderRadius: 1.5,
+            bgcolor: alpha(theme.palette.background.default, 0.6),
+            border: `1px solid ${alpha(theme.palette.divider, 0.6)}`,
+            transition: 'all 0.15s ease',
+            '&:hover': {
+                bgcolor: alpha(theme.palette.primary.main, 0.02),
+                borderColor: alpha(theme.palette.primary.main, 0.15),
+            },
+        }}>
+            {/* ── Số lượng group ── */}
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ flex: '0 0 auto' }}>
+                <Typography variant="caption" color="text.disabled" fontWeight={600}
+                    sx={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, minWidth: 22 }}>
+                    SL
+                </Typography>
+                {/* Min */}
+                <Box sx={{
+                    px: 1.25, py: 0.5, borderRadius: 1, minWidth: 52, textAlign: 'center',
+                    bgcolor: alpha(theme.palette.info.main, 0.06),
+                    border: `1px solid ${alpha(theme.palette.info.main, 0.12)}`,
+                }}>
+                    <Typography variant="body2" fontWeight={700} color="info.dark" sx={{ fontSize: 13 }}>
+                        {min.toLocaleString('vi-VN')}
+                    </Typography>
+                </Box>
+
+                <Typography variant="body2" fontWeight={700} color="text.disabled" sx={{ fontSize: 11 }}>→</Typography>
+
+                {/* Max */}
+                {isInfinity ? (
+                    <Tooltip title="Bấm để nhập số cụ thể" arrow>
+                        <Box onClick={() => onChange(index, 'max', prevMax + 100 || 500)}
+                            sx={{
+                                px: 1.25, py: 0.5, borderRadius: 1, minWidth: 52, textAlign: 'center', cursor: 'pointer',
+                                background: `linear-gradient(135deg, ${alpha(theme.palette.info.main, 0.1)}, ${alpha(theme.palette.primary.main, 0.08)})`,
+                                border: `1px solid ${alpha(theme.palette.info.main, 0.25)}`,
+                                transition: 'all 0.2s',
+                                '&:hover': { borderColor: theme.palette.info.main, transform: 'scale(1.03)' },
+                            }}>
+                            <Typography variant="body2" fontWeight={800} color="info.main" sx={{ fontSize: 15 }}>∞</Typography>
+                        </Box>
+                    </Tooltip>
+                ) : (
+                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <TextField size="small" type="number" value={tier.max}
+                            sx={{
+                                width: 72,
+                                '& input': { textAlign: 'center', fontWeight: 700, fontSize: 13, py: 0.6 },
+                                '& .MuiOutlinedInput-root': { borderRadius: 1 },
+                            }}
+                            onChange={e => onChange(index, 'max', parseInt(e.target.value) || 0)} />
+                        <Tooltip title="Đặt vô hạn (∞)" arrow>
+                            <IconButton size="small"
+                                onClick={() => onChange(index, 'max', 999999)}
+                                sx={{
+                                    width: 26, height: 26, fontSize: 13, fontWeight: 800,
+                                    color: 'info.main',
+                                    bgcolor: alpha(theme.palette.info.main, 0.06),
+                                    border: `1px solid ${alpha(theme.palette.info.main, 0.2)}`,
+                                    '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.15) },
+                                }}>
+                                ∞
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                )}
+            </Stack>
+
+            {/* ── Divider ── */}
+            <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
+
+            {/* ── Đơn giá group ── */}
+            <Stack direction="row" alignItems="center" spacing={0.75} sx={{ flex: 1 }}>
+                <Typography variant="caption" color="text.disabled" fontWeight={600}
+                    sx={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, minWidth: 22 }}>
+                    Giá
+                </Typography>
+                <TextField size="small" type="number" value={tier.price}
+                    sx={{
+                        width: 100,
+                        '& input': { fontWeight: 700, fontSize: 13, py: 0.6 },
+                        '& .MuiOutlinedInput-root': { borderRadius: 1 },
+                    }}
+                    onChange={e => onChange(index, 'price', parseInt(e.target.value) || 0)} />
+
+                {/* Unit */}
+                {unitOptions && onUnitChange ? (
+                    <TextField size="small" variant="outlined" select value={tier.unit || unit}
+                        onChange={e => onUnitChange(index, e.target.value)}
+                        SelectProps={{ native: true }}
+                        sx={{
+                            width: 95,
+                            '& .MuiInputBase-input': { py: 0.5, px: 1, fontSize: 12, fontWeight: 600 },
+                            '& .MuiOutlinedInput-root': { borderRadius: 1 },
+                        }}>
+                        {unitOptions.map(u => (
+                            <option key={u.value} value={u.value}>{u.label}</option>
+                        ))}
+                    </TextField>
+                ) : (
+                    <Chip label={unit} size="small" variant="outlined"
+                        sx={{ height: 24, fontSize: 11, fontWeight: 700, borderRadius: 1, color: 'text.secondary' }} />
+                )}
+            </Stack>
+
+            {/* ── Delete ── */}
+            <IconButton size="small" color="error" onClick={() => onDelete(index)} disabled={!canDelete}
+                sx={{
+                    width: 30, height: 30, opacity: canDelete ? 0.6 : 0.2,
+                    transition: 'all 0.2s',
+                    '&:hover': { opacity: 1, bgcolor: alpha(theme.palette.error.main, 0.08) },
+                }}>
+                <Iconify icon="solar:trash-bin-minimalistic-bold" width={15} />
             </IconButton>
-        </Stack>
+        </Box>
     );
 }
 
@@ -62,9 +171,80 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     const theme = useTheme();
     const [tab, setTab] = useState(0);
     const [settings, setSettings] = useState(() => loadPaperSettings());
+    const [catSettings, setCatSettings] = useState(() => loadCatalogueSettings());
+    const [expandedSizes, setExpandedSizes] = useState({});
+
+    // ===== DRAG & DROP for PAPERS =====
+    const dragRef = useRef({ sizeId: null, dragIdx: null, overIdx: null });
+    const [dragOverInfo, setDragOverInfo] = useState({ sizeId: null, overIdx: null });
+
+    // ===== DRAG & DROP for PRINT SIZES =====
+    const sizeDragRef = useRef({ dragIdx: null, overIdx: null });
+    const [sizeDragOverIdx, setSizeDragOverIdx] = useState(null);
+
+    const toggleSizeExpand = useCallback((sizeId) => {
+        setExpandedSizes(prev => ({ ...prev, [sizeId]: !prev[sizeId] }));
+    }, []);
+
+    // ===== PAPER DRAG & DROP HANDLERS =====
+    const handleDragStart = useCallback((sizeId, idx, e) => {
+        dragRef.current = { sizeId, dragIdx: idx, overIdx: idx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `paper-${idx}`);
+        if (e.target) e.target.style.opacity = '0.5';
+    }, []);
+
+    const handleDragEnd = useCallback((e) => {
+        if (e.target) e.target.style.opacity = '1';
+        const { sizeId, dragIdx, overIdx } = dragRef.current;
+        if (sizeId != null && dragIdx != null && overIdx != null && dragIdx !== overIdx) {
+            movePaper(sizeId, dragIdx, overIdx - dragIdx);
+        }
+        dragRef.current = { sizeId: null, dragIdx: null, overIdx: null };
+        setDragOverInfo({ sizeId: null, overIdx: null });
+    }, []);
+
+    const handleDragOver = useCallback((sizeId, idx, e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (dragRef.current.sizeId === sizeId && dragRef.current.overIdx !== idx) {
+            dragRef.current.overIdx = idx;
+            setDragOverInfo({ sizeId, overIdx: idx });
+        }
+    }, []);
+
+    // ===== PRINT SIZE DRAG & DROP HANDLERS =====
+    const handleSizeDragStart = useCallback((idx, e) => {
+        sizeDragRef.current = { dragIdx: idx, overIdx: idx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `size-${idx}`);
+        if (e.currentTarget) e.currentTarget.style.opacity = '0.5';
+    }, []);
+
+    const handleSizeDragEnd = useCallback((e) => {
+        if (e.currentTarget) e.currentTarget.style.opacity = '1';
+        const { dragIdx, overIdx } = sizeDragRef.current;
+        if (dragIdx != null && overIdx != null && dragIdx !== overIdx) {
+            movePrintSizeOrder(dragIdx, overIdx);
+        }
+        sizeDragRef.current = { dragIdx: null, overIdx: null };
+        setSizeDragOverIdx(null);
+    }, []);
+
+    const handleSizeDragOver = useCallback((idx, e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (sizeDragRef.current.dragIdx != null && sizeDragRef.current.overIdx !== idx) {
+            sizeDragRef.current.overIdx = idx;
+            setSizeDragOverIdx(idx);
+        }
+    }, []);
 
     useEffect(() => {
-        if (open) setSettings(loadPaperSettings());
+        if (open) {
+            setSettings(loadPaperSettings());
+            setCatSettings(loadCatalogueSettings());
+        }
     }, [open]);
 
     const save = useCallback((newSettings) => {
@@ -152,7 +332,9 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                 (lp.printSizeId === printSizeId && lp.lamId === lamId) ? { ...lp, ...data } : lp
             );
         } else {
-            newLP = [...lamPricing, { printSizeId, lamId, unit: 'per_sheet', tiers: [{ max: 999999, price: 0 }], ...data }];
+            const lam = settings.laminations.find(l => l.id === lamId);
+            const defaultUnit = lam?.unit || 'per_sheet';
+            newLP = [...lamPricing, { printSizeId, lamId, unit: defaultUnit, tiers: [{ max: 999999, price: 0, unit: defaultUnit }], ...data }];
         }
         save({ ...settings, laminationPricing: newLP });
     };
@@ -164,16 +346,25 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         setLamPricing(printSizeId, lamId, { tiers: newTiers });
     };
 
+    const updateLamPricingTierUnit = (printSizeId, lamId, tierIdx, unitValue) => {
+        const pricing = getLamPricing(printSizeId, lamId);
+        if (!pricing) return;
+        const newTiers = pricing.tiers.map((t, i) => i === tierIdx ? { ...t, unit: unitValue } : t);
+        setLamPricing(printSizeId, lamId, { tiers: newTiers });
+    };
+
     const addLamPricingTier = (printSizeId, lamId) => {
         const pricing = getLamPricing(printSizeId, lamId);
+        const lam = settings.laminations.find(l => l.id === lamId);
+        const defaultUnit = lam?.unit || 'per_sheet';
         if (!pricing) {
-            setLamPricing(printSizeId, lamId, { tiers: [{ max: 500, price: 0 }, { max: 999999, price: 0 }] });
+            setLamPricing(printSizeId, lamId, { tiers: [{ max: 500, price: 0, unit: defaultUnit }, { max: 999999, price: 0, unit: defaultUnit }] });
             return;
         }
         const lastT = pricing.tiers[pricing.tiers.length - 1];
         const newMax = lastT.max === 999999 ? 500 : lastT.max + 200;
         const newTiers = [...pricing.tiers];
-        newTiers.splice(newTiers.length - 1, 0, { max: newMax, price: lastT.price });
+        newTiers.splice(newTiers.length - 1, 0, { max: newMax, price: lastT.price, unit: lastT.unit || defaultUnit });
         setLamPricing(printSizeId, lamId, { tiers: newTiers });
     };
 
@@ -254,7 +445,7 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                                 {settings.laminations.filter(l => l.id !== 1).map(lam => {
                                     const pricing = getLamPricing(size.id, lam.id);
                                     const hasCustomPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
-                                    const unit = pricing?.unit || lam.unit || 'per_sheet';
+                                    const defaultUnit = lam.unit || 'per_sheet';
 
                                     return (
                                         <Paper key={lam.id} variant="outlined" sx={{
@@ -268,15 +459,8 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                                                     {lam.name}
                                                 </Typography>
 
-                                                {/* Đơn vị */}
-                                                <TextField size="small" variant="outlined" select value={unit}
-                                                    onChange={e => setLamPricing(size.id, lam.id, { unit: e.target.value })}
-                                                    SelectProps={{ native: true }}
-                                                    sx={{ width: 95, '& .MuiInputBase-input': { py: 0.5, fontSize: 13 } }}>
-                                                    {UNIT_OPTIONS.map(u => (
-                                                        <option key={u.value} value={u.value}>{u.label}</option>
-                                                    ))}
-                                                </TextField>
+                                                {/* Đơn vị mặc định label */}
+                                                <Chip label={`Mặc định: ${getUnitLabel(defaultUnit)}`} size="small" variant="soft" color="info" sx={{ height: 22, fontSize: 11 }} />
 
                                                 {hasCustomPricing ? (
                                                     <Stack direction="row" spacing={0.5}>
@@ -294,10 +478,13 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                                                 ) : (
                                                     <Button size="small" variant="soft" color="warning"
                                                         startIcon={<Iconify icon="mingcute:add-line" />}
-                                                        onClick={() => setLamPricing(size.id, lam.id, {
-                                                            unit: lam.unit || 'per_sheet',
-                                                            tiers: [{ max: 500, price: 0 }, { max: 999999, price: 0 }]
-                                                        })}
+                                                        onClick={() => {
+                                                            const dUnit = lam.unit || 'per_sheet';
+                                                            setLamPricing(size.id, lam.id, {
+                                                                unit: dUnit,
+                                                                tiers: [{ max: 500, price: 0, unit: dUnit }, { max: 999999, price: 0, unit: dUnit }]
+                                                            });
+                                                        }}
                                                         sx={{ fontSize: 12 }}>
                                                         Thêm giá
                                                     </Button>
@@ -306,9 +493,12 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
 
                                             {hasCustomPricing && (
                                                 <Box sx={{ pl: 1 }}>
-                                                    {pricing.tiers.map((tier, idx) => (
+                                                    {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
                                                         <TierRow key={idx} tier={tier} index={idx}
-                                                            unit={getUnitLabel(unit)}
+                                                            prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
+                                                            unit={getUnitLabel(tier.unit || defaultUnit)}
+                                                            unitOptions={UNIT_OPTIONS}
+                                                            onUnitChange={(i, v) => updateLamPricingTierUnit(size.id, lam.id, i, v)}
                                                             onChange={(i, f, v) => updateLamPricingTier(size.id, lam.id, i, f, v)}
                                                             onDelete={(i) => deleteLamPricingTier(size.id, lam.id, i)}
                                                             canDelete={pricing.tiers.length > 1} />
@@ -345,11 +535,11 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         const ns = {
             ...settings, processing: settings.processing.map(p => {
                 if (p.id !== id) return p;
-                const lastT = p.tiers[p.tiers.length - 1];
-                const newMax = lastT.max === 999999 ? 500 : lastT.max + 200;
-                const newTiers = [...p.tiers];
-                newTiers.splice(newTiers.length - 1, 0, { max: newMax, price: lastT.price });
-                return { ...p, tiers: newTiers };
+                const sorted = [...p.tiers].sort((a, b) => a.max - b.max);
+                const hasInfinity = sorted[sorted.length - 1]?.max === 999999;
+                const lastFinite = hasInfinity && sorted.length >= 2 ? sorted[sorted.length - 2] : sorted[sorted.length - 1];
+                const newMax = (lastFinite?.max || 100) + 100;
+                return { ...p, tiers: [...p.tiers, { max: newMax, price: lastFinite?.price || 100 }] };
             })
         };
         save(ns);
@@ -375,6 +565,14 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         const ns = { ...settings, processing: settings.processing.filter(p => p.id !== id) };
         save(ns);
     };
+    const updateProcTierUnit = (id, tierIdx, unitValue) => {
+        const ns = {
+            ...settings, processing: settings.processing.map(p => p.id === id ? {
+                ...p, tiers: p.tiers.map((t, i) => i === tierIdx ? { ...t, unit: unitValue } : t)
+            } : p)
+        };
+        save(ns);
+    };
 
     // ===== CUSTOMER TYPES =====
     const updateCust = (id, field, value) => {
@@ -397,6 +595,68 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         const ns = { ...settings, customerTypes: settings.customerTypes.filter(c => c.id !== id) };
         save(ns);
     };
+
+    // ===== BINDINGS (catalogue settings) =====
+    const catBindings = catSettings.bindings || [];
+    const saveCat = useCallback((newCat) => {
+        setCatSettings(newCat);
+        saveCatalogueSettings(newCat);
+        onSettingsChanged?.();
+    }, [onSettingsChanged]);
+    const addBinding = () => {
+        const ns = { ...catSettings, bindings: [...catBindings, { id: Date.now(), name: 'Loại mới', tiers: [{ max: 100, price: 500 }, { max: 999999, price: 300 }] }] };
+        saveCat(ns);
+    };
+    const updateBinding = (id, field, value) => {
+        const ns = { ...catSettings, bindings: catBindings.map(b => b.id === id ? { ...b, [field]: value } : b) };
+        saveCat(ns);
+    };
+    const deleteBinding = (id) => {
+        const ns = { ...catSettings, bindings: catBindings.filter(b => b.id !== id) };
+        saveCat(ns);
+    };
+    const updateBindTier = (id, tierIdx, field, value) => {
+        const ns = {
+            ...catSettings, bindings: catBindings.map(b =>
+                b.id === id ? { ...b, tiers: b.tiers.map((t, i) => i === tierIdx ? { ...t, [field]: value } : t) } : b
+            )
+        };
+        saveCat(ns);
+    };
+    const addBindTier = (id) => {
+        const ns = {
+            ...catSettings, bindings: catBindings.map(b => {
+                if (b.id !== id) return b;
+                const sorted = [...b.tiers].sort((a, bb) => a.max - bb.max);
+                const hasInfinity = sorted[sorted.length - 1]?.max === 999999;
+                const lastFinite = hasInfinity && sorted.length >= 2 ? sorted[sorted.length - 2] : sorted[sorted.length - 1];
+                const newMax = (lastFinite?.max || 100) + 100;
+                return { ...b, tiers: [...b.tiers, { max: newMax, price: lastFinite?.price || 500, pricePerPage: lastFinite?.pricePerPage || 0 }] };
+            })
+        };
+        saveCat(ns);
+    };
+    const deleteBindTier = (id, tierIdx) => {
+        const ns = {
+            ...catSettings, bindings: catBindings.map(b =>
+                b.id === id ? { ...b, tiers: b.tiers.filter((_, i) => i !== tierIdx) } : b
+            )
+        };
+        saveCat(ns);
+    };
+    const updateBindTierUnit = (id, tierIdx, unitValue) => {
+        const ns = {
+            ...catSettings, bindings: catBindings.map(b =>
+                b.id === id ? { ...b, tiers: b.tiers.map((t, i) => i === tierIdx ? { ...t, unit: unitValue } : t) } : b
+            )
+        };
+        saveCat(ns);
+    };
+    const BIND_UNIT_OPTIONS = [
+        { value: 'per_item', label: 'đ/cuốn' },
+        { value: 'per_lot', label: 'đ/lô' },
+    ];
+    const getBindUnitLabel = (unit) => BIND_UNIT_OPTIONS.find(u => u.value === unit)?.label || 'đ/cuốn';
 
     // ===== PRINT SIZES & PAPER TYPES =====
     const printSizes = settings.printSizes || [];
@@ -504,6 +764,27 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         };
         save(ns);
     };
+    const movePaper = (printSizeId, fromIdx, offset) => {
+        const ns = {
+            ...settings, paperPricing: paperPricing.map(pp => {
+                if (pp.printSizeId !== printSizeId) return pp;
+                const arr = [...pp.papers];
+                const toIdx = fromIdx + offset;
+                if (toIdx < 0 || toIdx >= arr.length) return pp;
+                // Remove item and insert at new position
+                const [moved] = arr.splice(fromIdx, 1);
+                arr.splice(toIdx, 0, moved);
+                return { ...pp, papers: arr };
+            })
+        };
+        save(ns);
+    };
+    const movePrintSizeOrder = (fromIdx, toIdx) => {
+        const newSizes = [...printSizes];
+        const [moved] = newSizes.splice(fromIdx, 1);
+        newSizes.splice(toIdx, 0, moved);
+        save({ ...settings, printSizes: newSizes });
+    };
 
     // ===== TAB 0: LOẠI GIẤY & KHỔ IN =====
     const renderPaperTypes = () => (
@@ -514,73 +795,184 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                         Chưa có khổ in nào — Bấm &quot;Thêm khổ&quot; để bắt đầu
                     </Typography>
                 ) : (
-                    <Stack spacing={2}>
-                        {printSizes.map(size => {
+                    <Stack spacing={1.5}>
+                        {printSizes.map((size, sizeIdx) => {
                             const pricing = paperPricing.find(pp => pp.printSizeId === size.id);
                             const papers2 = pricing?.papers || [];
+                            const isExpanded = !!expandedSizes[size.id];
+                            const isSizeDragOver = sizeDragOverIdx === sizeIdx;
                             return (
-                                <Paper key={size.id} variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: alpha(theme.palette.info.main, 0.3) }}>
-                                    {/* Print size header */}
-                                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+                                <Paper key={size.id} variant="outlined"
+                                    draggable
+                                    onDragStart={(e) => handleSizeDragStart(sizeIdx, e)}
+                                    onDragEnd={handleSizeDragEnd}
+                                    onDragOver={(e) => handleSizeDragOver(sizeIdx, e)}
+                                    sx={{
+                                        borderRadius: 2, overflow: 'hidden',
+                                        borderColor: isSizeDragOver
+                                            ? theme.palette.primary.main
+                                            : isExpanded
+                                                ? alpha(theme.palette.info.main, 0.4)
+                                                : alpha(theme.palette.divider, 0.8),
+                                        borderWidth: isSizeDragOver ? 2 : 1,
+                                        transition: 'all 0.2s ease',
+                                        ...(isSizeDragOver && {
+                                            bgcolor: alpha(theme.palette.primary.main, 0.04),
+                                        }),
+                                        ...(isExpanded && !isSizeDragOver && {
+                                            boxShadow: `0 2px 12px ${alpha(theme.palette.info.main, 0.08)}`,
+                                        }),
+                                    }}>
+                                    {/* Print size header — clickable to toggle */}
+                                    <Stack direction="row" alignItems="center" spacing={1.5}
+                                        onClick={() => toggleSizeExpand(size.id)}
+                                        sx={{
+                                            px: 2, py: 1.5, cursor: 'pointer',
+                                            bgcolor: isExpanded
+                                                ? alpha(theme.palette.info.main, 0.06)
+                                                : alpha(theme.palette.background.default, 0.4),
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                bgcolor: alpha(theme.palette.info.main, 0.08),
+                                            },
+                                        }}>
+                                        {/* Drag handle for print size */}
+                                        <Box
+                                            onMouseDown={(e) => e.stopPropagation()}
+                                            onClick={(e) => e.stopPropagation()}
+                                            sx={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: 'grab', px: 0.25, py: 0.5, borderRadius: 0.5,
+                                                color: 'text.disabled',
+                                                transition: 'all 0.15s',
+                                                '&:hover': {
+                                                    color: 'text.secondary',
+                                                    bgcolor: alpha(theme.palette.primary.main, 0.06),
+                                                },
+                                                '&:active': { cursor: 'grabbing' },
+                                            }}>
+                                            <Iconify icon="solar:hamburger-menu-outline" width={18} />
+                                        </Box>
+                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleSizeExpand(size.id); }} sx={{
+                                            width: 28, height: 28,
+                                            transition: 'transform 0.25s ease',
+                                            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                            color: 'info.main',
+                                        }}>
+                                            <Iconify icon="solar:alt-arrow-right-bold" width={16} />
+                                        </IconButton>
                                         <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'info.main' }} />
-                                        <TextField size="small" variant="standard" value={size.name}
-                                            sx={{ width: 100, '& input': { fontWeight: 700, fontSize: 15 } }}
-                                            onChange={e => updatePrintSize(size.id, 'name', e.target.value)} />
-                                        <TextField size="small" type="number" value={size.w} sx={{ width: 110 }}
-                                            InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
-                                            onChange={e => updatePrintSize(size.id, 'w', e.target.value)} />
-                                        <Typography variant="body2" fontWeight={700}>×</Typography>
-                                        <TextField size="small" type="number" value={size.h} sx={{ width: 110 }}
-                                            InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
-                                            onChange={e => updatePrintSize(size.id, 'h', e.target.value)} />
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ minWidth: 90 }}>
+                                            {size.name}
+                                        </Typography>
+                                        <Chip label={`${size.w}×${size.h} mm`} size="small" variant="outlined"
+                                            sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }} />
+                                        <Chip label={`${papers2.length} loại giấy`} size="small" variant="soft" color="info"
+                                            sx={{ height: 22, fontSize: 11, fontWeight: 600 }} />
                                         <Box sx={{ flex: 1 }} />
                                         <Tooltip title="Thêm loại giấy">
                                             <Button size="small" variant="soft" color="primary"
                                                 startIcon={<Iconify icon="mingcute:add-line" />}
-                                                onClick={() => addPaperType(size.id)}>Thêm giấy</Button>
+                                                onClick={(e) => { e.stopPropagation(); addPaperType(size.id); if (!isExpanded) toggleSizeExpand(size.id); }}>Thêm giấy</Button>
                                         </Tooltip>
                                         <Tooltip title="Xóa khổ in">
-                                            <IconButton size="small" color="error" onClick={() => deletePrintSize(size.id)}>
+                                            <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); deletePrintSize(size.id); }}>
                                                 <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
                                             </IconButton>
                                         </Tooltip>
                                     </Stack>
 
-                                    {/* Paper types list */}
-                                    {papers2.length === 0 ? (
-                                        <Typography variant="caption" color="text.disabled" sx={{ pl: 4 }}>
-                                            Chưa có loại giấy — Bấm &quot;Thêm giấy&quot;
-                                        </Typography>
-                                    ) : (
-                                        <Stack spacing={1.5} sx={{ pl: 1 }}>
-                                            {papers2.map(paper => (
-                                                <Paper key={paper.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.background.default, 0.5) }}>
-                                                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                                                        <Chip label="📄" size="small" variant="soft" sx={{ height: 24 }} />
-                                                        <TextField size="small" variant="standard" value={paper.name}
-                                                            sx={{ flex: 1, '& input': { fontWeight: 600 } }}
-                                                            onChange={e => updatePaperName(size.id, paper.id, e.target.value)} />
-                                                        <Tooltip title="Thêm mốc giá">
-                                                            <IconButton size="small" color="primary" onClick={() => addPaperTier(size.id, paper.id)}>
-                                                                <Iconify icon="mingcute:add-line" width={14} />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Xóa giấy">
-                                                            <IconButton size="small" color="error" onClick={() => deletePaperType(size.id, paper.id)}>
-                                                                <Iconify icon="solar:trash-bin-minimalistic-bold" width={14} />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Stack>
-                                                    {paper.tiers.map((tier, idx) => (
-                                                        <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
-                                                            onChange={(i, f, v) => updatePaperTier(size.id, paper.id, i, f, v)}
-                                                            onDelete={(i) => deletePaperTier(size.id, paper.id, i)}
-                                                            canDelete={paper.tiers.length > 1} />
-                                                    ))}
-                                                </Paper>
-                                            ))}
-                                        </Stack>
-                                    )}
+                                    {/* Collapsible content */}
+                                    <Collapse in={isExpanded} timeout={250}>
+                                        <Box sx={{ p: 2, pt: 1.5 }}>
+                                            {/* Editable dimensions */}
+                                            <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+                                                <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: 11 }}>Kích thước:</Typography>
+                                                <TextField size="small" variant="standard" value={size.name}
+                                                    sx={{ width: 100, '& input': { fontWeight: 700, fontSize: 14 } }}
+                                                    onChange={e => updatePrintSize(size.id, 'name', e.target.value)} />
+                                                <TextField size="small" type="number" value={size.w} sx={{ width: 100 }}
+                                                    InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
+                                                    onChange={e => updatePrintSize(size.id, 'w', e.target.value)} />
+                                                <Typography variant="body2" fontWeight={700}>×</Typography>
+                                                <TextField size="small" type="number" value={size.h} sx={{ width: 100 }}
+                                                    InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
+                                                    onChange={e => updatePrintSize(size.id, 'h', e.target.value)} />
+                                            </Stack>
+
+                                            {/* Paper types list */}
+                                            {papers2.length === 0 ? (
+                                                <Typography variant="caption" color="text.disabled" sx={{ pl: 2 }}>
+                                                    Chưa có loại giấy — Bấm &quot;Thêm giấy&quot;
+                                                </Typography>
+                                            ) : (
+                                                <Stack spacing={1}>
+                                                    {papers2.map((paper, paperIdx) => {
+                                                        const isDragOver = dragOverInfo.sizeId === size.id && dragOverInfo.overIdx === paperIdx;
+                                                        return (
+                                                            <Paper key={paper.id} variant="outlined"
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(size.id, paperIdx, e)}
+                                                                onDragEnd={handleDragEnd}
+                                                                onDragOver={(e) => handleDragOver(size.id, paperIdx, e)}
+                                                                sx={{
+                                                                    p: 1.5, borderRadius: 1.5,
+                                                                    bgcolor: isDragOver
+                                                                        ? alpha(theme.palette.primary.main, 0.06)
+                                                                        : alpha(theme.palette.background.default, 0.5),
+                                                                    borderColor: isDragOver
+                                                                        ? theme.palette.primary.main
+                                                                        : theme.palette.divider,
+                                                                    borderWidth: isDragOver ? 2 : 1,
+                                                                    transition: 'background-color 0.15s, border-color 0.15s',
+                                                                    cursor: 'default',
+                                                                }}>
+                                                                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                                                                    {/* Drag handle */}
+                                                                    <Box
+                                                                        sx={{
+                                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                            cursor: 'grab', px: 0.25, py: 0.5, borderRadius: 0.5,
+                                                                            color: 'text.disabled',
+                                                                            transition: 'all 0.15s',
+                                                                            '&:hover': {
+                                                                                color: 'text.secondary',
+                                                                                bgcolor: alpha(theme.palette.primary.main, 0.06),
+                                                                            },
+                                                                            '&:active': { cursor: 'grabbing' },
+                                                                        }}>
+                                                                        <Iconify icon="solar:hamburger-menu-outline" width={18} />
+                                                                    </Box>
+                                                                    <Chip label={`#${paperIdx + 1}`} size="small" variant="soft"
+                                                                        sx={{ height: 22, fontSize: 10, fontWeight: 700, borderRadius: 1, minWidth: 32 }} />
+                                                                    <TextField size="small" variant="standard" value={paper.name}
+                                                                        sx={{ flex: 1, '& input': { fontWeight: 600 } }}
+                                                                        onChange={e => updatePaperName(size.id, paper.id, e.target.value)} />
+                                                                    <Tooltip title="Thêm mốc giá">
+                                                                        <IconButton size="small" color="primary" onClick={() => addPaperTier(size.id, paper.id)}>
+                                                                            <Iconify icon="mingcute:add-line" width={14} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Xóa giấy">
+                                                                        <IconButton size="small" color="error" onClick={() => deletePaperType(size.id, paper.id)}>
+                                                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={14} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Stack>
+                                                                {[...paper.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
+                                                                    <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
+                                                                        prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
+                                                                        onChange={(i, f, v) => updatePaperTier(size.id, paper.id, i, f, v)}
+                                                                        onDelete={(i) => deletePaperTier(size.id, paper.id, i)}
+                                                                        canDelete={paper.tiers.length > 1} />
+                                                                ))}
+                                                            </Paper>
+                                                        );
+                                                    })}
+                                                </Stack>
+                                            )}
+                                        </Box>
+                                    </Collapse>
                                 </Paper>
                             );
                         })}
@@ -590,31 +982,126 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         </>
     );
 
-    // ===== TAB 1: GIÁ IN =====
+    // ===== TAB 1: GIÁ IN (THEO KHỔ GIẤY) =====
+    const printPricingBySize = settings.printPricingBySize || [];
+
+    const getPrintPricingForSize = (printSizeId) =>
+        printPricingBySize.find(pp => pp.printSizeId === printSizeId);
+
+    const setPrintPricingForSize = (printSizeId, data) => {
+        const existing = printPricingBySize.find(pp => pp.printSizeId === printSizeId);
+        let newPP;
+        if (existing) {
+            newPP = printPricingBySize.map(pp =>
+                pp.printSizeId === printSizeId ? { ...pp, ...data } : pp
+            );
+        } else {
+            // Default: copy from global printOptions (In 1 mặt)
+            const globalOpt = settings.printOptions.find(o => o.id === 1);
+            const defaultTiers = globalOpt ? globalOpt.tiers.map(t => ({ ...t })) : [{ max: 500, price: 2000 }, { max: 999999, price: 1800 }];
+            newPP = [...printPricingBySize, { printSizeId, tiers: defaultTiers, ...data }];
+        }
+        save({ ...settings, printPricingBySize: newPP });
+    };
+
+    const updatePrintPricingSizeTier = (printSizeId, tierIdx, field, value) => {
+        const pricing = getPrintPricingForSize(printSizeId);
+        if (!pricing) return;
+        const newTiers = pricing.tiers.map((t, i) => i === tierIdx ? { ...t, [field]: value } : t);
+        setPrintPricingForSize(printSizeId, { tiers: newTiers });
+    };
+
+    const addPrintPricingSizeTier = (printSizeId) => {
+        const pricing = getPrintPricingForSize(printSizeId);
+        if (!pricing) {
+            // Init with global tiers
+            const globalOpt = settings.printOptions.find(o => o.id === 1);
+            const defaultTiers = globalOpt ? globalOpt.tiers.map(t => ({ ...t })) : [{ max: 500, price: 2000 }, { max: 999999, price: 1800 }];
+            setPrintPricingForSize(printSizeId, { tiers: defaultTiers });
+            return;
+        }
+        const lastT = pricing.tiers[pricing.tiers.length - 1];
+        const newMax = lastT.max === 999999 ? 500 : lastT.max + 200;
+        const newTiers = [...pricing.tiers];
+        newTiers.splice(newTiers.length - 1, 0, { max: newMax, price: lastT.price });
+        setPrintPricingForSize(printSizeId, { tiers: newTiers });
+    };
+
+    const deletePrintPricingSizeTier = (printSizeId, tierIdx) => {
+        const pricing = getPrintPricingForSize(printSizeId);
+        if (!pricing) return;
+        setPrintPricingForSize(printSizeId, { tiers: pricing.tiers.filter((_, i) => i !== tierIdx) });
+    };
+
+    const initPrintPricingForSize = (printSizeId) => {
+        const globalOpt = settings.printOptions.find(o => o.id === 1);
+        const defaultTiers = globalOpt ? globalOpt.tiers.map(t => ({ ...t })) : [{ max: 500, price: 2000 }, { max: 999999, price: 1800 }];
+        setPrintPricingForSize(printSizeId, { tiers: defaultTiers });
+    };
+
     const renderPrintPricing = () => (
         <SettingSection icon="solar:printer-bold-duotone" title="Giá in / tờ" color="primary">
             <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
-                💡 Giá in 2 mặt tự động = In 1 mặt × 2
+                💡 Giá in 2 mặt tự động = In 1 mặt × 2 — Giá in được cài đặt riêng cho từng khổ giấy
             </Typography>
-            {settings.printOptions.filter(o => o.id === 1).map(opt => (
-                <Box key={opt.id}>
-                    <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.5 }}>
-                        <Typography variant="body2" fontWeight={700}>In 1 mặt</Typography>
-                        <Chip label="Tự động" size="small" color="info" variant="soft" />
-                    </Stack>
-                    {opt.tiers.map((tier, idx) => (
-                        <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
-                            onChange={(i, f, v) => updatePrintTier(opt.id, i, f, v)}
-                            onDelete={(i) => deletePrintTier(opt.id, i)}
-                            canDelete={opt.tiers.length > 1} />
-                    ))}
-                    <Button size="small" variant="outlined" color="primary" fullWidth sx={{ mt: 1 }}
-                        startIcon={<Iconify icon="mingcute:add-line" />}
-                        onClick={() => addPrintTier(opt.id)}>
-                        Thêm mốc số lượng
-                    </Button>
-                </Box>
-            ))}
+
+            {printSizes.length === 0 ? (
+                <Typography variant="body2" color="text.disabled" sx={{ textAlign: 'center', py: 3 }}>
+                    Chưa có khổ in — Thêm khổ in ở tab &quot;Loại giấy&quot; trước
+                </Typography>
+            ) : (
+                <Stack spacing={2}>
+                    {printSizes.map(size => {
+                        const pricing = getPrintPricingForSize(size.id);
+                        const hasPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
+
+                        return (
+                            <Paper key={size.id} variant="outlined" sx={{
+                                p: 2, borderRadius: 2,
+                                borderColor: hasPricing ? alpha(theme.palette.primary.main, 0.3) : alpha(theme.palette.divider, 0.8),
+                                bgcolor: hasPricing ? alpha(theme.palette.primary.main, 0.02) : 'transparent',
+                            }}>
+                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: hasPricing ? 1.5 : 0 }}>
+                                    <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'primary.main' }} />
+                                    <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
+                                        {size.name} ({size.w}×{size.h} mm)
+                                    </Typography>
+
+                                    {hasPricing ? (
+                                        <Stack direction="row" alignItems="center" spacing={1}>
+                                            <Chip label="In 1 mặt" size="small" color="primary" variant="soft" sx={{ height: 22, fontSize: 11 }} />
+                                            <Tooltip title="Thêm mốc">
+                                                <IconButton size="small" color="primary" onClick={() => addPrintPricingSizeTier(size.id)}>
+                                                    <Iconify icon="mingcute:add-line" width={14} />
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    ) : (
+                                        <Button size="small" variant="soft" color="primary"
+                                            startIcon={<Iconify icon="mingcute:add-line" />}
+                                            onClick={() => initPrintPricingForSize(size.id)}
+                                            sx={{ fontSize: 12 }}>
+                                            Cài giá in
+                                        </Button>
+                                    )}
+                                </Stack>
+
+                                {hasPricing && (
+                                    <Box sx={{ pl: 1 }}>
+                                        {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
+                                            <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
+                                                prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
+                                                onChange={(i, f, v) => updatePrintPricingSizeTier(size.id, i, f, v)}
+                                                onDelete={(i) => deletePrintPricingSizeTier(size.id, i)}
+                                                canDelete={pricing.tiers.length > 1} />
+                                        ))}
+                                    </Box>
+                                )}
+                            </Paper>
+                        );
+                    })}
+                </Stack>
+            )}
         </SettingSection>
     );
 
@@ -659,16 +1146,74 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                                     </Tooltip>
                                 </Stack>
                             </Stack>
-                            {proc.tiers.map((tier, idx) => (
-                                <TierRow key={idx} tier={tier} index={idx}
-                                    unit={getProcUnitLabel(procUnit)}
-                                    onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
-                                    onDelete={(i) => deleteProcTier(proc.id, i)}
-                                    canDelete={proc.tiers.length > 1} />
-                            ))}
+                            {proc.tiers
+                                .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
+                                .sort((a, b) => a.max - b.max)
+                                .map((tier, displayIdx, sortedArr) => (
+                                    <TierRow key={tier._oi} tier={tier} index={tier._oi}
+                                        prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
+                                        unit={getProcUnitLabel(tier.unit || procUnit)}
+                                        unitOptions={PROC_UNIT_OPTIONS}
+                                        onUnitChange={(i, v) => updateProcTierUnit(proc.id, i, v)}
+                                        onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
+                                        onDelete={(i) => deleteProcTier(proc.id, i)}
+                                        canDelete={proc.tiers.length > 1} />
+                                ))}
                         </Paper>
                     );
                 })}
+            </Stack>
+        </SettingSection>
+    );
+
+    // ===== TAB 5: ĐÓNG CUỐN =====
+    const renderBindings = () => (
+        <SettingSection icon="solar:bookmark-bold-duotone" title="Đóng cuốn" color="warning" onAdd={addBinding} addLabel="Thêm loại">
+            <Stack spacing={2}>
+                {catBindings.map(bind => (
+                    <Paper key={bind.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                            <TextField size="small" variant="standard" value={bind.name} sx={{ fontWeight: 700, flex: 1 }}
+                                onChange={e => updateBinding(bind.id, 'name', e.target.value)} />
+                            <Stack direction="row" spacing={0.5}>
+                                <Tooltip title="Thêm mốc">
+                                    <IconButton size="small" color="primary" onClick={() => addBindTier(bind.id)}>
+                                        <Iconify icon="mingcute:add-line" width={16} />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Xóa">
+                                    <IconButton size="small" color="error" onClick={() => deleteBinding(bind.id)}>
+                                        <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+                                    </IconButton>
+                                </Tooltip>
+                            </Stack>
+                        </Stack>
+                        {bind.tiers
+                            .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
+                            .sort((a, b) => a.max - b.max)
+                            .map((tier, displayIdx, sortedArr) => (
+                                <Stack key={tier._oi} direction="row" alignItems="center" spacing={1}>
+                                    <Box sx={{ flex: 1 }}>
+                                        <TierRow tier={tier} index={tier._oi}
+                                            prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
+                                            unit={getBindUnitLabel(tier.unit)}
+                                            unitOptions={BIND_UNIT_OPTIONS}
+                                            onUnitChange={(i, v) => updateBindTierUnit(bind.id, i, v)}
+                                            onChange={(i, f, v) => updateBindTier(bind.id, i, f, v)}
+                                            onDelete={(i) => deleteBindTier(bind.id, i)}
+                                            canDelete={bind.tiers.length > 1} />
+                                    </Box>
+                                    <TextField size="small" type="number" value={tier.pricePerPage || 0}
+                                        onChange={e => updateBindTier(bind.id, tier._oi, 'pricePerPage', parseInt(e.target.value) || 0)}
+                                        InputProps={{
+                                            endAdornment: <InputAdornment position="end" sx={{ '& p': { fontSize: 10 } }}>đ/trang</InputAdornment>,
+                                        }}
+                                        sx={{ width: 110, '& input': { py: 0.5, fontSize: 12, fontWeight: 600 }, mb: 1 }}
+                                    />
+                                </Stack>
+                            ))}
+                    </Paper>
+                ))}
             </Stack>
         </SettingSection>
     );
@@ -718,6 +1263,7 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                 <Tab icon={<Iconify icon="solar:printer-bold" width={18} />} iconPosition="start" label="Giá in" />
                 <Tab icon={<Iconify icon="solar:layers-bold" width={18} />} iconPosition="start" label="Cán màng" />
                 <Tab icon={<Iconify icon="solar:scissors-bold" width={18} />} iconPosition="start" label="Gia công" />
+                <Tab icon={<Iconify icon="solar:bookmark-bold" width={18} />} iconPosition="start" label="Đóng cuốn" />
                 <Tab icon={<Iconify icon="solar:users-group-rounded-bold" width={18} />} iconPosition="start" label="Loại khách" />
             </Tabs>
             <Box sx={{ px: 3, py: 2, maxHeight: embedded ? 'none' : 500, overflowY: embedded ? 'visible' : 'auto' }}>
@@ -725,7 +1271,8 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                 <TabPanel value={tab} index={1}>{renderPrintPricing()}</TabPanel>
                 <TabPanel value={tab} index={2}>{renderLaminations()}</TabPanel>
                 <TabPanel value={tab} index={3}>{renderProcessing()}</TabPanel>
-                <TabPanel value={tab} index={4}>{renderCustomerTypes()}</TabPanel>
+                <TabPanel value={tab} index={4}>{renderBindings()}</TabPanel>
+                <TabPanel value={tab} index={5}>{renderCustomerTypes()}</TabPanel>
             </Box>
             <Divider />
             <Box sx={{ px: 3, py: 2 }}>
