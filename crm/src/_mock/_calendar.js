@@ -1,14 +1,8 @@
-import { info, error, primary, success, warning, secondary } from 'src/theme/core';
-
 // ----------------------------------------------------------------------
 
+export const _calendar = [];
+
 export const CALENDAR_COLOR_OPTIONS = [
-  primary.main,
-  secondary.main,
-  info.main,
-  info.darker,
-  success.main,
-  warning.main,
-  error.main,
-  error.darker,
+    '#00AB55', '#1890FF', '#FFC107', '#FF4842',
+    '#04297A', '#7A0C2E', '#54D62C', '#FFE700',
 ];

@@ -64,7 +64,7 @@ export const navData = [
   {
     subheader: 'Tổng quan',
     items: [
-      { title: 'Workplace', path: paths.dashboard.root, icon: ICONS.dashboard },
+      { title: 'Tổng quan', path: paths.dashboard.root, icon: ICONS.dashboard },
     ],
   },
   /**

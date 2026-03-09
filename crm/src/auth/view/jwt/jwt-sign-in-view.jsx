@@ -33,7 +33,7 @@ function getSavedAccount() {
   try {
     const saved = localStorage.getItem(REMEMBER_KEY);
     if (saved) return JSON.parse(saved);
-  } catch (e) {
+  } catch (_e) {
     // ignore
   }
   return null;

@@ -249,84 +249,124 @@ export function getPaperPrice(settings, paperId, sheets) {
 
 /**
  * Lấy giá in theo khổ giấy
+ * Mốc giá tính theo "mặt in" (sides), không theo "tờ"
+ * In 1 mặt: mặt_in = tờ × 1
+ * In 2 mặt: mặt_in = tờ × 2 → tra bảng bằng mặt_in → giá/tờ = giá/mặt × 2
+ * @param {object} settings
+ * @param {string|number} sizeKeyOrId - sizeKey ("325x430") hoặc printSizeId
+ * @param {number} sheets
+ * @param {boolean} isTwoSided
+ * @returns {number} giá per TỜ (đã nhân số mặt)
  */
-export function getPrintPriceBySize(settings, sizeKey, sheets, isTwoSided = false) {
+export function getPrintPriceBySize(settings, sizeKeyOrId, sheets, isTwoSided = false) {
+    const sides = isTwoSided ? 2 : 1;
+    const totalSides = sheets * sides;
+
     const pricingBySize = settings.printPricingBySize;
-    if (!pricingBySize || !pricingBySize[sizeKey]) {
-        // Fallback: dùng printOptions cũ
-        const option = settings.printOptions?.find(p => p.id === (isTwoSided ? 2 : 1));
-        return option ? findTierPrice(option.tiers || [], sheets) : 0;
-    }
 
-    const sizeData = pricingBySize[sizeKey];
+    // New format: array of { printSizeId, tiers }
+    if (Array.isArray(pricingBySize) && pricingBySize.length > 0) {
+        // Try to find by printSizeId first
+        let sizeData = pricingBySize.find(pp => pp.printSizeId === sizeKeyOrId);
 
-    if (isTwoSided) {
-        // In 2 mặt: ưu tiên tiers riêng, nếu không có thì x2 giá 1 mặt
-        if (sizeData.twoSide?.tiers?.length > 0) {
-            return findTierPrice(sizeData.twoSide.tiers, sheets);
+        // If not found by ID, try to find by matching size dimensions from sizeKey
+        if (!sizeData && typeof sizeKeyOrId === 'string') {
+            const [w, h] = sizeKeyOrId.split('x').map(Number);
+            const matchingSize = settings.printSizes?.find(s => s.w === w && s.h === h);
+            if (matchingSize) {
+                sizeData = pricingBySize.find(pp => pp.printSizeId === matchingSize.id);
+            }
         }
-        // Fallback: x2 giá 1 mặt, tìm mốc bằng sheets*2
-        const oneSidePrice = findTierPrice(sizeData.oneSide?.tiers || [], sheets * 2);
-        return oneSidePrice * 2;
+
+        if (sizeData && sizeData.tiers && sizeData.tiers.length > 0) {
+            const pricePerSide = findTierPrice(sizeData.tiers, totalSides);
+            return pricePerSide * sides;
+        }
     }
 
-    return findTierPrice(sizeData.oneSide?.tiers || [], sheets);
+    // Old format: object keyed by sizeKey
+    if (pricingBySize && !Array.isArray(pricingBySize) && pricingBySize[sizeKeyOrId]) {
+        const sizeData = pricingBySize[sizeKeyOrId];
+        if (isTwoSided) {
+            if (sizeData.twoSide?.tiers?.length > 0) {
+                return findTierPrice(sizeData.twoSide.tiers, sheets);
+            }
+            const pricePerSide = findTierPrice(sizeData.oneSide?.tiers || [], totalSides);
+            return pricePerSide * sides;
+        }
+        return findTierPrice(sizeData.oneSide?.tiers || [], totalSides);
+    }
+
+    // Fallback: dùng printOptions (id=1 = In 1 mặt)
+    const oneSideOption = settings.printOptions?.find(p => p.id === 1);
+    const pricePerSide = oneSideOption ? findTierPrice(oneSideOption.tiers || [], totalSides) : 0;
+    return pricePerSide * sides;
 }
 
 /**
  * Tính giá cán màng
- * Hỗ trợ 3 đơn vị: per_lot (lô), per_sheet (tờ), per_m2 (m²)
- * Ưu tiên cấu trúc laminationPricing (theo từng khổ giấy)
- * Fallback về cấu trúc laminations cũ
+ * Mốc tính theo "mặt cán" (tương tự giá in)
+ * Cán 2 mặt: mặt_cán = tờ × 2 → tra bảng bằng mặt_cán
+ *
+ * @param {number} lamSides - 1 hoặc 2 (số mặt cán)
+ * @returns {{ cost, unit, tierPrice, tierMin, tierMax, area, totalSides }}
  */
-export function calculateLaminationCost(settings, printSizeId, lamId, sheets, paperW, paperH) {
-    if (!lamId || lamId <= 0) return 0;
+export function calculateLaminationCost(settings, printSizeId, lamId, sheets, paperW, paperH, lamSides = 1) {
+    const emptyResult = { cost: 0, unit: '', tierPrice: 0, tierMin: 0, tierMax: 0, area: 0, totalSides: 0 };
+    if (!lamId || lamId <= 0) return emptyResult;
 
-    // Tìm lamination type để lấy unit mặc định
     const lamType = settings.laminations?.find(l => l.id === lamId);
-    if (!lamType) return 0;
-    if (lamType.id === 1) return 0; // Không cán
+    if (!lamType) return emptyResult;
+    if (lamType.id === 1) return emptyResult; // Không cán
 
-    // Ưu tiên: Tìm pricing theo khổ giấy cụ thể
+    const area = (paperW * paperH) / 1000000; // m²
+    const totalSides = sheets * lamSides; // tổng mặt cán
+
+    // Helper: tính chi phí từ tier (dùng totalSides)
+    const calcFromTier = (tier, fallbackUnit) => {
+        const unit = tier.unit || fallbackUnit || 'per_sheet';
+        let cost = 0;
+        if (unit === 'per_m2') {
+            // totalSides × diện tích × đơn giá
+            cost = Math.round(totalSides * area * tier.price);
+        } else if (unit === 'per_lot') {
+            // giá cố định trọn lô
+            cost = Math.round(tier.price);
+        } else {
+            // per_sheet: totalSides × đơn giá
+            cost = Math.round(totalSides * tier.price);
+        }
+        return { cost, unit, tierPrice: tier.price, tierMin: tier.min || 1, tierMax: tier.max, area, totalSides };
+    };
+
+    // Ưu tiên: pricing theo khổ giấy cụ thể (tra mốc bằng totalSides)
     if (settings.laminationPricing && settings.laminationPricing.length > 0) {
         const pricing = settings.laminationPricing.find(
             lp => lp.printSizeId === printSizeId && lp.lamId === lamId
         );
         if (pricing && pricing.tiers && pricing.tiers.length > 0) {
-            const tier = findTierWithMin(pricing.tiers, sheets);
-            if (!tier) return 0;
-
-            const unit = pricing.unit || lamType.unit || 'per_sheet';
-            if (unit === 'per_m2') {
-                const area = (paperW * paperH) / 1000000;
-                return Math.round(sheets * area * tier.price);
-            }
-            if (unit === 'per_lot') {
-                return Math.round(tier.price);
-            }
-            return Math.round(sheets * tier.price); // per_sheet
+            const tier = findTierWithMin(pricing.tiers, totalSides);
+            if (!tier) return emptyResult;
+            return calcFromTier(tier, pricing.unit || lamType.unit);
         }
     }
 
-    // Fallback: dùng cấu trúc laminations cũ
+    // Fallback: cấu trúc laminations cũ (tra mốc bằng totalSides)
     const unit = lamType.unit || 'per_sheet';
+    const tierPrice = findTierPrice(lamType.tiers || [], totalSides);
 
     if (unit === 'per_m2') {
-        const area = (paperW * paperH) / 1000000;
-        const price = lamType.pricePerM2 || findTierPrice(lamType.tiers || [], sheets);
-        return Math.round(sheets * area * price);
+        return { cost: Math.round(totalSides * area * tierPrice), unit, tierPrice, tierMin: 1, tierMax: 999999, area, totalSides };
     }
     if (unit === 'per_lot') {
-        return Math.round(findTierPrice(lamType.tiers || [], sheets));
+        return { cost: Math.round(tierPrice), unit, tierPrice, tierMin: 1, tierMax: 999999, area, totalSides };
     }
-
-    // per_sheet - giữ logic cũ: số lượng lớn dùng m², nhỏ dùng đ/tờ
-    if (lamType.pricePerM2 && sheets >= 500) {
-        const area = (paperW * paperH) / 1000000;
-        return Math.round(sheets * area * lamType.pricePerM2);
+    if (lamType.pricePerM2 && totalSides >= 500) {
+        return { cost: Math.round(totalSides * area * lamType.pricePerM2), unit: 'per_m2', tierPrice: lamType.pricePerM2, tierMin: 500, tierMax: 999999, area, totalSides };
     }
-    return Math.round(sheets * findTierPrice(lamType.tiers || [], sheets));
+    return { cost: Math.round(totalSides * tierPrice), unit, tierPrice, tierMin: 1, tierMax: 999999, area, totalSides };
 }
+
 
 /**
  * Tính giá hoàn chỉnh cho In Nhanh
@@ -334,7 +374,7 @@ export function calculateLaminationCost(settings, printSizeId, lamId, sheets, pa
 export function calculatePaperPricing({
     prodW, prodH, qty, paperTypeId, printSideId, lamId, custId,
     extraCosts = 0, selectedProcIds = [], spacing = 0, marginH = 5, marginV = 5,
-    waste = 0, allowRotation = false, customPaperPrice = null, settings
+    waste = 0, allowRotation = false, customPaperPrice = null, lamDoubleSide = false, settings
 }) {
     if (prodW <= 0 || prodH <= 0 || qty <= 0) return null;
 
@@ -361,16 +401,21 @@ export function calculatePaperPricing({
     let paperPricePerSheet = customPaperPrice !== null ? customPaperPrice : getPaperPrice(settings, paperTypeId, sheets);
     const paperCost = Math.round(sheets * paperPricePerSheet);
 
-    // 4. Giá in
+    // 4. Giá in (mốc tính theo mặt in)
+    const sides = isTwoSided ? 2 : 1;
+    const totalSides = sheets * sides;
     const sizeKey = `${printSheetW}x${printSheetH}`;
     const printPricePerSheet = getPrintPriceBySize(settings, sizeKey, sheets, isTwoSided);
+    const printPricePerSide = printPricePerSheet / sides;
     const printCost = Math.round(sheets * printPricePerSheet);
 
-    // 5. Giá cán màng
+    // 5. Giá cán màng (mốc tính theo mặt cán)
+    const lamSides = lamDoubleSide ? 2 : 1;
     const printSizeId = paper ? paper.printSizeId : null;
-    const lamCost = printSizeId
-        ? calculateLaminationCost(settings, printSizeId, lamId, sheets, paper?.w || 0, paper?.h || 0)
-        : 0;
+    const lamResult = printSizeId
+        ? calculateLaminationCost(settings, printSizeId, lamId, sheets, paper?.w || 0, paper?.h || 0, lamSides)
+        : { cost: 0, unit: '', tierPrice: 0, tierMin: 0, tierMax: 0, area: 0, totalSides: 0 };
+    const lamCost = lamResult.cost;
 
     // 6. Giá gia công
     let procCost = 0;
@@ -395,8 +440,9 @@ export function calculatePaperPricing({
         imposition,
         sheets, baseSheets, waste,
         paperCost, paperPricePerSheet,
-        printCost, printPricePerSheet,
-        lamCost,
+        printCost, printPricePerSheet, printPricePerSide,
+        printSides: sides, totalPrintSides: totalSides,
+        lamCost, lamDetail: lamResult,
         procCost, procDetails,
         extraCosts,
         totalCost, costPerItem,

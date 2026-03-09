@@ -1,9 +1,10 @@
+import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 
+import { CONFIG } from 'src/global-config';
 import { DashboardContent } from 'src/layouts/dashboard';
-import { MotivationIllustration } from 'src/assets/illustrations';
 import {
   _ecommerceNewProducts,
   _ecommerceBestSalesman,
@@ -37,7 +38,20 @@ export function OverviewEcommerceView() {
           <EcommerceWelcome
             title={`Xin chào 🎉  \n ${user?.displayName}`}
             description="Doanh số tháng này đã tăng 57.6% so với cùng kỳ."
-            img={<MotivationIllustration hideBackground />}
+            img={
+              <Box
+                component="img"
+                src={`${CONFIG.assetsDir}/assets/images/motivation-poster.jpg`}
+                alt="Tranh động lực"
+                sx={{
+                  width: 260,
+                  height: 'auto',
+                  borderRadius: 2,
+                  objectFit: 'cover',
+                  filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.3))',
+                }}
+              />
+            }
             action={
               <Button variant="contained" color="primary">
                 Xem ngay

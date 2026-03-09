@@ -6,6 +6,7 @@ import { DashboardLayout } from 'src/layouts/dashboard';
 
 import { LoadingScreen } from 'src/components/loading-screen';
 
+import { CheckoutProvider } from 'src/sections/checkout/context';
 import { AccountLayout } from 'src/sections/account/account-layout';
 
 import { AuthGuard } from 'src/auth/guard';
@@ -146,6 +147,7 @@ export const dashboardRoutes = [
       },
       {
         path: 'product',
+        element: <CheckoutProvider><SuspenseOutlet /></CheckoutProvider>,
         children: [
           { index: true, element: <ProductListPage /> },
           { path: 'list', element: <ProductListPage /> },

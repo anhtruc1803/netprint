@@ -6,6 +6,8 @@ import { SimpleLayout } from 'src/layouts/simple';
 
 import { SplashScreen } from 'src/components/loading-screen';
 
+import { CheckoutProvider } from 'src/sections/checkout/context';
+
 // ----------------------------------------------------------------------
 
 const FaqsPage = lazy(() => import('src/pages/faqs'));
@@ -54,6 +56,7 @@ export const mainRoutes = [
           { path: 'blank', element: <BlankPage /> },
           {
             path: 'product',
+            element: <CheckoutProvider><Outlet /></CheckoutProvider>,
             children: [
               { index: true, element: <ProductListPage /> },
               { path: 'list', element: <ProductListPage /> },

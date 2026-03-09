@@ -1,8 +1,6 @@
 import { useSetState } from 'minimal-shared/hooks';
 import { useMemo, useEffect, useCallback } from 'react';
 
-import axios, { endpoints } from 'src/lib/axios';
-
 import { JWT_STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
@@ -27,7 +25,7 @@ export function AuthProvider({ children }) {
 
         // Decode user from local JWT token payload
         const parts = accessToken.split('.');
-        const payload = JSON.parse(atob(parts[1]));
+        const payload = JSON.parse(decodeURIComponent(atob(parts[1]).split('').map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`).join('')));
         const user = {
           id: payload.sub,
           email: payload.email,

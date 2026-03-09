@@ -1,0 +1,41 @@
+{
+  "name": "NetPrint CRM",
+  "short_name": "NetPrint",
+  "description": "NetPrint CRM - Hệ thống quản lý in ấn chuyên nghiệp. In Màu · In Cảm Xúc",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ED1C24",
+  "orientation": "any",
+  "lang": "vi",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "/logo/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logo/logo-single.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Bảng tính giá",
+      "short_name": "Tính giá",
+      "url": "/calculator",
+      "icons": [{ "src": "/logo/logo-icon.png", "sizes": "512x512" }]
+    }
+  ]
+}

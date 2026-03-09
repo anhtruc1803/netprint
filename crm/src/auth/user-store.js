@@ -1,6 +1,8 @@
 // User management store using localStorage
 // Supports multiple users with roles: admin, staff
 
+import { syncToServer } from './data-seeder';
+
 const USERS_STORAGE_KEY = 'netprint_users';
 
 // Default admin account
@@ -102,6 +104,7 @@ export function createUser({ email, password, displayName, role = 'staff', phone
 
     users.push(newUser);
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    syncToServer();
     return newUser;
 }
 
@@ -122,6 +125,7 @@ export function updateUser(id, data) {
 
     users[index] = { ...users[index], ...data };
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    syncToServer();
     return users[index];
 }
 
@@ -138,6 +142,7 @@ export function deleteUser(id) {
 
     const filtered = users.filter((u) => u.id !== id);
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(filtered));
+    syncToServer();
     return true;
 }
 
@@ -150,5 +155,6 @@ export function toggleUserActive(id) {
     }
     users[index].isActive = !users[index].isActive;
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    syncToServer();
     return users[index];
 }

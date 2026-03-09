@@ -8,7 +8,7 @@ const DEFAULT_USER = {
   id: '1',
   displayName: 'NetPrint Admin',
   email: 'admin@netprint.vn',
-  photoURL: '',
+  photoURL: '/logo/logo-icon.png',
   phoneNumber: '',
   country: 'Vietnam',
   address: '',
@@ -32,9 +32,12 @@ function getStoredUser() {
   return DEFAULT_USER;
 }
 
+import { syncToServer } from '../data-seeder';
+
 export function saveUserProfile(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    syncToServer();
     return true;
   } catch (e) {
     console.error('Error saving user profile:', e);

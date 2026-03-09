@@ -6,6 +6,7 @@ import Grid from '@mui/material/Grid';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
 import Badge from '@mui/material/Badge';
+import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Drawer from '@mui/material/Drawer';
@@ -13,22 +14,26 @@ import Select from '@mui/material/Select';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import TextField from '@mui/material/TextField';
 import Checkbox from '@mui/material/Checkbox';
+import Collapse from '@mui/material/Collapse';
+import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
 import FormControl from '@mui/material/FormControl';
 import CardContent from '@mui/material/CardContent';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Collapse from '@mui/material/Collapse';
-import Alert from '@mui/material/Alert';
-import InputAdornment from '@mui/material/InputAdornment';
+import Autocomplete from '@mui/material/Autocomplete';
 import { alpha, useTheme } from '@mui/material/styles';
+import InputAdornment from '@mui/material/InputAdornment';
+import FormControlLabel from '@mui/material/FormControlLabel';
 
-import { Iconify } from 'src/components/iconify';
 import { DashboardContent } from 'src/layouts/dashboard';
 
+import { Iconify } from 'src/components/iconify';
+
+import { loadPaperSettings } from '../data/default-settings';
+import PricingSettingsDialog from './pricing-settings-dialog';
+import { playCalculateSound, playErrorSound } from '../../../utils/sound';
 import {
     formatMoney,
     formatNumber,
@@ -37,9 +42,6 @@ import {
     calculateSheetsNeeded,
     calculatePaperPricing,
 } from '../utils/pricing-calc';
-
-import { loadPaperSettings } from '../data/default-settings';
-import PricingSettingsDialog from './pricing-settings-dialog';
 
 // Quick size presets
 const QUICK_SIZES = [
@@ -76,6 +78,7 @@ export function PricingCalculatorView() {
     const [paperTypeId, setPaperTypeId] = useState('');
     const [printSideId, setPrintSideId] = useState(1);
     const [lamId, setLamId] = useState(1);
+    const [lamDoubleSide, setLamDoubleSide] = useState(false);
     const [custId, setCustId] = useState(settings.customerTypes[0]?.id || 1);
     const [selectedProcs, setSelectedProcs] = useState([]);
     const [spacing, setSpacing] = useState(0);
@@ -88,6 +91,7 @@ export function PricingCalculatorView() {
     const [result, setResult] = useState(null);
     const [showDetail, setShowDetail] = useState(true);
     const [error, setError] = useState('');
+    const [fieldErrors, setFieldErrors] = useState({});
     const [showCustomPrice, setShowCustomPrice] = useState(false);
     const [customPaperPrice, setCustomPaperPrice] = useState('');
     const [customPaperName, setCustomPaperName] = useState('');
@@ -190,14 +194,32 @@ export function PricingCalculatorView() {
 
     const handleCalculate = useCallback(() => {
         setError('');
+
+        // Validate từng field bắt buộc
+        const errs = {};
+        if (!numProdW || numProdW <= 0) errs.prodW = 'Nhập chiều rộng';
+        if (!numProdH || numProdH <= 0) errs.prodH = 'Nhập chiều cao';
+        if (!numQty || numQty <= 0) errs.qty = 'Nhập số lượng';
+        if (!printSizeIdCalc) errs.printSizeIdCalc = 'Chọn khổ in';
+        if (!paperTypeId) errs.paperTypeId = 'Chọn loại giấy';
+
+        if (Object.keys(errs).length > 0) {
+            setFieldErrors(errs);
+            playErrorSound();
+            setError('Vui lòng điền đầy đủ các trường bắt buộc!');
+            return;
+        }
+        setFieldErrors({});
+
         const res = calculatePaperPricing({
             prodW: numProdW, prodH: numProdH, qty: numQty, paperTypeId, printSideId, lamId, custId,
             extraCosts: totalExtraCosts, selectedProcIds: selectedProcs,
-            spacing, marginH, marginV, waste, allowRotation, settings,
+            spacing, marginH, marginV, waste, allowRotation, lamDoubleSide, settings,
             customPaperPrice: showCustomPrice && customPaperPrice ? Number(customPaperPrice) : null,
         });
         if (!res) { setError('Vui lòng nhập đầy đủ thông tin!'); return; }
         if (res.error) { setError(res.error); return; }
+
         setResult(res);
 
         // Save to history
@@ -208,7 +230,7 @@ export function PricingCalculatorView() {
             prodW: numProdW, prodH: numProdH, qty: numQty,
             paperName: res.paperName,
             printSides: printSideId === 1 ? 'In 1 mặt' : 'In 2 mặt',
-            lamName: settings.laminations.find(l => l.id === lamId)?.name || '',
+            lamName: (settings.laminations.find(l => l.id === lamId)?.name || '') + (lamId !== 1 ? (lamDoubleSide ? ' (2 mặt)' : ' (1 mặt)') : ''),
             procNames: selectedProcs.map(id => settings.processing.find(p => p.id === id)?.name).filter(Boolean),
             custName: cust?.name || '',
             custProfit: cust?.profit || 0,
@@ -229,7 +251,7 @@ export function PricingCalculatorView() {
             localStorage.setItem('netprint_price_history', JSON.stringify(updated));
             return updated;
         });
-    }, [numProdW, numProdH, numQty, paperTypeId, printSideId, lamId, custId, totalExtraCosts, selectedProcs, spacing, marginH, marginV, waste, allowRotation, settings]);
+    }, [numProdW, numProdH, numQty, paperTypeId, printSideId, lamId, lamDoubleSide, custId, totalExtraCosts, selectedProcs, spacing, marginH, marginV, waste, allowRotation, settings, printSizeIdCalc, showCustomPrice, customPaperPrice]);
 
     // ===== SECTION HEADER =====
     const SectionHeader = ({ icon, title, color = 'primary' }) => (
@@ -390,20 +412,26 @@ export function PricingCalculatorView() {
                 {/* Product specs */}
                 <SectionHeader icon="solar:box-bold-duotone" title="QUY CÁCH SẢN PHẨM" color="primary" />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 1 }}>
-                    <TextField fullWidth label="Chiều rộng" type="number" value={prodW} sx={{ flex: 1 }}
-                        onChange={e => { setProdW(e.target.value); setActiveSize(''); }}
+                    <TextField fullWidth label="Chiều rộng *" type="number" value={prodW} sx={{ flex: 1 }}
+                        error={!!fieldErrors.prodW}
+                        helperText={fieldErrors.prodW || ''}
+                        onChange={e => { setProdW(e.target.value); setActiveSize(''); setFieldErrors(prev => ({ ...prev, prodW: '' })); }}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start"><Iconify icon="solar:ruler-bold" width={18} sx={{ color: 'primary.main' }} /></InputAdornment>,
+                            startAdornment: <InputAdornment position="start"><Iconify icon="solar:ruler-bold" width={18} sx={{ color: fieldErrors.prodW ? 'error.main' : 'primary.main' }} /></InputAdornment>,
                             endAdornment: <InputAdornment position="end">mm</InputAdornment>,
                         }} />
-                    <TextField fullWidth label="Chiều cao" type="number" value={prodH} sx={{ flex: 1 }}
-                        onChange={e => { setProdH(e.target.value); setActiveSize(''); }}
+                    <TextField fullWidth label="Chiều cao *" type="number" value={prodH} sx={{ flex: 1 }}
+                        error={!!fieldErrors.prodH}
+                        helperText={fieldErrors.prodH || ''}
+                        onChange={e => { setProdH(e.target.value); setActiveSize(''); setFieldErrors(prev => ({ ...prev, prodH: '' })); }}
                         InputProps={{
-                            startAdornment: <InputAdornment position="start"><Iconify icon="solar:ruler-bold" width={18} sx={{ color: 'error.main', transform: 'rotate(90deg)' }} /></InputAdornment>,
+                            startAdornment: <InputAdornment position="start"><Iconify icon="solar:ruler-bold" width={18} sx={{ color: fieldErrors.prodH ? 'error.main' : 'error.main', transform: 'rotate(90deg)' }} /></InputAdornment>,
                             endAdornment: <InputAdornment position="end">mm</InputAdornment>,
                         }} />
-                    <TextField fullWidth label="Số lượng sản phẩm" type="number" value={qty} sx={{ flex: 1 }}
-                        onChange={e => setQty(e.target.value)}
+                    <TextField fullWidth label="Số lượng *" type="number" value={qty} sx={{ flex: 1 }}
+                        error={!!fieldErrors.qty}
+                        helperText={fieldErrors.qty || ''}
+                        onChange={e => { setQty(e.target.value); setFieldErrors(prev => ({ ...prev, qty: '' })); }}
                         InputProps={{
                             startAdornment: <InputAdornment position="start"><Iconify icon="solar:layers-bold" width={18} sx={{ color: 'warning.main' }} /></InputAdornment>,
                             endAdornment: <InputAdornment position="end">sp</InputAdornment>,
@@ -439,10 +467,12 @@ export function PricingCalculatorView() {
                 {/* Paper specs */}
                 <SectionHeader icon="solar:document-bold-duotone" title="QUY CÁCH GIẤY IN" color="info" />
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3 }}>
-                    <FormControl fullWidth sx={{ flex: 1 }}>
-                        <InputLabel>Chọn khổ in</InputLabel>
-                        <Select value={printSizeIdCalc} onChange={e => setPrintSizeIdCalc(e.target.value)} label="Chọn khổ in"
-                            startAdornment={<InputAdornment position="start"><Iconify icon="solar:maximize-square-bold" width={18} sx={{ color: 'primary.main' }} /></InputAdornment>}>
+                    <FormControl fullWidth sx={{ flex: 1 }} error={!!fieldErrors.printSizeIdCalc}>
+                        <InputLabel>Chọn khổ in *</InputLabel>
+                        <Select value={printSizeIdCalc}
+                            onChange={e => { setPrintSizeIdCalc(e.target.value); setFieldErrors(prev => ({ ...prev, printSizeIdCalc: '' })); }}
+                            label="Chọn khổ in *"
+                            startAdornment={<InputAdornment position="start"><Iconify icon="solar:maximize-square-bold" width={18} sx={{ color: fieldErrors.printSizeIdCalc ? 'error.main' : 'primary.main' }} /></InputAdornment>}>
                             {printSizes.length === 0 && (
                                 <MenuItem disabled value=""><em>Chưa có khổ in — Thêm ở Cài đặt giá</em></MenuItem>
                             )}
@@ -452,35 +482,108 @@ export function PricingCalculatorView() {
                                 </MenuItem>
                             ))}
                         </Select>
+                        {fieldErrors.printSizeIdCalc && <Typography variant="caption" color="error" sx={{ mt: 0.5, ml: 1.5 }}>{fieldErrors.printSizeIdCalc}</Typography>}
                     </FormControl>
-                    <FormControl fullWidth sx={{ flex: 1 }}>
-                        <InputLabel>Loại giấy</InputLabel>
-                        <Select value={paperTypeId} onChange={e => { setPaperTypeId(e.target.value); if (e.target.value !== '__custom__') { setShowCustomPrice(false); setCustomPaperPrice(''); setCustomPaperName(''); } else { setShowCustomPrice(true); } }} label="Loại giấy"
-                            displayEmpty
-                            startAdornment={<InputAdornment position="start"><Iconify icon="solar:layers-minimalistic-bold" width={18} sx={{ color: 'info.main' }} /></InputAdornment>}
-                            renderValue={(selected) => {
-                                if (!selected) return <Typography color="text.secondary">Chọn loại giấy</Typography>;
-                                if (selected === '__custom__') return <Typography color="warning.main" fontWeight={600}>Loại giấy khác</Typography>;
-                                const p = allPapers.find(pp => pp.id === selected);
-                                return p ? p.name : '';
-                            }}>
-                            {papers.length === 0 && (
-                                <MenuItem disabled value=""><em>Chưa có loại giấy cho khổ này</em></MenuItem>
-                            )}
-                            {papers.map(p => (
-                                <MenuItem key={p.id} value={p.id}>
-                                    <Typography variant="body2" fontWeight={600}>{p.name}</Typography>
-                                </MenuItem>
-                            ))}
-                            <Divider sx={{ my: 0.5 }} />
-                            <MenuItem value="__custom__" sx={{ color: 'warning.main', fontWeight: 700 }}>
-                                <Stack direction="row" alignItems="center" spacing={1}>
-                                    <Iconify icon="solar:pen-new-round-bold" width={18} />
-                                    <Typography variant="body2" fontWeight={700}>Loại giấy khác</Typography>
+                    <Autocomplete
+                        fullWidth
+                        sx={{ flex: 1 }}
+                        options={(() => {
+                            const PAPER_GROUPS = {
+                                'C': 'Couché (C)', 'FO': 'Ford (FO)', 'I': 'Ivory (I)',
+                                'Decal': 'Decal', 'D': 'Duplex (D)', 'B': 'Bristol (B)',
+                                'Kraft': 'Kraft',
+                            };
+                            const grouped = papers.map(p => {
+                                const name = p.name || '';
+                                let group = 'Khác';
+                                for (const [prefix, label] of Object.entries(PAPER_GROUPS)) {
+                                    if (name.startsWith(prefix)) { group = label; break; }
+                                }
+                                return { ...p, group };
+                            });
+                            grouped.push({ id: '__custom__', name: '✏️ Loại giấy khác', group: '⚡ Tuỳ chọn' });
+                            return grouped;
+                        })()}
+                        groupBy={(option) => option.group}
+                        getOptionLabel={(option) => option.name || ''}
+                        value={(() => {
+                            if (!paperTypeId) return null;
+                            if (paperTypeId === '__custom__') return { id: '__custom__', name: '✏️ Loại giấy khác', group: '⚡ Tuỳ chọn' };
+                            return papers.find(p => p.id === paperTypeId) || null;
+                        })()}
+                        onChange={(_, newValue) => {
+                            if (!newValue) {
+                                setPaperTypeId('');
+                                setShowCustomPrice(false); setCustomPaperPrice(''); setCustomPaperName('');
+                            } else if (newValue.id === '__custom__') {
+                                setPaperTypeId('__custom__');
+                                setShowCustomPrice(true);
+                            } else {
+                                setPaperTypeId(newValue.id);
+                                setShowCustomPrice(false); setCustomPaperPrice(''); setCustomPaperName('');
+                            }
+                        }}
+                        isOptionEqualToValue={(option, value) => option.id === value?.id}
+                        noOptionsText="Không tìm thấy giấy"
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Loại giấy"
+                                placeholder="Tìm kiếm giấy..."
+                                InputProps={{
+                                    ...params.InputProps,
+                                    startAdornment: (
+                                        <>
+                                            <InputAdornment position="start">
+                                                <Iconify icon="solar:layers-minimalistic-bold" width={18} sx={{ color: 'info.main' }} />
+                                            </InputAdornment>
+                                            {params.InputProps.startAdornment}
+                                        </>
+                                    ),
+                                }}
+                            />
+                        )}
+                        renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                                <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
+                                    {option.id === '__custom__' ? (
+                                        <Typography variant="body2" fontWeight={700} color="warning.main">{option.name}</Typography>
+                                    ) : (
+                                        <Typography variant="body2" fontWeight={600}>{option.name}</Typography>
+                                    )}
                                 </Stack>
-                            </MenuItem>
-                        </Select>
-                    </FormControl>
+                            </li>
+                        )}
+                        renderGroup={(params) => (
+                            <li key={params.key}>
+                                <Box sx={{
+                                    position: 'sticky', top: -8, py: 0.5, px: 2,
+                                    bgcolor: (t) => alpha(t.palette.primary.main, 0.06),
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider',
+                                }}>
+                                    <Typography variant="caption" fontWeight={800} color="primary.main"
+                                        sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 11 }}>
+                                        {params.group}
+                                    </Typography>
+                                </Box>
+                                <Box component="ul" sx={{ p: 0 }}>{params.children}</Box>
+                            </li>
+                        )}
+                        slotProps={{
+                            paper: {
+                                sx: {
+                                    borderRadius: 2,
+                                    boxShadow: (t) => t.shadows[8],
+                                    '& .MuiAutocomplete-listbox': {
+                                        py: 0,
+                                        maxHeight: 320,
+                                    },
+                                    '& .MuiAutocomplete-option': { py: 0.8, px: 2, minHeight: 36 },
+                                },
+                            },
+                        }}
+                    />
                     <FormControl fullWidth sx={{ flex: 1 }}>
                         <InputLabel>Số mặt in</InputLabel>
                         <Select value={printSideId} onChange={e => setPrintSideId(e.target.value)} label="Số mặt in"
@@ -491,11 +594,39 @@ export function PricingCalculatorView() {
                     </FormControl>
                     <FormControl fullWidth sx={{ flex: 1 }}>
                         <InputLabel>Cán màng</InputLabel>
-                        <Select value={lamId} onChange={e => setLamId(e.target.value)} label="Cán màng"
-                            startAdornment={<InputAdornment position="start"><Iconify icon="solar:layers-bold" width={18} sx={{ color: 'warning.main' }} /></InputAdornment>}>
-                            {settings.laminations.map(l => (
-                                <MenuItem key={l.id} value={l.id}>{l.name}</MenuItem>
-                            ))}
+                        <Select
+                            value={lamDoubleSide ? `${lamId}_2mat` : String(lamId)}
+                            onChange={e => {
+                                const val = String(e.target.value);
+                                if (val.endsWith('_2mat')) {
+                                    setLamId(Number(val.replace('_2mat', '')));
+                                    setLamDoubleSide(true);
+                                } else {
+                                    setLamId(Number(val));
+                                    setLamDoubleSide(false);
+                                }
+                            }}
+                            label="Cán màng"
+                            startAdornment={<InputAdornment position="start"><Iconify icon="solar:layers-bold" width={18} sx={{ color: 'warning.main' }} /></InputAdornment>}
+                        >
+                            {settings.laminations.map(l => {
+                                // "Không cán" chỉ hiện 1 dòng
+                                if (l.id === 1) {
+                                    return <MenuItem key={l.id} value={String(l.id)}>{l.name}</MenuItem>;
+                                }
+                                // Các loại khác: hiện cả 1 mặt và 2 mặt
+                                return [
+                                    <MenuItem key={l.id} value={String(l.id)}>
+                                        {l.name} (1 mặt)
+                                    </MenuItem>,
+                                    <MenuItem key={`${l.id}_2mat`} value={`${l.id}_2mat`}
+                                        sx={{ pl: 4, color: 'warning.dark', fontWeight: 600 }}>
+                                        {l.name} (2 mặt)
+                                        <Chip label="×2" size="small" color="warning" variant="soft"
+                                            sx={{ ml: 1, height: 18, fontSize: 10, fontWeight: 800 }} />
+                                    </MenuItem>,
+                                ];
+                            })}
                         </Select>
                     </FormControl>
                 </Stack>
@@ -581,7 +712,7 @@ export function PricingCalculatorView() {
                                 next[index] = { ...next[index], name: e.target.value };
                                 setExtraCostItems(next);
                             }} />
-                        <TextField size="small" placeholder="Số tiền" type="number" value={item.amount} sx={{ width: 160 }}
+                        <TextField size="small" placeholder="Số tiền" type="number" value={item.amount} sx={{ width: 220 }}
                             InputProps={{ endAdornment: <InputAdornment position="end">đ</InputAdornment> }}
                             onChange={e => {
                                 const next = [...extraCostItems];
@@ -609,7 +740,8 @@ export function PricingCalculatorView() {
                             ))}
                         </Select>
                     </FormControl>
-                    <Button variant="contained" size="large" onClick={handleCalculate}
+                    <Button variant="contained" size="large"
+                        onClick={() => { playCalculateSound(); handleCalculate(); }}
                         startIcon={<Iconify icon="solar:calculator-bold-duotone" />}
                         sx={{
                             px: 5, py: 1.5, fontWeight: 800, fontSize: 16, borderRadius: 2,
@@ -750,7 +882,10 @@ export function PricingCalculatorView() {
                                 </Typography>
                                 <Stack direction="row" alignItems="center" spacing={0.5}>
                                     <Iconify icon="solar:layers-bold" width={14} sx={{ color: 'warning.main' }} />
-                                    <Typography variant="body2" fontWeight={700}>{settings.laminations.find(l => l.id === lamId)?.name || '—'}</Typography>
+                                    <Typography variant="body2" fontWeight={700}>
+                                        {settings.laminations.find(l => l.id === lamId)?.name || '—'}
+                                        {lamDoubleSide && ' (2 mặt)'}
+                                    </Typography>
                                 </Stack>
                             </Box>
 
@@ -848,34 +983,88 @@ export function PricingCalculatorView() {
                             💰 Chi tiết chi phí
                         </Typography>
                         <Stack spacing={1.5}>
-                            {[
-                                { icon: '📄', label: result.paperName || 'Giấy', detail: `${formatNumber(result.sheets)} tờ × ${formatNumber(result.paperPricePerSheet)}đ/tờ`, value: result.paperCost, color: 'primary' },
-                                { icon: '🖨️', label: result.printName, detail: `${formatNumber(result.sheets)} tờ × ${formatNumber(result.printPricePerSheet)}đ/tờ`, value: result.printCost, color: 'info' },
-                                { icon: '✨', label: 'Cán màng', detail: result.lamCost > 0 ? `${formatNumber(result.sheets)} tờ` : 'Không cán', value: result.lamCost, color: 'warning' },
-                                ...result.procDetails.map(p => ({
-                                    icon: '✂️', label: p.name, detail: '', value: p.cost, color: 'error'
-                                })),
-                                ...(result.procDetails.length === 0 ? [{ icon: '✂️', label: 'Gia công', detail: 'Không chọn', value: 0, color: 'error' }] : []),
-                                ...(result.extraCosts > 0 ? [{ icon: '💰', label: 'Chi phí khác', detail: '', value: result.extraCosts, color: 'secondary' }] : []),
-                            ].map((row, i) => (
-                                <Stack key={i} direction="row" alignItems="center" justifyContent="space-between"
-                                    sx={{
-                                        py: 1, px: 1.5, borderRadius: 1,
-                                        '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.06) },
-                                        transition: 'background 0.2s ease',
-                                    }}>
-                                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flex: 1 }}>
-                                        <Typography sx={{ fontSize: 18 }}>{row.icon}</Typography>
-                                        <Stack>
-                                            <Typography variant="body2" fontWeight={600}>{row.label}</Typography>
-                                            {row.detail && <Typography variant="caption" color="text.secondary">{row.detail}</Typography>}
+                            {(() => {
+                                const lamName = (settings.laminations.find(l => l.id === lamId)?.name || 'Không cán') + (lamId !== 1 ? (lamDoubleSide ? ' (2 mặt)' : ' (1 mặt)') : '');
+                                const rows = [
+                                    {
+                                        icon: '📄', label: result.paperName || 'Giấy', color: 'primary',
+                                        value: result.paperCost,
+                                        lines: [
+                                            `${formatNumber(result.sheets)} tờ × ${formatNumber(result.paperPricePerSheet)}đ/tờ = ${formatMoney(result.paperCost)}`,
+                                        ],
+                                    },
+                                    {
+                                        icon: '🖨️', label: result.printName, color: 'info',
+                                        value: result.printCost,
+                                        lines: result.printSides === 2 ? [
+                                            `Mặt in: ${formatNumber(result.sheets)} tờ × ${result.printSides} mặt = ${formatNumber(result.totalPrintSides)} mặt in`,
+                                            `Mốc ${formatNumber(result.totalPrintSides)} mặt → ${formatNumber(result.printPricePerSide)}đ/mặt`,
+                                            `${formatNumber(result.totalPrintSides)} mặt × ${formatNumber(result.printPricePerSide)}đ = ${formatMoney(result.printCost)}`,
+                                        ] : [
+                                            `Mốc ${formatNumber(result.sheets)} tờ → ${formatNumber(result.printPricePerSheet)}đ/tờ`,
+                                            `${formatNumber(result.sheets)} tờ × ${formatNumber(result.printPricePerSheet)}đ = ${formatMoney(result.printCost)}`,
+                                        ],
+                                    },
+                                    {
+                                        icon: '✨', label: `Cán màng — ${lamName}`, color: 'warning',
+                                        value: result.lamCost,
+                                        lines: (() => {
+                                            if (result.lamCost <= 0) return ['Không cán'];
+                                            const d = result.lamDetail;
+                                            const maxLabel = d.tierMax === 999999 ? '∞' : formatNumber(d.tierMax);
+                                            const lines = [];
+                                            // Hiện quy đổi mặt cán nếu 2 mặt
+                                            if (lamDoubleSide) {
+                                                lines.push(`Mặt cán: ${formatNumber(result.sheets)} tờ × 2 mặt = ${formatNumber(d.totalSides)} mặt`);
+                                            }
+                                            lines.push(`Mốc ${formatNumber(d.tierMin)}→${maxLabel}`);
+                                            if (d.unit === 'per_m2') {
+                                                lines.push(`S = ${(d.area).toFixed(4)} m²`);
+                                                lines.push(`${formatNumber(d.totalSides)} mặt × ${(d.area).toFixed(4)} m² × ${formatNumber(d.tierPrice)}đ/m² = ${formatMoney(result.lamCost)}`);
+                                            } else if (d.unit === 'per_lot') {
+                                                lines.push(`Giá trọn lô: ${formatMoney(d.tierPrice)}`);
+                                            } else {
+                                                lines.push(`${formatNumber(d.totalSides)} mặt × ${formatNumber(d.tierPrice)}đ/mặt = ${formatMoney(result.lamCost)}`);
+                                            }
+                                            return lines;
+                                        })(),
+                                    },
+                                    ...(result.procDetails.length > 0 ? result.procDetails.map(p => ({
+                                        icon: '✂️', label: p.name, color: 'error',
+                                        value: p.cost,
+                                        lines: [`${formatMoney(p.cost)}`],
+                                    })) : [{ icon: '✂️', label: 'Gia công', color: 'error', value: 0, lines: ['Không chọn'] }]),
+                                    ...(result.extraCosts > 0 ? [{
+                                        icon: '💰', label: 'Chi phí khác', color: 'secondary',
+                                        value: result.extraCosts,
+                                        lines: [`${formatMoney(result.extraCosts)}`],
+                                    }] : []),
+                                ];
+                                return rows.map((row, i) => (
+                                    <Stack key={i} direction="row" alignItems="flex-start" justifyContent="space-between"
+                                        sx={{
+                                            py: 1.25, px: 1.5, borderRadius: 1.5,
+                                            '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.06) },
+                                            transition: 'background 0.2s ease',
+                                        }}>
+                                        <Stack direction="row" alignItems="flex-start" spacing={1.5} sx={{ flex: 1 }}>
+                                            <Typography sx={{ fontSize: 18, mt: 0.25 }}>{row.icon}</Typography>
+                                            <Stack>
+                                                <Typography variant="body2" fontWeight={700}>{row.label}</Typography>
+                                                {row.lines.map((line, li) => (
+                                                    <Typography key={li} variant="caption" color="text.secondary"
+                                                        sx={{ fontFamily: 'monospace', fontSize: 11.5 }}>
+                                                        {line}
+                                                    </Typography>
+                                                ))}
+                                            </Stack>
                                         </Stack>
+                                        <Typography variant="body2" fontWeight={700} color={`${row.color}.main`} sx={{ mt: 0.25, whiteSpace: 'nowrap' }}>
+                                            {formatMoney(row.value)}
+                                        </Typography>
                                     </Stack>
-                                    <Typography variant="body2" fontWeight={700} color={`${row.color}.main`}>
-                                        {formatMoney(row.value)}
-                                    </Typography>
-                                </Stack>
-                            ))}
+                                ));
+                            })()}
                         </Stack>
 
                         <Divider sx={{ my: 2 }} />

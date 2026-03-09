@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+
+import { alpha, useTheme } from '@mui/material/styles';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Box, Stack, Typography, Button, TextField, IconButton,
@@ -6,8 +8,9 @@ import {
     Table, TableHead, TableRow, TableCell, TableBody,
     Collapse,
 } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
+
 import { Iconify } from 'src/components/iconify';
+
 import { loadPaperSettings, savePaperSettings, loadCatalogueSettings, saveCatalogueSettings } from '../data/default-settings';
 
 // ===== TabPanel =====
@@ -173,6 +176,10 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     const [settings, setSettings] = useState(() => loadPaperSettings());
     const [catSettings, setCatSettings] = useState(() => loadCatalogueSettings());
     const [expandedSizes, setExpandedSizes] = useState({});
+    const [expandedProcs, setExpandedProcs] = useState({});
+    const [expandedPrint, setExpandedPrint] = useState({});
+    const [expandedBinds, setExpandedBinds] = useState({});
+    const [expandedLamSizes, setExpandedLamSizes] = useState({});
 
     // ===== DRAG & DROP for PAPERS =====
     const dragRef = useRef({ sizeId: null, dragIdx: null, overIdx: null });
@@ -182,8 +189,24 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     const sizeDragRef = useRef({ dragIdx: null, overIdx: null });
     const [sizeDragOverIdx, setSizeDragOverIdx] = useState(null);
 
+    // ===== DRAG & DROP for PROCESSING =====
+    const procDragRef = useRef({ dragIdx: null, overIdx: null });
+    const [procDragOverIdx, setProcDragOverIdx] = useState(null);
+
     const toggleSizeExpand = useCallback((sizeId) => {
         setExpandedSizes(prev => ({ ...prev, [sizeId]: !prev[sizeId] }));
+    }, []);
+    const toggleProcExpand = useCallback((procId) => {
+        setExpandedProcs(prev => ({ ...prev, [procId]: !prev[procId] }));
+    }, []);
+    const togglePrintExpand = useCallback((sizeId) => {
+        setExpandedPrint(prev => ({ ...prev, [sizeId]: !prev[sizeId] }));
+    }, []);
+    const toggleBindExpand = useCallback((bindId) => {
+        setExpandedBinds(prev => ({ ...prev, [bindId]: !prev[bindId] }));
+    }, []);
+    const toggleLamSizeExpand = useCallback((sizeId) => {
+        setExpandedLamSizes(prev => ({ ...prev, [sizeId]: !prev[sizeId] }));
     }, []);
 
     // ===== PAPER DRAG & DROP HANDLERS =====
@@ -432,84 +455,110 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                         Chưa có khổ in — Thêm khổ in ở tab &quot;Loại giấy&quot; trước
                     </Typography>
                 ) : (
-                    <Stack spacing={2}>
-                        {printSizes.map(size => (
-                            <Paper key={size.id} variant="outlined" sx={{ p: 2, borderRadius: 2, borderColor: alpha(theme.palette.info.main, 0.3) }}>
-                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-                                    <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'info.main' }} />
-                                    <Typography variant="subtitle2" fontWeight={700}>
-                                        {size.name} ({size.w}×{size.h} mm)
-                                    </Typography>
-                                </Stack>
-
-                                {settings.laminations.filter(l => l.id !== 1).map(lam => {
-                                    const pricing = getLamPricing(size.id, lam.id);
-                                    const hasCustomPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
-                                    const defaultUnit = lam.unit || 'per_sheet';
-
-                                    return (
-                                        <Paper key={lam.id} variant="outlined" sx={{
-                                            p: 1.5, borderRadius: 1.5, mb: 1.5,
-                                            bgcolor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.04) : 'transparent',
-                                            borderColor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.3) : theme.palette.divider,
+                    <Stack spacing={1.5}>
+                        {printSizes.map(size => {
+                            const lamCount = settings.laminations.filter(l => l.id !== 1 && getLamPricing(size.id, l.id)).length;
+                            const isExpLam = !!expandedLamSizes[size.id];
+                            return (
+                                <Paper key={size.id} variant="outlined" sx={{
+                                    borderRadius: 2, overflow: 'hidden',
+                                    borderColor: isExpLam ? alpha(theme.palette.info.main, 0.4) : alpha(theme.palette.divider, 0.8),
+                                    ...(isExpLam && { boxShadow: `0 2px 12px ${alpha(theme.palette.info.main, 0.08)}` }),
+                                }}>
+                                    <Stack direction="row" alignItems="center" spacing={1.5}
+                                        onClick={() => toggleLamSizeExpand(size.id)}
+                                        sx={{
+                                            px: 2, py: 1.5, cursor: 'pointer',
+                                            bgcolor: isExpLam ? alpha(theme.palette.info.main, 0.06) : alpha(theme.palette.background.default, 0.4),
+                                            transition: 'all 0.2s',
+                                            '&:hover': { bgcolor: alpha(theme.palette.info.main, 0.08) },
                                         }}>
-                                            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: hasCustomPricing ? 1 : 0 }}>
-                                                <Chip label="✨" size="small" variant="soft" sx={{ height: 24 }} />
-                                                <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
-                                                    {lam.name}
-                                                </Typography>
+                                        <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleLamSizeExpand(size.id); }} sx={{
+                                            width: 28, height: 28, transition: 'transform 0.25s ease',
+                                            transform: isExpLam ? 'rotate(90deg)' : 'rotate(0deg)', color: 'info.main',
+                                        }}>
+                                            <Iconify icon="solar:alt-arrow-right-bold" width={16} />
+                                        </IconButton>
+                                        <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'info.main' }} />
+                                        <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
+                                            {size.name}
+                                        </Typography>
+                                        <Chip label={`${size.w}×${size.h} mm`} size="small" variant="outlined"
+                                            sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }} />
+                                        <Chip label={lamCount > 0 ? `${lamCount} loại` : 'Chưa cài'} size="small" variant="soft"
+                                            color={lamCount > 0 ? 'info' : 'default'}
+                                            sx={{ height: 22, fontSize: 11, fontWeight: 600 }} />
+                                    </Stack>
 
-                                                {/* Đơn vị mặc định label */}
-                                                <Chip label={`Mặc định: ${getUnitLabel(defaultUnit)}`} size="small" variant="soft" color="info" sx={{ height: 22, fontSize: 11 }} />
+                                    <Collapse in={isExpLam} timeout={250}>
+                                        <Box sx={{ p: 2, pt: 1.5 }}>
+                                            {settings.laminations.filter(l => l.id !== 1).map(lam => {
+                                                const pricing = getLamPricing(size.id, lam.id);
+                                                const hasCustomPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
+                                                const defaultUnit = lam.unit || 'per_sheet';
 
-                                                {hasCustomPricing ? (
-                                                    <Stack direction="row" spacing={0.5}>
-                                                        <Tooltip title="Thêm mốc">
-                                                            <IconButton size="small" color="primary" onClick={() => addLamPricingTier(size.id, lam.id)}>
-                                                                <Iconify icon="mingcute:add-line" width={14} />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                        <Tooltip title="Xóa giá riêng">
-                                                            <IconButton size="small" color="error" onClick={() => removeLamPricing(size.id, lam.id)}>
-                                                                <Iconify icon="solar:trash-bin-minimalistic-bold" width={14} />
-                                                            </IconButton>
-                                                        </Tooltip>
-                                                    </Stack>
-                                                ) : (
-                                                    <Button size="small" variant="soft" color="warning"
-                                                        startIcon={<Iconify icon="mingcute:add-line" />}
-                                                        onClick={() => {
-                                                            const dUnit = lam.unit || 'per_sheet';
-                                                            setLamPricing(size.id, lam.id, {
-                                                                unit: dUnit,
-                                                                tiers: [{ max: 500, price: 0, unit: dUnit }, { max: 999999, price: 0, unit: dUnit }]
-                                                            });
-                                                        }}
-                                                        sx={{ fontSize: 12 }}>
-                                                        Thêm giá
-                                                    </Button>
-                                                )}
-                                            </Stack>
-
-                                            {hasCustomPricing && (
-                                                <Box sx={{ pl: 1 }}>
-                                                    {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
-                                                        <TierRow key={idx} tier={tier} index={idx}
-                                                            prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
-                                                            unit={getUnitLabel(tier.unit || defaultUnit)}
-                                                            unitOptions={UNIT_OPTIONS}
-                                                            onUnitChange={(i, v) => updateLamPricingTierUnit(size.id, lam.id, i, v)}
-                                                            onChange={(i, f, v) => updateLamPricingTier(size.id, lam.id, i, f, v)}
-                                                            onDelete={(i) => deleteLamPricingTier(size.id, lam.id, i)}
-                                                            canDelete={pricing.tiers.length > 1} />
-                                                    ))}
-                                                </Box>
-                                            )}
-                                        </Paper>
-                                    );
-                                })}
-                            </Paper>
-                        ))}
+                                                return (
+                                                    <Paper key={lam.id} variant="outlined" sx={{
+                                                        p: 1.5, borderRadius: 1.5, mb: 1.5,
+                                                        bgcolor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.04) : 'transparent',
+                                                        borderColor: hasCustomPricing ? alpha(theme.palette.warning.main, 0.3) : theme.palette.divider,
+                                                    }}>
+                                                        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: hasCustomPricing ? 1 : 0 }}>
+                                                            <Chip label="✨" size="small" variant="soft" sx={{ height: 24 }} />
+                                                            <Typography variant="body2" fontWeight={600} sx={{ flex: 1 }}>
+                                                                {lam.name}
+                                                            </Typography>
+                                                            <Chip label={`Mặc định: ${getUnitLabel(defaultUnit)}`} size="small" variant="soft" color="info" sx={{ height: 22, fontSize: 11 }} />
+                                                            {hasCustomPricing ? (
+                                                                <Stack direction="row" spacing={0.5}>
+                                                                    <Tooltip title="Thêm mốc">
+                                                                        <IconButton size="small" color="primary" onClick={() => addLamPricingTier(size.id, lam.id)}>
+                                                                            <Iconify icon="mingcute:add-line" width={14} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Xóa giá riêng">
+                                                                        <IconButton size="small" color="error" onClick={() => removeLamPricing(size.id, lam.id)}>
+                                                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={14} />
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Stack>
+                                                            ) : (
+                                                                <Button size="small" variant="soft" color="warning"
+                                                                    startIcon={<Iconify icon="mingcute:add-line" />}
+                                                                    onClick={() => {
+                                                                        const dUnit = lam.unit || 'per_sheet';
+                                                                        setLamPricing(size.id, lam.id, {
+                                                                            unit: dUnit,
+                                                                            tiers: [{ max: 500, price: 0, unit: dUnit }, { max: 999999, price: 0, unit: dUnit }]
+                                                                        });
+                                                                    }}
+                                                                    sx={{ fontSize: 12 }}>
+                                                                    Thêm giá
+                                                                </Button>
+                                                            )}
+                                                        </Stack>
+                                                        {hasCustomPricing && (
+                                                            <Box sx={{ pl: 1 }}>
+                                                                {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
+                                                                    <TierRow key={idx} tier={tier} index={idx}
+                                                                        prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
+                                                                        unit={getUnitLabel(tier.unit || defaultUnit)}
+                                                                        unitOptions={UNIT_OPTIONS}
+                                                                        onUnitChange={(i, v) => updateLamPricingTierUnit(size.id, lam.id, i, v)}
+                                                                        onChange={(i, f, v) => updateLamPricingTier(size.id, lam.id, i, f, v)}
+                                                                        onDelete={(i) => deleteLamPricingTier(size.id, lam.id, i)}
+                                                                        canDelete={pricing.tiers.length > 1} />
+                                                                ))}
+                                                            </Box>
+                                                        )}
+                                                    </Paper>
+                                                );
+                                            })}
+                                        </Box>
+                                    </Collapse>
+                                </Paper>
+                            );
+                        })}
                     </Stack>
                 )}
             </SettingSection>
@@ -573,6 +622,36 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         };
         save(ns);
     };
+    const moveProc = (fromIdx, toIdx) => {
+        const arr = [...settings.processing];
+        if (toIdx < 0 || toIdx >= arr.length) return;
+        const [moved] = arr.splice(fromIdx, 1);
+        arr.splice(toIdx, 0, moved);
+        save({ ...settings, processing: arr });
+    };
+    const handleProcDragStart = useCallback((idx, e) => {
+        procDragRef.current = { dragIdx: idx, overIdx: idx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `proc-${idx}`);
+        if (e.currentTarget) e.currentTarget.style.opacity = '0.5';
+    }, []);
+    const handleProcDragEnd = useCallback((e) => {
+        if (e.currentTarget) e.currentTarget.style.opacity = '1';
+        const { dragIdx, overIdx } = procDragRef.current;
+        if (dragIdx != null && overIdx != null && dragIdx !== overIdx) {
+            moveProc(dragIdx, overIdx);
+        }
+        procDragRef.current = { dragIdx: null, overIdx: null };
+        setProcDragOverIdx(null);
+    }, []);
+    const handleProcDragOver = useCallback((idx, e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        if (procDragRef.current.dragIdx != null && procDragRef.current.overIdx !== idx) {
+            procDragRef.current.overIdx = idx;
+            setProcDragOverIdx(idx);
+        }
+    }, []);
 
     // ===== CUSTOMER TYPES =====
     const updateCust = (id, field, value) => {
@@ -657,6 +736,66 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
         { value: 'per_lot', label: 'đ/lô' },
     ];
     const getBindUnitLabel = (unit) => BIND_UNIT_OPTIONS.find(u => u.value === unit)?.label || 'đ/cuốn';
+
+    // ===== DRAG & DROP for BINDINGS =====
+    const bindDragRef = useRef({ dragIdx: null, overIdx: null });
+    const [bindDragOverIdx, setBindDragOverIdx] = useState(null);
+    const moveBinding = (fromIdx, toIdx) => {
+        const arr = [...catBindings];
+        if (toIdx < 0 || toIdx >= arr.length) return;
+        const [moved] = arr.splice(fromIdx, 1);
+        arr.splice(toIdx, 0, moved);
+        saveCat({ ...catSettings, bindings: arr });
+    };
+    const handleBindDragStart = useCallback((idx, e) => {
+        bindDragRef.current = { dragIdx: idx, overIdx: idx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `bind-${idx}`);
+        if (e.currentTarget) e.currentTarget.style.opacity = '0.5';
+    }, []);
+    const handleBindDragEnd = useCallback((e) => {
+        if (e.currentTarget) e.currentTarget.style.opacity = '1';
+        const { dragIdx, overIdx } = bindDragRef.current;
+        if (dragIdx != null && overIdx != null && dragIdx !== overIdx) moveBinding(dragIdx, overIdx);
+        bindDragRef.current = { dragIdx: null, overIdx: null };
+        setBindDragOverIdx(null);
+    }, []);
+    const handleBindDragOver = useCallback((idx, e) => {
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        if (bindDragRef.current.dragIdx != null && bindDragRef.current.overIdx !== idx) {
+            bindDragRef.current.overIdx = idx; setBindDragOverIdx(idx);
+        }
+    }, []);
+
+    // ===== DRAG & DROP for CUSTOMERS =====
+    const custDragRef = useRef({ dragIdx: null, overIdx: null });
+    const [custDragOverIdx, setCustDragOverIdx] = useState(null);
+    const moveCust = (fromIdx, toIdx) => {
+        const arr = [...settings.customerTypes];
+        if (toIdx < 0 || toIdx >= arr.length) return;
+        const [moved] = arr.splice(fromIdx, 1);
+        arr.splice(toIdx, 0, moved);
+        save({ ...settings, customerTypes: arr });
+    };
+    const handleCustDragStart = useCallback((idx, e) => {
+        custDragRef.current = { dragIdx: idx, overIdx: idx };
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', `cust-${idx}`);
+        if (e.currentTarget) e.currentTarget.style.opacity = '0.5';
+    }, []);
+    const handleCustDragEnd = useCallback((e) => {
+        if (e.currentTarget) e.currentTarget.style.opacity = '1';
+        const { dragIdx, overIdx } = custDragRef.current;
+        if (dragIdx != null && overIdx != null && dragIdx !== overIdx) moveCust(dragIdx, overIdx);
+        custDragRef.current = { dragIdx: null, overIdx: null };
+        setCustDragOverIdx(null);
+    }, []);
+    const handleCustDragOver = useCallback((idx, e) => {
+        e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+        if (custDragRef.current.dragIdx != null && custDragRef.current.overIdx !== idx) {
+            custDragRef.current.overIdx = idx; setCustDragOverIdx(idx);
+        }
+    }, []);
 
     // ===== PRINT SIZES & PAPER TYPES =====
     const printSizes = settings.printSizes || [];
@@ -1050,53 +1189,81 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
                     Chưa có khổ in — Thêm khổ in ở tab &quot;Loại giấy&quot; trước
                 </Typography>
             ) : (
-                <Stack spacing={2}>
+                <Stack spacing={1.5}>
                     {printSizes.map(size => {
                         const pricing = getPrintPricingForSize(size.id);
                         const hasPricing = pricing && pricing.tiers && pricing.tiers.length > 0;
+                        const isExpPrint = !!expandedPrint[size.id];
 
                         return (
                             <Paper key={size.id} variant="outlined" sx={{
-                                p: 2, borderRadius: 2,
-                                borderColor: hasPricing ? alpha(theme.palette.primary.main, 0.3) : alpha(theme.palette.divider, 0.8),
-                                bgcolor: hasPricing ? alpha(theme.palette.primary.main, 0.02) : 'transparent',
+                                borderRadius: 2, overflow: 'hidden',
+                                borderColor: isExpPrint ? alpha(theme.palette.primary.main, 0.4) : alpha(theme.palette.divider, 0.8),
+                                ...(isExpPrint && { boxShadow: `0 2px 12px ${alpha(theme.palette.primary.main, 0.08)}` }),
                             }}>
-                                <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: hasPricing ? 1.5 : 0 }}>
-                                    <Iconify icon="solar:maximize-square-bold" width={20} sx={{ color: 'primary.main' }} />
+                                <Stack direction="row" alignItems="center" spacing={1.5}
+                                    onClick={() => togglePrintExpand(size.id)}
+                                    sx={{
+                                        px: 2, py: 1.5, cursor: 'pointer',
+                                        bgcolor: isExpPrint ? alpha(theme.palette.primary.main, 0.06) : alpha(theme.palette.background.default, 0.4),
+                                        transition: 'all 0.2s',
+                                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.08) },
+                                    }}>
+                                    <IconButton size="small" onClick={(e) => { e.stopPropagation(); togglePrintExpand(size.id); }} sx={{
+                                        width: 28, height: 28, transition: 'transform 0.25s ease',
+                                        transform: isExpPrint ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        color: 'primary.main',
+                                    }}>
+                                        <Iconify icon="solar:alt-arrow-right-bold" width={16} />
+                                    </IconButton>
+                                    <Iconify icon="solar:printer-bold" width={20} sx={{ color: 'primary.main' }} />
                                     <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
-                                        {size.name} ({size.w}×{size.h} mm)
+                                        {size.name}
                                     </Typography>
-
+                                    <Chip label={`${size.w}×${size.h} mm`} size="small" variant="outlined"
+                                        sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }} />
                                     {hasPricing ? (
-                                        <Stack direction="row" alignItems="center" spacing={1}>
-                                            <Chip label="In 1 mặt" size="small" color="primary" variant="soft" sx={{ height: 22, fontSize: 11 }} />
-                                            <Tooltip title="Thêm mốc">
-                                                <IconButton size="small" color="primary" onClick={() => addPrintPricingSizeTier(size.id)}>
-                                                    <Iconify icon="mingcute:add-line" width={14} />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Stack>
+                                        <Chip label={`${pricing.tiers.length} mốc`} size="small" variant="soft" color="primary"
+                                            sx={{ height: 22, fontSize: 11, fontWeight: 600 }} />
                                     ) : (
-                                        <Button size="small" variant="soft" color="primary"
-                                            startIcon={<Iconify icon="mingcute:add-line" />}
-                                            onClick={() => initPrintPricingForSize(size.id)}
-                                            sx={{ fontSize: 12 }}>
-                                            Cài giá in
-                                        </Button>
+                                        <Chip label="Chưa cài" size="small" variant="soft" color="default"
+                                            sx={{ height: 22, fontSize: 11 }} />
                                     )}
+                                    <Tooltip title="Thêm mốc">
+                                        <IconButton size="small" color="primary" onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!hasPricing) initPrintPricingForSize(size.id);
+                                            else addPrintPricingSizeTier(size.id);
+                                            if (!isExpPrint) togglePrintExpand(size.id);
+                                        }}>
+                                            <Iconify icon="mingcute:add-line" width={14} />
+                                        </IconButton>
+                                    </Tooltip>
                                 </Stack>
 
-                                {hasPricing && (
-                                    <Box sx={{ pl: 1 }}>
-                                        {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
-                                            <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
-                                                prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
-                                                onChange={(i, f, v) => updatePrintPricingSizeTier(size.id, i, f, v)}
-                                                onDelete={(i) => deletePrintPricingSizeTier(size.id, i)}
-                                                canDelete={pricing.tiers.length > 1} />
-                                        ))}
+                                <Collapse in={isExpPrint} timeout={250}>
+                                    <Box sx={{ p: 2, pt: 1.5 }}>
+                                        {hasPricing ? (
+                                            <>
+                                                <Chip label="In 1 mặt" size="small" color="primary" variant="soft" sx={{ height: 22, fontSize: 11, mb: 1.5 }} />
+                                                {[...pricing.tiers].sort((a, b) => a.max - b.max).map((tier, idx, sortedArr) => (
+                                                    <TierRow key={idx} tier={tier} index={idx} unit="đ/tờ"
+                                                        prevMax={idx > 0 ? sortedArr[idx - 1].max : 0}
+                                                        onChange={(i, f, v) => updatePrintPricingSizeTier(size.id, i, f, v)}
+                                                        onDelete={(i) => deletePrintPricingSizeTier(size.id, i)}
+                                                        canDelete={pricing.tiers.length > 1} />
+                                                ))}
+                                            </>
+                                        ) : (
+                                            <Button size="small" variant="soft" color="primary"
+                                                startIcon={<Iconify icon="mingcute:add-line" />}
+                                                onClick={() => initPrintPricingForSize(size.id)}
+                                                sx={{ fontSize: 12 }}>
+                                                Cài giá in
+                                            </Button>
+                                        )}
                                     </Box>
-                                )}
+                                </Collapse>
                             </Paper>
                         );
                     })}
@@ -1115,50 +1282,118 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
 
     const renderProcessing = () => (
         <SettingSection icon="solar:scissors-bold-duotone" title="Gia công" color="error" onAdd={addProc} addLabel="Thêm gia công">
-            <Stack spacing={2}>
-                {settings.processing.map(proc => {
+            <Stack spacing={1.5}>
+                {settings.processing.filter(Boolean).map((proc, procIdx) => {
                     const procUnit = proc.unit || 'per_item';
+                    const procTiers = (proc.tiers || []).filter(Boolean);
+                    const isExpanded = !!expandedProcs[proc.id];
+                    const isProcDragOver = procDragOverIdx === procIdx;
                     return (
-                        <Paper key={proc.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-                            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                                <Stack direction="row" alignItems="center" spacing={1} sx={{ flex: 1 }}>
-                                    <TextField size="small" variant="standard" value={proc.name} sx={{ fontWeight: 700, flex: 1 }}
-                                        onChange={e => updateProc(proc.id, 'name', e.target.value)} />
-                                    <TextField size="small" variant="outlined" select value={procUnit}
-                                        onChange={e => updateProc(proc.id, 'unit', e.target.value)}
-                                        SelectProps={{ native: true }}
-                                        sx={{ width: 90, '& .MuiInputBase-input': { py: 0.5, fontSize: 13 } }}>
-                                        {PROC_UNIT_OPTIONS.map(u => (
-                                            <option key={u.value} value={u.value}>{u.label}</option>
-                                        ))}
-                                    </TextField>
-                                </Stack>
-                                <Stack direction="row" spacing={0.5}>
-                                    <Tooltip title="Thêm mốc">
-                                        <IconButton size="small" color="primary" onClick={() => addProcTier(proc.id)}>
-                                            <Iconify icon="mingcute:add-line" width={16} />
-                                        </IconButton>
-                                    </Tooltip>
-                                    <Tooltip title="Xóa">
-                                        <IconButton size="small" color="error" onClick={() => deleteProc(proc.id)}>
-                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
-                                        </IconButton>
-                                    </Tooltip>
-                                </Stack>
+                        <Paper key={proc.id} variant="outlined"
+                            draggable
+                            onDragStart={(e) => handleProcDragStart(procIdx, e)}
+                            onDragEnd={handleProcDragEnd}
+                            onDragOver={(e) => handleProcDragOver(procIdx, e)}
+                            sx={{
+                                borderRadius: 2, overflow: 'hidden',
+                                borderColor: isProcDragOver
+                                    ? theme.palette.primary.main
+                                    : isExpanded
+                                        ? alpha(theme.palette.error.main, 0.4)
+                                        : alpha(theme.palette.divider, 0.8),
+                                borderWidth: isProcDragOver ? 2 : 1,
+                                transition: 'all 0.2s ease',
+                                ...(isProcDragOver && { bgcolor: alpha(theme.palette.primary.main, 0.04) }),
+                                ...(isExpanded && !isProcDragOver && {
+                                    boxShadow: `0 2px 12px ${alpha(theme.palette.error.main, 0.08)}`,
+                                }),
+                            }}>
+                            {/* Header — clickable to toggle */}
+                            <Stack direction="row" alignItems="center" spacing={1.5}
+                                onClick={() => toggleProcExpand(proc.id)}
+                                sx={{
+                                    px: 2, py: 1.5, cursor: 'pointer',
+                                    bgcolor: isExpanded
+                                        ? alpha(theme.palette.error.main, 0.06)
+                                        : alpha(theme.palette.background.default, 0.4),
+                                    transition: 'all 0.2s',
+                                    '&:hover': { bgcolor: alpha(theme.palette.error.main, 0.08) },
+                                }}>
+                                {/* Drag handle */}
+                                <Box
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    sx={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'grab', px: 0.25, py: 0.5, borderRadius: 0.5,
+                                        color: 'text.disabled', transition: 'all 0.15s',
+                                        '&:hover': { color: 'text.secondary', bgcolor: alpha(theme.palette.primary.main, 0.06) },
+                                        '&:active': { cursor: 'grabbing' },
+                                    }}>
+                                    <Iconify icon="solar:hamburger-menu-outline" width={18} />
+                                </Box>
+                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleProcExpand(proc.id); }} sx={{
+                                    width: 28, height: 28, transition: 'transform 0.25s ease',
+                                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                                    color: 'error.main',
+                                }}>
+                                    <Iconify icon="solar:alt-arrow-right-bold" width={16} />
+                                </IconButton>
+                                <Iconify icon="solar:scissors-bold" width={20} sx={{ color: 'error.main' }} />
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
+                                    {proc.name}
+                                </Typography>
+                                <Chip label={getProcUnitLabel(procUnit)} size="small" variant="outlined"
+                                    sx={{ height: 24, fontSize: 12, fontWeight: 600, borderRadius: 1 }} />
+                                <Chip label={`${procTiers.length} mốc`} size="small" variant="soft" color="error"
+                                    sx={{ height: 22, fontSize: 11, fontWeight: 600 }} />
+                                <Tooltip title="Thêm mốc">
+                                    <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); addProcTier(proc.id); if (!isExpanded) toggleProcExpand(proc.id); }}>
+                                        <Iconify icon="mingcute:add-line" width={14} />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title="Xóa">
+                                    <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); deleteProc(proc.id); }}>
+                                        <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+                                    </IconButton>
+                                </Tooltip>
                             </Stack>
-                            {proc.tiers
-                                .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
-                                .sort((a, b) => a.max - b.max)
-                                .map((tier, displayIdx, sortedArr) => (
-                                    <TierRow key={tier._oi} tier={tier} index={tier._oi}
-                                        prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
-                                        unit={getProcUnitLabel(tier.unit || procUnit)}
-                                        unitOptions={PROC_UNIT_OPTIONS}
-                                        onUnitChange={(i, v) => updateProcTierUnit(proc.id, i, v)}
-                                        onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
-                                        onDelete={(i) => deleteProcTier(proc.id, i)}
-                                        canDelete={proc.tiers.length > 1} />
-                                ))}
+
+                            {/* Collapsible content */}
+                            <Collapse in={isExpanded} timeout={250}>
+                                <Box sx={{ p: 2, pt: 1.5 }}>
+                                    {/* Editable name & unit */}
+                                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: 11 }}>Tên:</Typography>
+                                        <TextField size="small" variant="standard" value={proc.name}
+                                            sx={{ flex: 1, '& input': { fontWeight: 700, fontSize: 14 } }}
+                                            onChange={e => updateProc(proc.id, 'name', e.target.value)} />
+                                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: 11 }}>Đơn vị:</Typography>
+                                        <TextField size="small" variant="outlined" select value={procUnit}
+                                            onChange={e => updateProc(proc.id, 'unit', e.target.value)}
+                                            SelectProps={{ native: true }}
+                                            sx={{ width: 90, '& .MuiInputBase-input': { py: 0.5, fontSize: 13 } }}>
+                                            {PROC_UNIT_OPTIONS.map(u => (
+                                                <option key={u.value} value={u.value}>{u.label}</option>
+                                            ))}
+                                        </TextField>
+                                    </Stack>
+                                    {/* Tier rows */}
+                                    {procTiers
+                                        .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
+                                        .sort((a, b) => a.max - b.max)
+                                        .map((tier, displayIdx, sortedArr) => (
+                                            <TierRow key={tier._oi} tier={tier} index={tier._oi}
+                                                prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
+                                                unit={getProcUnitLabel(tier.unit || procUnit)}
+                                                unitOptions={PROC_UNIT_OPTIONS}
+                                                onUnitChange={(i, v) => updateProcTierUnit(proc.id, i, v)}
+                                                onChange={(i, f, v) => updateProcTier(proc.id, i, f, v)}
+                                                onDelete={(i) => deleteProcTier(proc.id, i)}
+                                                canDelete={procTiers.length > 1} />
+                                        ))}
+                                </Box>
+                            </Collapse>
                         </Paper>
                     );
                 })}
@@ -1169,51 +1404,99 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     // ===== TAB 5: ĐÓNG CUỐN =====
     const renderBindings = () => (
         <SettingSection icon="solar:bookmark-bold-duotone" title="Đóng cuốn" color="warning" onAdd={addBinding} addLabel="Thêm loại">
-            <Stack spacing={2}>
-                {catBindings.map(bind => (
-                    <Paper key={bind.id} variant="outlined" sx={{ p: 1.5, borderRadius: 1.5 }}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                            <TextField size="small" variant="standard" value={bind.name} sx={{ fontWeight: 700, flex: 1 }}
-                                onChange={e => updateBinding(bind.id, 'name', e.target.value)} />
-                            <Stack direction="row" spacing={0.5}>
+            <Stack spacing={1.5}>
+                {catBindings.filter(Boolean).map((bind, bindIdx) => {
+                    const isExpBind = !!expandedBinds[bind.id];
+                    const isBindDragOver = bindDragOverIdx === bindIdx;
+                    return (
+                        <Paper key={bind.id} variant="outlined"
+                            draggable
+                            onDragStart={(e) => handleBindDragStart(bindIdx, e)}
+                            onDragEnd={handleBindDragEnd}
+                            onDragOver={(e) => handleBindDragOver(bindIdx, e)}
+                            sx={{
+                                borderRadius: 2, overflow: 'hidden',
+                                borderColor: isBindDragOver ? theme.palette.primary.main
+                                    : isExpBind ? alpha(theme.palette.warning.main, 0.4) : alpha(theme.palette.divider, 0.8),
+                                borderWidth: isBindDragOver ? 2 : 1,
+                                transition: 'all 0.2s ease',
+                                ...(isBindDragOver && { bgcolor: alpha(theme.palette.primary.main, 0.04) }),
+                                ...(isExpBind && !isBindDragOver && { boxShadow: `0 2px 12px ${alpha(theme.palette.warning.main, 0.08)}` }),
+                            }}>
+                            <Stack direction="row" alignItems="center" spacing={1.5}
+                                onClick={() => toggleBindExpand(bind.id)}
+                                sx={{
+                                    px: 2, py: 1.5, cursor: 'pointer',
+                                    bgcolor: isExpBind ? alpha(theme.palette.warning.main, 0.06) : alpha(theme.palette.background.default, 0.4),
+                                    transition: 'all 0.2s',
+                                    '&:hover': { bgcolor: alpha(theme.palette.warning.main, 0.08) },
+                                }}>
+                                <Box onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}
+                                    sx={{
+                                        display: 'flex', alignItems: 'center', cursor: 'grab', px: 0.25, py: 0.5, borderRadius: 0.5,
+                                        color: 'text.disabled', transition: 'all 0.15s',
+                                        '&:hover': { color: 'text.secondary', bgcolor: alpha(theme.palette.primary.main, 0.06) },
+                                        '&:active': { cursor: 'grabbing' }
+                                    }}>
+                                    <Iconify icon="solar:hamburger-menu-outline" width={18} />
+                                </Box>
+                                <IconButton size="small" onClick={(e) => { e.stopPropagation(); toggleBindExpand(bind.id); }} sx={{
+                                    width: 28, height: 28, transition: 'transform 0.25s ease',
+                                    transform: isExpBind ? 'rotate(90deg)' : 'rotate(0deg)', color: 'warning.main',
+                                }}>
+                                    <Iconify icon="solar:alt-arrow-right-bold" width={16} />
+                                </IconButton>
+                                <Iconify icon="solar:bookmark-bold" width={20} sx={{ color: 'warning.main' }} />
+                                <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>{bind.name}</Typography>
+                                <Chip label={`${bind.tiers.length} mốc`} size="small" variant="soft" color="warning"
+                                    sx={{ height: 22, fontSize: 11, fontWeight: 600 }} />
                                 <Tooltip title="Thêm mốc">
-                                    <IconButton size="small" color="primary" onClick={() => addBindTier(bind.id)}>
-                                        <Iconify icon="mingcute:add-line" width={16} />
+                                    <IconButton size="small" color="primary" onClick={(e) => { e.stopPropagation(); addBindTier(bind.id); if (!isExpBind) toggleBindExpand(bind.id); }}>
+                                        <Iconify icon="mingcute:add-line" width={14} />
                                     </IconButton>
                                 </Tooltip>
                                 <Tooltip title="Xóa">
-                                    <IconButton size="small" color="error" onClick={() => deleteBinding(bind.id)}>
+                                    <IconButton size="small" color="error" onClick={(e) => { e.stopPropagation(); deleteBinding(bind.id); }}>
                                         <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
                                     </IconButton>
                                 </Tooltip>
                             </Stack>
-                        </Stack>
-                        {bind.tiers
-                            .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
-                            .sort((a, b) => a.max - b.max)
-                            .map((tier, displayIdx, sortedArr) => (
-                                <Stack key={tier._oi} direction="row" alignItems="center" spacing={1}>
-                                    <Box sx={{ flex: 1 }}>
-                                        <TierRow tier={tier} index={tier._oi}
-                                            prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
-                                            unit={getBindUnitLabel(tier.unit)}
-                                            unitOptions={BIND_UNIT_OPTIONS}
-                                            onUnitChange={(i, v) => updateBindTierUnit(bind.id, i, v)}
-                                            onChange={(i, f, v) => updateBindTier(bind.id, i, f, v)}
-                                            onDelete={(i) => deleteBindTier(bind.id, i)}
-                                            canDelete={bind.tiers.length > 1} />
-                                    </Box>
-                                    <TextField size="small" type="number" value={tier.pricePerPage || 0}
-                                        onChange={e => updateBindTier(bind.id, tier._oi, 'pricePerPage', parseInt(e.target.value) || 0)}
-                                        InputProps={{
-                                            endAdornment: <InputAdornment position="end" sx={{ '& p': { fontSize: 10 } }}>đ/trang</InputAdornment>,
-                                        }}
-                                        sx={{ width: 110, '& input': { py: 0.5, fontSize: 12, fontWeight: 600 }, mb: 1 }}
-                                    />
-                                </Stack>
-                            ))}
-                    </Paper>
-                ))}
+
+                            <Collapse in={isExpBind} timeout={250}>
+                                <Box sx={{ p: 2, pt: 1.5 }}>
+                                    <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1.5 }}>
+                                        <Typography variant="caption" color="text.secondary" fontWeight={600} sx={{ fontSize: 11 }}>Tên:</Typography>
+                                        <TextField size="small" variant="standard" value={bind.name}
+                                            sx={{ flex: 1, '& input': { fontWeight: 700, fontSize: 14 } }}
+                                            onChange={e => updateBinding(bind.id, 'name', e.target.value)} />
+                                    </Stack>
+                                    {(bind.tiers || []).filter(Boolean)
+                                        .map((tier, origIdx) => ({ ...tier, _oi: origIdx }))
+                                        .sort((a, b) => a.max - b.max)
+                                        .map((tier, displayIdx, sortedArr) => (
+                                            <Stack key={tier._oi} direction="row" alignItems="center" spacing={1}>
+                                                <Box sx={{ flex: 1 }}>
+                                                    <TierRow tier={tier} index={tier._oi}
+                                                        prevMax={displayIdx > 0 ? sortedArr[displayIdx - 1].max : 0}
+                                                        unit={getBindUnitLabel(tier.unit)}
+                                                        unitOptions={BIND_UNIT_OPTIONS}
+                                                        onUnitChange={(i, v) => updateBindTierUnit(bind.id, i, v)}
+                                                        onChange={(i, f, v) => updateBindTier(bind.id, i, f, v)}
+                                                        onDelete={(i) => deleteBindTier(bind.id, i)}
+                                                        canDelete={bind.tiers.length > 1} />
+                                                </Box>
+                                                <TextField size="small" type="number" value={tier.pricePerPage || 0}
+                                                    onChange={e => updateBindTier(bind.id, tier._oi, 'pricePerPage', parseInt(e.target.value) || 0)}
+                                                    InputProps={{ endAdornment: <InputAdornment position="end" sx={{ '& p': { fontSize: 10 } }}>đ/trang</InputAdornment> }}
+                                                    sx={{ width: 110, '& input': { py: 0.5, fontSize: 12, fontWeight: 600 }, mb: 1 }}
+                                                />
+                                            </Stack>
+                                        ))}
+                                </Box>
+                            </Collapse>
+                        </Paper>
+                    );
+                })}
             </Stack>
         </SettingSection>
     );
@@ -1221,36 +1504,48 @@ export default function PricingSettingsDialog({ open, onClose, onSettingsChanged
     // ===== TAB 4: LOẠI KHÁCH =====
     const renderCustomerTypes = () => (
         <SettingSection icon="solar:users-group-rounded-bold-duotone" title="Loại khách hàng" color="success" onAdd={addCust} addLabel="Thêm loại">
-            <Table size="small">
-                <TableHead>
-                    <TableRow>
-                        <TableCell sx={{ fontWeight: 700 }}>Tên loại khách</TableCell>
-                        <TableCell sx={{ fontWeight: 700 }} align="right">% Lợi nhuận</TableCell>
-                        <TableCell width={40} />
-                    </TableRow>
-                </TableHead>
-                <TableBody>
-                    {settings.customerTypes.map(c => (
-                        <TableRow key={c.id} sx={{ '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) } }}>
-                            <TableCell>
-                                <TextField size="small" variant="standard" value={c.name} fullWidth
+            <Stack spacing={1}>
+                {settings.customerTypes.filter(Boolean).map((c, custIdx) => {
+                    const isCustDragOver = custDragOverIdx === custIdx;
+                    return (
+                        <Paper key={c.id} variant="outlined"
+                            draggable
+                            onDragStart={(e) => handleCustDragStart(custIdx, e)}
+                            onDragEnd={handleCustDragEnd}
+                            onDragOver={(e) => handleCustDragOver(custIdx, e)}
+                            sx={{
+                                px: 2, py: 1.5, borderRadius: 2,
+                                borderColor: isCustDragOver ? theme.palette.primary.main : alpha(theme.palette.divider, 0.8),
+                                borderWidth: isCustDragOver ? 2 : 1,
+                                transition: 'all 0.2s ease',
+                                ...(isCustDragOver && { bgcolor: alpha(theme.palette.primary.main, 0.04) }),
+                                '&:hover': { bgcolor: alpha(theme.palette.success.main, 0.04) },
+                            }}>
+                            <Stack direction="row" alignItems="center" spacing={1.5}>
+                                <Box sx={{
+                                    display: 'flex', alignItems: 'center', cursor: 'grab', px: 0.25, py: 0.5, borderRadius: 0.5,
+                                    color: 'text.disabled', transition: 'all 0.15s',
+                                    '&:hover': { color: 'text.secondary', bgcolor: alpha(theme.palette.primary.main, 0.06) },
+                                    '&:active': { cursor: 'grabbing' }
+                                }}>
+                                    <Iconify icon="solar:hamburger-menu-outline" width={18} />
+                                </Box>
+                                <Iconify icon="solar:user-bold" width={20} sx={{ color: 'success.main' }} />
+                                <TextField size="small" variant="standard" value={c.name} sx={{ flex: 1, '& input': { fontWeight: 700, fontSize: 14 } }}
                                     onChange={e => updateCust(c.id, 'name', e.target.value)} />
-                            </TableCell>
-                            <TableCell align="right">
-                                <TextField size="small" variant="standard" type="number" value={c.profit}
-                                    sx={{ width: 60 }} inputProps={{ style: { textAlign: 'right' } }}
+                                <Chip label="Lợi nhuận" size="small" variant="soft" color="success" sx={{ height: 22, fontSize: 11 }} />
+                                <TextField size="small" variant="outlined" type="number" value={c.profit}
+                                    sx={{ width: 80, '& input': { py: 0.5, textAlign: 'right', fontWeight: 700, fontSize: 14 } }}
                                     InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
                                     onChange={e => updateCust(c.id, 'profit', e.target.value)} />
-                            </TableCell>
-                            <TableCell>
                                 <IconButton size="small" color="error" onClick={() => deleteCust(c.id)}>
                                     <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
                                 </IconButton>
-                            </TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
-            </Table>
+                            </Stack>
+                        </Paper>
+                    );
+                })}
+            </Stack>
         </SettingSection>
     );
 

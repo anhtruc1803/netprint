@@ -24,7 +24,6 @@ import { AnimateBorder } from 'src/components/animate';
 
 import { useMockedUser } from 'src/auth/hooks';
 
-import { UpgradeBlock } from './nav-upgrade';
 import { AccountButton } from './account-button';
 import { SignOutButton } from './sign-out-button';
 
@@ -193,8 +192,21 @@ export function AccountDrawer({ data = [], sx, ...other }) {
 
           {renderList()}
 
-          <Box sx={{ px: 2.5, py: 3 }}>
-            <UpgradeBlock />
+          <Box sx={{ px: 3, py: 2 }}>
+            <Box
+              component="img"
+              src="/assets/images/motivation-poster.jpg"
+              alt="Tranh động lực"
+              sx={{
+                width: '100%',
+                height: 'auto',
+                objectFit: 'cover',
+                border: 'none',
+                outline: 'none',
+                boxShadow: 'none',
+                borderRadius: 0,
+              }}
+            />
           </Box>
         </Scrollbar>
 

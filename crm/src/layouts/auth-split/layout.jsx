@@ -1,15 +1,11 @@
 import { merge } from 'es-toolkit';
 
 import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 
 import { paths } from 'src/routes/paths';
-import { RouterLink } from 'src/routes/components';
 
 import { CONFIG } from 'src/global-config';
-
-import { Logo } from 'src/components/logo';
 
 import { AuthSplitSection } from './section';
 import { AuthSplitContent } from './content';
@@ -30,7 +26,7 @@ export function AuthSplitLayout({ sx, cssVars, children, slotProps, layoutQuery 
           This is an info Alert.
         </Alert>
       ),
-      leftArea: <></>,
+      leftArea: null,
       rightArea: (
         <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
           {/** @slot Settings button */}

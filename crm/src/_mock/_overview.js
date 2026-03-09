@@ -36,6 +36,7 @@ export const _bankingRecentTransitions = [];
 export const _bookings = [];
 export const _bookingReview = [];
 export const _bookingNew = [];
+export const _bookingsOverview = [];
 
 // COURSE
 // ----------------------------------------------------------------------
