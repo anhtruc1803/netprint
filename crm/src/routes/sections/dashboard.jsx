@@ -32,6 +32,8 @@ const ProductEditPage = lazy(() => import('src/pages/dashboard/product/edit'));
 const OrderListPage = lazy(() => import('src/pages/dashboard/order/list'));
 const OrderDetailsPage = lazy(() => import('src/pages/dashboard/order/details'));
 const OrderCreatePage = lazy(() => import('src/pages/dashboard/order/new'));
+// Quick Order (In Nhanh Đại Lý)
+const QuickOrderListPage = lazy(() => import('src/pages/dashboard/quick-order/list'));
 // Pricing
 const PricingCalculatorPage = lazy(() => import('src/pages/dashboard/pricing/calculator'));
 const CatalogueCalculatorPage = lazy(() => import('src/pages/dashboard/pricing/catalogue'));
@@ -163,6 +165,13 @@ export const dashboardRoutes = [
           { path: 'list', element: <OrderListPage /> },
           { path: 'new', element: <OrderCreatePage /> },
           { path: ':id', element: <OrderDetailsPage /> },
+        ],
+      },
+      {
+        path: 'quick-order',
+        children: [
+          { index: true, element: <QuickOrderListPage /> },
+          { path: 'list', element: <QuickOrderListPage /> },
         ],
       },
       {

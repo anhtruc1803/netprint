@@ -79,14 +79,30 @@ const DEFAULT_LABEL_SETTINGS = {
     ],
 };
 
-// Tất cả các key cần đồng bộ
-const ALL_SYNC_KEYS = [
+// Các key cố định cần đồng bộ
+const FIXED_SYNC_KEYS = [
     'netprint_paper_settings',
     'netprint_catalogue_settings',
     'netprint_label_settings',
     'netprint_user_profile',
     'netprint_users',
 ];
+
+/**
+ * Lấy danh sách TẤT CẢ key cần đồng bộ,
+ * bao gồm cả các key per-user như netprint_user_profile_1, _2, ...
+ */
+function getAllSyncKeys() {
+    const keys = [...FIXED_SYNC_KEYS];
+    // Quét localStorage để tìm thêm các key per-user profile
+    for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('netprint_user_profile_') && !keys.includes(key)) {
+            keys.push(key);
+        }
+    }
+    return keys;
+}
 
 const CODE_DEFAULTS = {
     netprint_paper_settings: DEFAULT_PAPER_SETTINGS,
@@ -118,6 +134,13 @@ async function syncFromServer() {
         const res = await fetch('/api/settings');
         if (!res.ok) return false;
 
+        // Kiểm tra content-type — trên production Nginx trả HTML thay vì JSON
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            console.log('[DataSeeder] Server không hỗ trợ API settings (production mode)');
+            return false;
+        }
+
         const serverData = await res.json();
         if (!serverData || Object.keys(serverData).length === 0) return false;
 
@@ -140,19 +163,23 @@ async function syncFromServer() {
 export async function syncToServer() {
     try {
         const allData = {};
-        ALL_SYNC_KEYS.forEach((key) => {
+        getAllSyncKeys().forEach((key) => {
             const val = localStorage.getItem(key);
             if (val) allData[key] = val;
         });
 
-        await fetch('/api/settings', {
+        const res = await fetch('/api/settings', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(allData),
         });
-        console.log('[DataSeeder] ✅ Đã lưu vào file trên ổ cứng');
+        // Trên production, POST sẽ trả về HTML — bỏ qua
+        const contentType = res.headers?.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            console.log('[DataSeeder] ✅ Đã lưu vào file trên ổ cứng');
+        }
     } catch (_e) {
-        // Chạy nền, không cần báo lỗi
+        // Chạy nền, không cần báo lỗi (production mode)
     }
 }
 

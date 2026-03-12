@@ -99,7 +99,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets (JS, CSS, images) - Cache First
+  // Static assets (JS, CSS, images, fonts) - Network First (luôn lấy bản mới nhất)
   if (
     request.destination === 'style' ||
     request.destination === 'script' ||
@@ -107,21 +107,17 @@ self.addEventListener('fetch', (event) => {
     request.destination === 'font'
   ) {
     event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) {
-          // Trả về cache ngay, đồng thời fetch bản mới (Stale While Revalidate)
-          fetch(request).then((response) => {
-            caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, response));
-          }).catch(() => {});
-          return cached;
-        }
-        // Chưa có cache → fetch và cache lại
-        return fetch(request).then((response) => {
+      fetch(request)
+        .then((response) => {
+          // Lưu bản mới vào cache cho offline
           const clone = response.clone();
           caches.open(DYNAMIC_CACHE).then((cache) => cache.put(request, clone));
           return response;
-        });
-      })
+        })
+        .catch(() => {
+          // Offline → lấy từ cache
+          return caches.match(request);
+        })
     );
     return;
   }

@@ -153,6 +153,11 @@ export const paths = {
       details: (id) => `${ROOTS.DASHBOARD}/order/${id}`,
       demo: { details: `${ROOTS.DASHBOARD}/order/${MOCK_ID}` },
     },
+    quickOrder: {
+      root: `${ROOTS.DASHBOARD}/quick-order`,
+      new: `${ROOTS.DASHBOARD}/quick-order/new`,
+      details: (id) => `${ROOTS.DASHBOARD}/quick-order/${id}`,
+    },
     pricing: {
       root: `${ROOTS.DASHBOARD}/pricing`,
       calculator: `${ROOTS.DASHBOARD}/pricing/calculator`,

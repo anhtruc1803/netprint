@@ -46,64 +46,64 @@ export function OrderTableRow({ row, selected, onSelectRow, onDeleteRow, details
         />
       </TableCell>
 
+      {/* Ngày tạo */}
+      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+        {new Date(row.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+      </TableCell>
+
+      {/* Đơn hàng */}
       <TableCell>
-        <Link component={RouterLink} href={detailsHref} color="inherit" underline="always">
-          {row.orderNumber}
+        <Link
+          component={RouterLink}
+          href={detailsHref}
+          color="inherit"
+          underline="hover"
+          sx={{ fontSize: '0.8rem', whiteSpace: 'nowrap', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240 }}
+        >
+          {row.orderNumber}{row.name ? ` - ${row.name}` : ''}
         </Link>
       </TableCell>
 
+      {/* Khách hàng */}
       <TableCell>
-        <Box sx={{ gap: 2, display: 'flex', alignItems: 'center' }}>
-          <Avatar alt={row.customer.name} src={row.customer.avatarUrl} />
+        <Box sx={{ gap: 1.5, display: 'flex', alignItems: 'center' }}>
+          <Avatar alt={row.customer.name} src={row.customer.avatarUrl} sx={{ width: 32, height: 32, fontSize: '0.8rem' }} />
           <ListItemText
             primary={row.customer.name}
-            secondary={row.customer.email}
             slotProps={{
               primary: {
-                sx: { typography: 'body2' },
-              },
-              secondary: {
-                sx: { color: 'text.disabled' },
+                noWrap: true,
+                sx: { typography: 'body2', textTransform: 'uppercase', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis' },
               },
             }}
           />
         </Box>
       </TableCell>
 
-      <TableCell>
-        <ListItemText
-          primary={fDate(row.createdAt)}
-          secondary={fTime(row.createdAt)}
-          slotProps={{
-            primary: {
-              noWrap: true,
-              sx: { typography: 'body2' },
-            },
-            secondary: {
-              sx: { mt: 0.5, typography: 'caption' },
-            },
-          }}
-        />
+      {/* Giá trị */}
+      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}> {fCurrency(row.subtotal)} </TableCell>
+
+      {/* Đã thu */}
+      <TableCell align="right" sx={{ whiteSpace: 'nowrap', color: row.paidAmount > 0 ? 'success.main' : 'text.disabled' }}>
+        {row.paidAmount > 0 ? fCurrency(row.paidAmount) : '—'}
       </TableCell>
 
-      <TableCell align="center"> {row.totalQuantity} </TableCell>
+      {/* Còn lại */}
+      <TableCell align="right" sx={{ whiteSpace: 'nowrap', color: (row.subtotal - row.paidAmount) > 0 ? 'error.main' : 'text.disabled' }}>
+        {(row.subtotal - row.paidAmount) > 0 ? fCurrency(row.subtotal - row.paidAmount) : '—'}
+      </TableCell>
 
-      <TableCell> {fCurrency(row.subtotal)} </TableCell>
-
-      <TableCell>
+      <TableCell align="right">
         <Label
           variant="soft"
           color={
-            (row.status === 'completed' && 'success') ||
-            (row.status === 'pending' && 'warning') ||
-            (row.status === 'cancelled' && 'error') ||
+            (row.status === 'approved' && 'success') ||
+            (row.status === 'pending_approval' && 'warning') ||
             'default'
           }
         >
-          {(row.status === 'completed' && 'Hoàn thành') ||
-            (row.status === 'pending' && 'Đang chờ') ||
-            (row.status === 'cancelled' && 'Đã hủy') ||
-            (row.status === 'refunded' && 'Hoàn tiền') ||
+          {(row.status === 'approved' && 'Đã duyệt') ||
+            (row.status === 'pending_approval' && 'Chờ duyệt') ||
             row.status}
         </Label>
       </TableCell>

@@ -1,10 +1,13 @@
 import { merge } from 'es-toolkit';
 import { useBoolean } from 'minimal-shared/hooks';
+import { useMemo } from 'react';
 
 import Box from '@mui/material/Box';
 import Alert from '@mui/material/Alert';
 import { useTheme } from '@mui/material/styles';
 import { iconButtonClasses } from '@mui/material/IconButton';
+
+import { usePathname } from 'src/routes/hooks';
 
 import { allLangs } from 'src/locales';
 
@@ -12,11 +15,13 @@ import { Logo } from 'src/components/logo';
 import { useSettingsContext } from 'src/components/settings';
 
 import { useMockedUser } from 'src/auth/hooks';
+import { usePermission } from 'src/auth/hooks/use-permission';
 
 import { NavMobile } from './nav-mobile';
 import { VerticalDivider } from './content';
 import { NavVertical } from './nav-vertical';
 import { NavHorizontal } from './nav-horizontal';
+
 import { _account } from '../nav-config-account';
 import { Searchbar } from '../components/searchbar';
 import { MenuButton } from '../components/menu-button';
@@ -24,10 +29,36 @@ import { AccountDrawer } from '../components/account-drawer';
 import { SettingsButton } from '../components/settings-button';
 import { LanguagePopover } from '../components/language-popover';
 import { ContactsPopover } from '../components/contacts-popover';
-import { navData as dashboardNavData } from '../nav-config-dashboard';
+import { navData as dashboardNavData, navGridData as dashboardNavGridData } from '../nav-config-dashboard';
 import { dashboardLayoutVars, dashboardNavColorVars } from './css-vars';
 import { NotificationsDrawer } from '../components/notifications-drawer';
 import { MainSection, layoutClasses, HeaderSection, LayoutSection } from '../core';
+
+// Filter nav items by permission
+function filterNavItems(items, hasPermission) {
+  return items
+    .filter((item) => {
+      if (item.requiredPermission && !hasPermission(item.requiredPermission)) {
+        return false;
+      }
+      return true;
+    })
+    .map((item) => {
+      if (item.children) {
+        return { ...item, children: filterNavItems(item.children, hasPermission) };
+      }
+      return item;
+    });
+}
+
+function filterNavData(sections, hasPermission) {
+  return sections
+    .map((section) => ({
+      ...section,
+      items: filterNavItems(section.items, hasPermission),
+    }))
+    .filter((section) => section.items.length > 0);
+}
 
 // ----------------------------------------------------------------------
 
@@ -35,6 +66,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
   const theme = useTheme();
 
   const { user } = useMockedUser();
+  const { hasPermission } = usePermission();
 
   const settings = useSettingsContext();
 
@@ -42,20 +74,22 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
 
   const { value: open, onFalse: onClose, onTrue: onOpen } = useBoolean();
 
-  const navData = slotProps?.nav?.data ?? dashboardNavData;
+  const rawNavData = slotProps?.nav?.data ?? dashboardNavData;
+  const navData = useMemo(() => filterNavData(rawNavData, hasPermission), [rawNavData, hasPermission]);
 
-  const isNavMini = settings.state.navLayout === 'mini';
+  const rawGridData = dashboardNavGridData;
+  const gridData = useMemo(() => filterNavData(rawGridData, hasPermission), [rawGridData, hasPermission]);
+
   const isNavHorizontal = settings.state.navLayout === 'horizontal';
-  const isNavVertical = isNavMini || settings.state.navLayout === 'vertical';
 
-  const canDisplayItemByRole = (allowedRoles) => !allowedRoles?.includes(user?.role);
+
 
   const renderHeader = () => {
     const headerSlotProps = {
       container: {
         maxWidth: false,
         sx: {
-          ...(isNavVertical && { px: { [layoutQuery]: 5 } }),
+          ...(!isNavHorizontal && { px: { [layoutQuery]: 5 } }),
           ...(isNavHorizontal && {
             bgcolor: 'var(--layout-nav-bg)',
             height: { [layoutQuery]: 'var(--layout-nav-horizontal-height)' },
@@ -76,7 +110,6 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
           data={navData}
           layoutQuery={layoutQuery}
           cssVars={navVars.section}
-          checkPermissions={canDisplayItemByRole}
         />
       ) : null,
       leftArea: (
@@ -87,11 +120,10 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
             sx={{ mr: 1, ml: -1, [theme.breakpoints.up(layoutQuery)]: { display: 'none' } }}
           />
           <NavMobile
-            data={navData}
+            data={gridData}
             open={open}
             onClose={onClose}
             cssVars={navVars.section}
-            checkPermissions={canDisplayItemByRole}
           />
 
           {/** @slot Logo */}
@@ -108,9 +140,6 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
           {isNavHorizontal && (
             <VerticalDivider sx={{ [theme.breakpoints.up(layoutQuery)]: { display: 'flex' } }} />
           )}
-
-
-
         </>
       ),
       rightArea: (
@@ -139,7 +168,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
     return (
       <HeaderSection
         layoutQuery={layoutQuery}
-        disableElevation={isNavVertical}
+        disableElevation={!isNavHorizontal}
         {...slotProps?.header}
         slots={{ ...headerSlots, ...slotProps?.header?.slots }}
         slotProps={merge(headerSlotProps, slotProps?.header?.slotProps ?? {})}
@@ -151,16 +180,10 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
   const renderSidebar = () => (
     <NavVertical
       data={navData}
-      isNavMini={isNavMini}
+      gridData={gridData}
+      isNavMini
       layoutQuery={layoutQuery}
       cssVars={navVars.section}
-      checkPermissions={canDisplayItemByRole}
-      onToggleNav={() =>
-        settings.setField(
-          'navLayout',
-          settings.state.navLayout === 'vertical' ? 'mini' : 'vertical'
-        )
-      }
     />
   );
 
@@ -190,11 +213,7 @@ export function DashboardLayout({ sx, cssVars, children, slotProps, layoutQuery 
         {
           [`& .${layoutClasses.sidebarContainer}`]: {
             [theme.breakpoints.up(layoutQuery)]: {
-              pl: isNavMini ? 'var(--layout-nav-mini-width)' : 'var(--layout-nav-vertical-width)',
-              transition: theme.transitions.create(['padding-left'], {
-                easing: 'var(--layout-transition-easing)',
-                duration: 'var(--layout-transition-duration)',
-              }),
+              pl: 'var(--layout-nav-mini-width)',
             },
           },
         },

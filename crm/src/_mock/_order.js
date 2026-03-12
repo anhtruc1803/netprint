@@ -1,10 +1,156 @@
 // ----------------------------------------------------------------------
 
-export const _orders = [];
-
 export const ORDER_STATUS_OPTIONS = [
-    { value: 'pending', label: 'Đang chờ' },
-    { value: 'completed', label: 'Hoàn thành' },
-    { value: 'cancelled', label: 'Đã hủy' },
-    { value: 'refunded', label: 'Hoàn tiền' },
+    { value: 'pending_approval', label: 'Chờ duyệt' },
+    { value: 'approved', label: 'Đã duyệt' },
+];
+
+// ----------------------------------------------------------------------
+
+export const _orders = [
+    {
+        id: 'ord-001',
+        orderNumber: 'DH-2024001',
+        name: 'In tờ rơi A5 2 mặt',
+        createdAt: new Date('2024-03-01T08:30:00'),
+        status: 'approved',
+        subtotal: 1250000,
+        paidAmount: 1250000,
+        totalQuantity: 500,
+        customer: { name: 'Công ty TNHH ABC Việt Nam', email: 'contact@abcvn.com', avatarUrl: null },
+        items: [
+            { id: 'item-1', name: 'In tờ rơi A5 2 mặt', sku: 'TRAI-A5-2M', coverUrl: null, quantity: 500, price: 2500 },
+        ],
+    },
+    {
+        id: 'ord-002',
+        orderNumber: 'DH-2024002',
+        name: 'In menu + standee khai trương',
+        createdAt: new Date('2024-03-02T09:15:00'),
+        status: 'pending_approval',
+        subtotal: 3400000,
+        paidAmount: 1000000,
+        totalQuantity: 1000,
+        customer: { name: 'Cà phê Highlands - CN Quận 1', email: 'order@highlands.vn', avatarUrl: null },
+        items: [
+            { id: 'item-2', name: 'In menu A4 cán màng bóng', sku: 'MENU-A4-CB', coverUrl: null, quantity: 500, price: 4000 },
+            { id: 'item-3', name: 'In standee 60x160cm', sku: 'STAND-60160', coverUrl: null, quantity: 2, price: 250000 },
+        ],
+    },
+    {
+        id: 'ord-003',
+        orderNumber: 'DH-2024003',
+        name: 'In hộp bánh ngọt 200 cái',
+        createdAt: new Date('2024-03-03T10:00:00'),
+        status: 'approved',
+        subtotal: 780000,
+        paidAmount: 780000,
+        totalQuantity: 200,
+        customer: { name: 'Tiệm bánh Sweet Home', email: 'sweethome.bakery@gmail.com', avatarUrl: null },
+        items: [
+            { id: 'item-4', name: 'In hộp giấy bánh 20x20x5cm', sku: 'HOP-BANH-S', coverUrl: null, quantity: 200, price: 3900 },
+        ],
+    },
+    {
+        id: 'ord-004',
+        orderNumber: 'DH-2024004',
+        name: 'In catalogue + bao thư thương hiệu',
+        createdAt: new Date('2024-03-04T11:20:00'),
+        status: 'pending_approval',
+        subtotal: 5600000,
+        paidAmount: 2000000,
+        totalQuantity: 2000,
+        customer: { name: 'Marketing Agency XYZ', email: 'production@xyzagency.vn', avatarUrl: null },
+        items: [
+            { id: 'item-5', name: 'In catalogue 24 trang A4', sku: 'CAT-24-A4', coverUrl: null, quantity: 500, price: 8000 },
+            { id: 'item-6', name: 'In bao thư C5 có logo', sku: 'BAO-THU-C5', coverUrl: null, quantity: 1000, price: 2600 },
+        ],
+    },
+    {
+        id: 'ord-005',
+        orderNumber: 'DH-2024005',
+        name: 'In sổ tay học sinh 300 cuốn',
+        createdAt: new Date('2024-03-05T14:00:00'),
+        status: 'pending_approval',
+        subtotal: 920000,
+        paidAmount: 500000,
+        totalQuantity: 300,
+        customer: { name: 'Trường THPT Nguyễn Du', email: 'vanphong@thptnguyendu.edu.vn', avatarUrl: null },
+        items: [
+            { id: 'item-7', name: 'In sổ tay A5 bìa cứng', sku: 'SO-TAY-A5', coverUrl: null, quantity: 300, price: 3066 },
+        ],
+    },
+    {
+        id: 'ord-006',
+        orderNumber: 'DH-2024006',
+        name: 'In nhãn lon nước tăng lực',
+        createdAt: new Date('2024-03-06T08:45:00'),
+        status: 'approved',
+        subtotal: 2100000,
+        paidAmount: 2100000,
+        totalQuantity: 700,
+        customer: { name: 'Công ty CP Phân phối Miền Nam', email: 'mua.hang@ppmn.com', avatarUrl: null },
+        items: [
+            { id: 'item-8', name: 'In nhãn lon nước tăng lực', sku: 'NHAN-LON', coverUrl: null, quantity: 700, price: 3000 },
+        ],
+    },
+    {
+        id: 'ord-007',
+        orderNumber: 'DH-2024007',
+        name: 'In ảnh canvas nghệ thuật',
+        createdAt: new Date('2024-03-07T09:30:00'),
+        status: 'approved',
+        subtotal: 450000,
+        paidAmount: 450000,
+        totalQuantity: 100,
+        customer: { name: 'Studio Chụp Ảnh Ánh Dương', email: 'anhduong.studio@gmail.com', avatarUrl: null },
+        items: [
+            { id: 'item-9', name: 'In ảnh canvas 60x90cm', sku: 'CANVAS-6090', coverUrl: null, quantity: 2, price: 225000 },
+        ],
+    },
+    {
+        id: 'ord-008',
+        orderNumber: 'DH-2024008',
+        name: 'In tờ rơi sự kiện A4 5000 tờ',
+        createdAt: new Date('2024-03-08T10:10:00'),
+        status: 'pending_approval',
+        subtotal: 8750000,
+        paidAmount: 3000000,
+        totalQuantity: 5000,
+        customer: { name: 'Tập đoàn Vingroup - Bộ phận MKT', email: 'marketing.print@vingroup.net', avatarUrl: null },
+        items: [
+            { id: 'item-10', name: 'In tờ rơi A4 4 màu', sku: 'TRAI-A4-4M', coverUrl: null, quantity: 5000, price: 1750 },
+        ],
+    },
+    {
+        id: 'ord-009',
+        orderNumber: 'DH-2024009',
+        name: 'In menu nhà hàng bìa cứng + A3',
+        createdAt: new Date('2024-03-09T13:00:00'),
+        status: 'approved',
+        subtotal: 1680000,
+        paidAmount: 1680000,
+        totalQuantity: 400,
+        customer: { name: 'Nhà hàng Hương Biển', email: 'order@huongbien.vn', avatarUrl: null },
+        items: [
+            { id: 'item-11', name: 'In menu bìa cứng ép plastic', sku: 'MENU-EP', coverUrl: null, quantity: 200, price: 6000 },
+            { id: 'item-12', name: 'In tờ menu A3 2 mặt', sku: 'MENU-A3', coverUrl: null, quantity: 200, price: 2400 },
+        ],
+    },
+    {
+        id: 'ord-010',
+        orderNumber: 'DH-2024010',
+        name: 'In poster + túi nylon siêu thị',
+        createdAt: new Date('2024-03-10T15:30:00'),
+        status: 'pending_approval',
+        subtotal: 3250000,
+        paidAmount: 1500000,
+        totalQuantity: 1500,
+        customer: { name: 'Siêu thị Co.opmart Bình Thạnh', email: 'print@coopmartbt.vn', avatarUrl: null },
+        items: [
+            { id: 'item-13', name: 'In băng keo logo thương hiệu', sku: 'BANG-KEO', coverUrl: null, quantity: 500, price: 3000 },
+            { id: 'item-14', name: 'In poster A0 quảng cáo', sku: 'POSTER-A0', coverUrl: null, quantity: 50, price: 25000 },
+            { id: 'item-15', name: 'In túi nylon có logo', sku: 'TUI-NYLON', coverUrl: null, quantity: 1000, price: 2000 },
+        ],
+    },
 ];

@@ -18,28 +18,43 @@
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 
-  <!-- PWA Service Worker Registration -->
+  <!-- PWA Service Worker - CHỈ bật ở production -->
   <script>
     if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((reg) => {
-            console.log('[PWA] ✅ Service Worker registered:', reg.scope);
+      const isDev = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-            // Kiểm tra update
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'activated') {
-                  console.log('[PWA] 🔄 New version available!');
-                }
-              });
-            });
-          })
-          .catch((err) => {
-            console.log('[PWA] ❌ SW registration failed:', err);
+      if (isDev) {
+        // DEV: Xóa sạch Service Worker cũ + cache cũ để tránh lỗi file cũ
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((reg) => {
+            reg.unregister();
+            console.log('[PWA] 🗑️ Đã gỡ Service Worker (dev mode)');
           });
-      });
+        });
+        caches.keys().then((keys) => {
+          keys.forEach((key) => caches.delete(key));
+          if (keys.length > 0) console.log('[PWA] 🗑️ Đã xóa cache cũ (dev mode)');
+        });
+      } else {
+        // PRODUCTION: Đăng ký Service Worker bình thường
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+              console.log('[PWA] ✅ Service Worker registered:', reg.scope);
+              reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                  if (newWorker.state === 'activated') {
+                    console.log('[PWA] 🔄 New version available!');
+                  }
+                });
+              });
+            })
+            .catch((err) => {
+              console.log('[PWA] ❌ SW registration failed:', err);
+            });
+        });
+      }
     }
   </script>
 </body>

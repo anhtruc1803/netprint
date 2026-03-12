@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mở ứng dụng NetPrint CRM</title>
+    <!-- Trình duyệt sẽ tự động chuyển hướng đến localhost:3333 -->
+    <meta http-equiv="refresh" content="0; url=http://localhost:3333" />
+    <script>
+        // Cách 2: Chuyển hướng bằng JavaScript cho chắc chắn
+        window.location.href = "http://localhost:3333";
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f4f6f8;
+            color: #333;
+            text-align: center;
+        }
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+        }
+        h2 { color: #00A76F; }
+        .warning {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff4e5;
+            color: #b76e00;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚀 Đang mở ứng dụng cho anh...</h2>
+        <p>Đang tự động chuyển hướng sang <b>http://localhost:3333</b></p>
+        
+        <div class="warning">
+            <b>⚠️ CHÚ Ý QUAN TRỌNG:</b><br/>
+            Vì dự án là ứng dụng React nâng cao, trình duyệt Chrome <b>bắt buộc</b> cần có máy ảo biên dịch (Terminal) chạy ngầm.<br/><br/>
+            Nếu anh thấy thông báo "Không thể truy cập trang web này" (This site can't be reached), thì anh hãy nhớ quay vào phần mềm code gõ lại lệnh <code>npm run dev</code> nhé!
+        </div>
+    </div>
+</body>
+</html>

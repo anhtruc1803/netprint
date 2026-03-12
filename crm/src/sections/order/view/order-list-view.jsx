@@ -7,8 +7,9 @@ import Box from '@mui/material/Box';
 import Tabs from '@mui/material/Tabs';
 import Card from '@mui/material/Card';
 import Table from '@mui/material/Table';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 import TableBody from '@mui/material/TableBody';
 import IconButton from '@mui/material/IconButton';
 
@@ -47,13 +48,14 @@ import { OrderTableFiltersResult } from '../order-table-filters-result';
 const STATUS_OPTIONS = [{ value: 'all', label: 'Tất cả' }, ...ORDER_STATUS_OPTIONS];
 
 const TABLE_HEAD = [
-  { id: 'orderNumber', label: 'Đơn hàng', width: 88 },
-  { id: 'name', label: 'Khách hàng' },
-  { id: 'createdAt', label: 'Ngày tạo', width: 140 },
-  { id: 'totalQuantity', label: 'Số lượng', width: 120, align: 'center' },
-  { id: 'totalAmount', label: 'Giá trị', width: 140 },
-  { id: 'status', label: 'Trạng thái', width: 110 },
-  { id: '', width: 88 },
+  { id: 'createdAt', label: 'Ngày bán', width: 95, sx: { whiteSpace: 'nowrap' } },
+  { id: 'orderNumber', label: 'Đơn hàng', width: 260, sx: { whiteSpace: 'nowrap' } },
+  { id: 'name', label: 'Khách hàng', width: 190, sx: { whiteSpace: 'nowrap' } },
+  { id: 'totalAmount', label: 'Giá trị', width: 105, align: 'right', sx: { whiteSpace: 'nowrap' } },
+  { id: 'paidAmount', label: 'Đã thu', width: 105, align: 'right', sx: { whiteSpace: 'nowrap' } },
+  { id: 'remaining', label: 'Còn lại', width: 105, align: 'right', sx: { whiteSpace: 'nowrap' } },
+  { id: 'status', label: 'Trạng thái', width: 95, align: 'right', sx: { whiteSpace: 'nowrap' } },
+  { id: '', width: 48 },
 ];
 
 // ----------------------------------------------------------------------
@@ -149,29 +151,31 @@ export function OrderListView() {
 
   return (
     <>
-      <DashboardContent>
-        <CustomBreadcrumbs
-          heading="Danh sách"
-          links={[
-            { name: 'Bảng điều khiển', href: paths.dashboard.root },
-            { name: 'Đơn hàng', href: paths.dashboard.order.root },
-            { name: 'Danh sách' },
-          ]}
-          action={
-            <Button
+      <DashboardContent maxWidth={false} sx={{ px: { xs: 2, sm: 3 } }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: { xs: 2, md: 2.5 } }}>
+          <Tooltip title="Tạo đơn hàng">
+            <IconButton
               component={RouterLink}
               href={paths.dashboard.order.new}
-              variant="contained"
-              color="primary"
-              startIcon={<Iconify icon="mingcute:add-line" />}
+              size="small"
+              sx={{
+                bgcolor: 'primary.main',
+                color: 'white',
+                borderRadius: 1,
+                width: 28,
+                height: 28,
+                '&:hover': { bgcolor: 'primary.dark' },
+              }}
             >
-              Tạo đơn hàng
-            </Button>
-          }
-          sx={{ mb: { xs: 3, md: 5 } }}
-        />
+              <Iconify icon="mingcute:add-line" width={18} />
+            </IconButton>
+          </Tooltip>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Danh sách đơn hàng bán
+          </Typography>
+        </Box>
 
-        <Card>
+        <Card sx={{ borderRadius: 1 }}>
           <Tabs
             value={currentFilters.status}
             onChange={handleFilterStatus}
@@ -214,6 +218,8 @@ export function OrderListView() {
             filters={filters}
             onResetPage={table.onResetPage}
             dateError={dateError}
+            table={table}
+            totalCount={dataFiltered.length}
           />
 
           {canReset && (
@@ -246,7 +252,7 @@ export function OrderListView() {
             />
 
             <Scrollbar sx={{ minHeight: 444 }}>
-              <Table size={table.dense ? 'small' : 'medium'} sx={{ minWidth: 960 }}>
+              <Table size={table.dense ? 'small' : 'medium'} sx={{ width: '100%' }}>
                 <TableHeadCustom
                   order={table.order}
                   orderBy={table.orderBy}

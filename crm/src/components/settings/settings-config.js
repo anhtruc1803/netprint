@@ -9,7 +9,7 @@ export const defaultSettings = {
   mode: themeConfig.defaultMode,
   direction: themeConfig.direction,
   contrast: 'default',
-  navLayout: 'vertical',
+  navLayout: 'mini',
   primaryColor: 'default',
   navColor: 'integrate',
   compactLayout: true,

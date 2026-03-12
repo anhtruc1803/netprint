@@ -2,12 +2,16 @@ import { useState, useCallback } from 'react';
 
 import Box from '@mui/material/Box';
 import Card from '@mui/material/Card';
+import Chip from '@mui/material/Chip';
 import Table from '@mui/material/Table';
 import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import Select from '@mui/material/Select';
+import Divider from '@mui/material/Divider';
 import MenuItem from '@mui/material/MenuItem';
+import Collapse from '@mui/material/Collapse';
 import TableRow from '@mui/material/TableRow';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -22,6 +26,8 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import InputAdornment from '@mui/material/InputAdornment';
 import TableContainer from '@mui/material/TableContainer';
+import FormControlLabel from '@mui/material/FormControlLabel';
+import { alpha, useTheme } from '@mui/material/styles';
 
 import { paths } from 'src/routes/paths';
 
@@ -33,6 +39,7 @@ import { Iconify } from 'src/components/iconify';
 import { CustomBreadcrumbs } from 'src/components/custom-breadcrumbs';
 
 import { getUsers, createUser, updateUser, deleteUser, toggleUserActive } from 'src/auth/user-store';
+import { PERMISSION_GROUPS, DEFAULT_PERMISSIONS } from 'src/auth/permissions';
 
 // ----------------------------------------------------------------------
 
@@ -48,12 +55,18 @@ const EMPTY_FORM = {
 // ----------------------------------------------------------------------
 
 export function AccountManagementView() {
+    const theme = useTheme();
     const [users, setUsers] = useState(getUsers);
     const [openDialog, setOpenDialog] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [form, setForm] = useState(EMPTY_FORM);
     const [showPassword, setShowPassword] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState(null);
+
+    // Permissions dialog
+    const [permDialog, setPermDialog] = useState(null); // user object
+    const [permState, setPermState] = useState([]);
+    const [expandedGroup, setExpandedGroup] = useState(null);
 
     const refreshUsers = useCallback(() => {
         setUsers(getUsers());
@@ -111,6 +124,10 @@ export function AccountManagementView() {
                 if (form.password.trim()) {
                     data.password = form.password;
                 }
+                // Nếu đổi role → reset permissions về mặc định
+                if (form.role !== editingUser.role) {
+                    data.permissions = DEFAULT_PERMISSIONS[form.role] || DEFAULT_PERMISSIONS.staff;
+                }
                 updateUser(editingUser.id, data);
                 toast.success('Cập nhật tài khoản thành công!');
             } else {
@@ -119,7 +136,10 @@ export function AccountManagementView() {
                     toast.error('Vui lòng nhập mật khẩu!');
                     return;
                 }
-                createUser(form);
+                createUser({
+                    ...form,
+                    permissions: DEFAULT_PERMISSIONS[form.role] || DEFAULT_PERMISSIONS.staff,
+                });
                 toast.success('Tạo tài khoản thành công!');
             }
 
@@ -150,6 +170,39 @@ export function AccountManagementView() {
             toast.error(error.message);
         }
     };
+
+    // ====== PERMISSIONS DIALOG ======
+
+    const handleOpenPermissions = (user) => {
+        setPermDialog(user);
+        setPermState(user.permissions || DEFAULT_PERMISSIONS[user.role] || []);
+        setExpandedGroup(null);
+    };
+
+    const handleTogglePerm = (key) => {
+        setPermState((prev) =>
+            prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key]
+        );
+    };
+
+    const handleSavePermissions = () => {
+        try {
+            updateUser(permDialog.id, { permissions: permState });
+            toast.success('Đã cập nhật quyền!');
+            refreshUsers();
+            setPermDialog(null);
+        } catch (error) {
+            toast.error(error.message);
+        }
+    };
+
+    const handleResetPermissions = () => {
+        if (permDialog) {
+            setPermState(DEFAULT_PERMISSIONS[permDialog.role] || DEFAULT_PERMISSIONS.staff);
+        }
+    };
+
+    // ====== RENDER ======
 
     return (
         <DashboardContent>
@@ -215,6 +268,16 @@ export function AccountManagementView() {
                                             >
                                                 <Iconify icon="solar:pen-bold" width={20} />
                                             </IconButton>
+                                            {user.role !== 'admin' && (
+                                                <IconButton
+                                                    size="small"
+                                                    color="info"
+                                                    onClick={() => handleOpenPermissions(user)}
+                                                    title="Phân quyền"
+                                                >
+                                                    <Iconify icon="solar:shield-keyhole-bold" width={20} />
+                                                </IconButton>
+                                            )}
                                             <IconButton
                                                 size="small"
                                                 color={user.isActive ? 'warning' : 'success'}
@@ -251,7 +314,7 @@ export function AccountManagementView() {
                 </TableContainer>
             </Card>
 
-            {/* Create/Edit Dialog */}
+            {/* ====== Create/Edit Dialog ====== */}
             <Dialog open={openDialog} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle>{editingUser ? 'Chỉnh sửa tài khoản' : 'Tạo tài khoản mới'}</DialogTitle>
                 <DialogContent>
@@ -318,6 +381,146 @@ export function AccountManagementView() {
                     </Button>
                     <Button onClick={handleSubmit} variant="contained" color="primary">
                         {editingUser ? 'Cập nhật' : 'Tạo tài khoản'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* ====== Permissions Dialog ====== */}
+            <Dialog
+                open={!!permDialog}
+                onClose={() => setPermDialog(null)}
+                maxWidth="sm"
+                fullWidth
+                PaperProps={{
+                    sx: { borderRadius: 2 },
+                }}
+            >
+                <DialogTitle>
+                    <Stack direction="row" alignItems="center" spacing={1.5}>
+                        <Box sx={{
+                            width: 40, height: 40, borderRadius: 1.5,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: `linear-gradient(135deg, ${theme.palette.info.main}, ${theme.palette.info.dark})`,
+                            color: 'white',
+                        }}>
+                            <Iconify icon="solar:shield-keyhole-bold" width={22} />
+                        </Box>
+                        <Box>
+                            <Typography variant="h6" fontWeight={700}>Phân quyền</Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                {permDialog?.displayName} ({permDialog?.email})
+                            </Typography>
+                        </Box>
+                    </Stack>
+                </DialogTitle>
+                <Divider />
+                <DialogContent sx={{ p: 0 }}>
+                    {PERMISSION_GROUPS.map((group) => {
+                        const isExpanded = expandedGroup === group.label;
+                        const groupPerms = group.permissions.map((p) => p.key);
+                        const enabledCount = groupPerms.filter((k) => permState.includes(k)).length;
+                        const allEnabled = enabledCount === groupPerms.length;
+
+                        return (
+                            <Box key={group.label}>
+                                <Stack
+                                    direction="row"
+                                    alignItems="center"
+                                    spacing={1.5}
+                                    onClick={() => setExpandedGroup(isExpanded ? null : group.label)}
+                                    sx={{
+                                        px: 3, py: 1.5,
+                                        cursor: 'pointer',
+                                        transition: 'background 0.2s',
+                                        '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.04) },
+                                    }}
+                                >
+                                    <Box sx={{
+                                        width: 36, height: 36, borderRadius: 1,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        bgcolor: alpha(theme.palette.primary.main, 0.08),
+                                        color: 'primary.main',
+                                    }}>
+                                        <Iconify icon={group.icon} width={20} />
+                                    </Box>
+                                    <Box sx={{ flex: 1 }}>
+                                        <Typography variant="subtitle2" fontWeight={700}>
+                                            {group.label}
+                                        </Typography>
+                                    </Box>
+                                    <Chip
+                                        label={`${enabledCount}/${groupPerms.length}`}
+                                        size="small"
+                                        color={allEnabled ? 'success' : enabledCount > 0 ? 'warning' : 'default'}
+                                        variant="soft"
+                                        sx={{ fontWeight: 700, fontSize: 12 }}
+                                    />
+                                    <Iconify
+                                        icon={isExpanded ? 'solar:alt-arrow-up-bold' : 'solar:alt-arrow-down-bold'}
+                                        width={16}
+                                        sx={{ color: 'text.secondary' }}
+                                    />
+                                </Stack>
+
+                                <Collapse in={isExpanded}>
+                                    <Stack spacing={0} sx={{ px: 3, pb: 1.5 }}>
+                                        {group.permissions.map((perm) => (
+                                            <Stack
+                                                key={perm.key}
+                                                direction="row"
+                                                alignItems="center"
+                                                spacing={1}
+                                                sx={{
+                                                    py: 0.75, pl: 5.5,
+                                                    borderRadius: 1,
+                                                    transition: 'background 0.15s',
+                                                    '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.08) },
+                                                }}
+                                            >
+                                                <Box sx={{ flex: 1 }}>
+                                                    <Typography variant="body2" fontWeight={600}>
+                                                        {perm.label}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        {perm.desc}
+                                                    </Typography>
+                                                </Box>
+                                                <FormControlLabel
+                                                    control={
+                                                        <Switch
+                                                            size="small"
+                                                            checked={permState.includes(perm.key)}
+                                                            onChange={() => handleTogglePerm(perm.key)}
+                                                            color="success"
+                                                        />
+                                                    }
+                                                    label=""
+                                                    sx={{ m: 0 }}
+                                                />
+                                            </Stack>
+                                        ))}
+                                    </Stack>
+                                </Collapse>
+                                <Divider />
+                            </Box>
+                        );
+                    })}
+                </DialogContent>
+                <DialogActions sx={{ px: 3, py: 2 }}>
+                    <Button
+                        onClick={handleResetPermissions}
+                        color="warning"
+                        startIcon={<Iconify icon="solar:restart-bold" />}
+                        size="small"
+                    >
+                        Đặt lại mặc định
+                    </Button>
+                    <Box sx={{ flex: 1 }} />
+                    <Button onClick={() => setPermDialog(null)} color="inherit">
+                        Hủy
+                    </Button>
+                    <Button onClick={handleSavePermissions} variant="contained" color="primary">
+                        Lưu quyền
                     </Button>
                 </DialogActions>
             </Dialog>

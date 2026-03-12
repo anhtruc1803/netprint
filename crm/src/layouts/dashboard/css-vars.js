@@ -8,8 +8,9 @@ export function dashboardLayoutVars(theme) {
   return {
     '--layout-transition-easing': 'linear',
     '--layout-transition-duration': '120ms',
-    '--layout-nav-mini-width': '88px',
-    '--layout-nav-vertical-width': '300px',
+    '--layout-nav-mini-width': '75px',
+    '--layout-nav-vertical-width': '440px',
+    '--layout-nav-sub-width': '105px',
     '--layout-nav-horizontal-height': '64px',
     '--layout-dashboard-content-pt': theme.spacing(1),
     '--layout-dashboard-content-pb': theme.spacing(8),

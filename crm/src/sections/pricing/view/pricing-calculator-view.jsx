@@ -31,6 +31,10 @@ import { DashboardContent } from 'src/layouts/dashboard';
 
 import { Iconify } from 'src/components/iconify';
 
+import { PERMISSIONS } from 'src/auth/permissions';
+import { usePermission } from 'src/auth/hooks/use-permission';
+import { useMockedUser } from 'src/auth/hooks/use-mocked-user';
+
 import { loadPaperSettings } from '../data/default-settings';
 import PricingSettingsDialog from './pricing-settings-dialog';
 import { playCalculateSound, playErrorSound } from '../../../utils/sound';
@@ -55,6 +59,10 @@ const QUICK_SIZES = [
 
 export function PricingCalculatorView() {
     const theme = useTheme();
+    const { hasPermission } = usePermission();
+    const { user: currentUser } = useMockedUser();
+    const canViewDetail = hasPermission(PERMISSIONS.PRICING_DETAIL);
+    const canViewAllHistory = hasPermission(PERMISSIONS.PRICING_HISTORY_ALL);
     const [settings, setSettings] = useState(() => loadPaperSettings());
     const [settingsOpen, setSettingsOpen] = useState(false);
     const handleSettingsChanged = useCallback((newSettings) => setSettings({ ...newSettings }), []);
@@ -227,6 +235,8 @@ export function PricingCalculatorView() {
         const entry = {
             id: Date.now(),
             createdAt: new Date().toISOString(),
+            userId: currentUser?.id || '1',
+            userName: currentUser?.displayName || 'Admin',
             prodW: numProdW, prodH: numProdH, qty: numQty,
             paperName: res.paperName,
             printSides: printSideId === 1 ? 'In 1 mặt' : 'In 2 mặt',
@@ -245,12 +255,25 @@ export function PricingCalculatorView() {
             sellPerItem: res.sellPerItem,
             totalSell: res.totalSell,
             costPerItem: res.costPerItem,
+            totalCost: res.totalCost,
+            paperCost: res.paperCost,
+            printCost: res.printCost,
+            lamCost: res.lamCost,
+            procCost: res.procCost,
+            procDetails: res.procDetails,
         };
         setPriceHistory(prev => {
             const updated = [entry, ...prev].slice(0, 50);
             localStorage.setItem('netprint_price_history', JSON.stringify(updated));
             return updated;
         });
+
+        // Gửi lên server (để admin xem tất cả)
+        fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(entry),
+        }).catch(() => { /* silent */ });
     }, [numProdW, numProdH, numQty, paperTypeId, printSideId, lamId, lamDoubleSide, custId, totalExtraCosts, selectedProcs, spacing, marginH, marginV, waste, allowRotation, settings, printSizeIdCalc, showCustomPrice, customPaperPrice]);
 
     // ===== SECTION HEADER =====
@@ -841,61 +864,34 @@ export function PricingCalculatorView() {
                             </Typography>
                         </Stack>
 
-                        <Stack direction="row" sx={{ width: '100%' }} justifyContent="space-between">
-                            {/* Loại giấy */}
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                    Loại giấy
-                                </Typography>
-                                <Stack direction="row" alignItems="center" spacing={0.5}>
-                                    <Iconify icon="solar:layers-minimalistic-bold" width={14} sx={{ color: 'info.main' }} />
-                                    <Typography variant="body2" fontWeight={700}>{result.paperName || '—'}</Typography>
-                                </Stack>
-                            </Box>
-
-                            {/* Kích thước SP */}
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                    Kích thước SP
-                                </Typography>
-                                <Stack direction="row" alignItems="center" spacing={0.5}>
-                                    <Iconify icon="solar:ruler-angular-bold" width={14} sx={{ color: 'primary.main' }} />
-                                    <Typography variant="body2" fontWeight={700}>{prodW} × {prodH} mm</Typography>
-                                </Stack>
-                            </Box>
-
-                            {/* Số mặt in */}
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                    Số mặt in
-                                </Typography>
-                                <Stack direction="row" alignItems="center" spacing={0.5}>
-                                    <Iconify icon="solar:document-bold" width={14} sx={{ color: 'text.secondary' }} />
-                                    <Typography variant="body2" fontWeight={700}>{printSideId === 1 ? 'In 1 mặt' : 'In 2 mặt'}</Typography>
-                                </Stack>
-                            </Box>
-
-                            {/* Cán màng */}
-                            <Box sx={{ flex: 1 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                    Cán màng
-                                </Typography>
-                                <Stack direction="row" alignItems="center" spacing={0.5}>
-                                    <Iconify icon="solar:layers-bold" width={14} sx={{ color: 'warning.main' }} />
-                                    <Typography variant="body2" fontWeight={700}>
-                                        {settings.laminations.find(l => l.id === lamId)?.name || '—'}
-                                        {lamDoubleSide && ' (2 mặt)'}
+                        <Box sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(3, 1fr)' },
+                            gap: 1.5,
+                        }}>
+                            {[
+                                { label: 'Loại giấy', value: result.paperName || '—', icon: 'solar:layers-minimalistic-bold', color: 'info.main' },
+                                { label: 'Kích thước SP', value: `${prodW} × ${prodH} mm`, icon: 'solar:ruler-angular-bold', color: 'primary.main' },
+                                { label: 'Số mặt in', value: printSideId === 1 ? 'In 1 mặt' : 'In 2 mặt', icon: 'solar:document-bold', color: 'text.secondary' },
+                                { label: 'Cán màng', value: `${settings.laminations.find(l => l.id === lamId)?.name || '—'}${lamDoubleSide ? ' (2 mặt)' : ''}`, icon: 'solar:layers-bold', color: 'warning.main' },
+                            ].map((item, i) => (
+                                <Box key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.04) }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3, fontSize: 10.5 }}>
+                                        {item.label}
                                     </Typography>
-                                </Stack>
-                            </Box>
-
-                            {/* Gia công */}
-                            <Box sx={{ flex: 2 }}>
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
+                                    <Stack direction="row" alignItems="center" spacing={0.5}>
+                                        <Iconify icon={item.icon} width={14} sx={{ color: item.color, flexShrink: 0 }} />
+                                        <Typography variant="body2" fontWeight={700} sx={{ fontSize: 12.5 }}>{item.value}</Typography>
+                                    </Stack>
+                                </Box>
+                            ))}
+                            {/* Gia công - full width */}
+                            <Box sx={{ gridColumn: { xs: '1 / -1' }, p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.04) }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3, fontSize: 10.5 }}>
                                     Gia công
                                 </Typography>
                                 <Stack direction="row" alignItems="center" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                                    <Iconify icon="solar:scissors-bold" width={14} sx={{ color: 'error.main' }} />
+                                    <Iconify icon="solar:scissors-bold" width={14} sx={{ color: 'error.main', flexShrink: 0 }} />
                                     {selectedProcs.length > 0 ? (
                                         selectedProcs.map(id => {
                                             const proc = settings.processing.find(p => p.id === id);
@@ -905,11 +901,11 @@ export function PricingCalculatorView() {
                                             ) : null;
                                         })
                                     ) : (
-                                        <Typography variant="body2" fontWeight={700} color="text.secondary">Không có</Typography>
+                                        <Typography variant="body2" fontWeight={700} color="text.secondary" sx={{ fontSize: 12.5 }}>Không có</Typography>
                                     )}
                                 </Stack>
                             </Box>
-                        </Stack>
+                        </Box>
                     </Box>
 
                     <Divider />
@@ -929,188 +925,194 @@ export function PricingCalculatorView() {
                             </Typography>
                         </Stack>
 
-                        <Stack direction="row" alignItems="flex-start" sx={{ width: '100%' }} justifyContent="space-between">
-                            {/* Stats */}
+                        <Box sx={{
+                            display: 'grid',
+                            gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+                            gap: 1.5,
+                        }}>
                             {[
-                                { label: 'Khổ giấy in', value: result.sheetSize, icon: 'solar:maximize-square-bold', color: 'primary' },
-                                { label: 'SP / tờ', value: `${result.imposition?.total || 0} sp`, icon: 'solar:layers-bold', color: 'success' },
-                                { label: 'Số tờ in', value: `${formatNumber(result.sheets)} tờ`, icon: 'solar:printer-bold', color: 'info' },
-                                { label: 'Tờ gốc', value: `${formatNumber(result.baseSheets)} tờ`, icon: 'solar:document-bold', color: 'warning' },
-                                { label: 'Bù hao', value: `${result.waste} tờ`, icon: 'solar:danger-triangle-bold', color: 'error' },
-                            ].map((info, i) => (
-                                <Box key={i} sx={{ flex: 1 }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                        {info.label}
-                                    </Typography>
-                                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                                        <Iconify icon={info.icon} width={14} sx={{ color: `${info.color}.main` }} />
-                                        <Typography variant="body2" fontWeight={700}>{info.value}</Typography>
-                                    </Stack>
-                                </Box>
-                            ))}
-
-                            {/* Divider */}
-                            <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
-
-                            {/* Settings — same style as stats */}
-                            {[
+                                { label: 'Khổ giấy in', value: result.sheetSize, icon: 'solar:maximize-square-bold', color: 'primary.main' },
+                                { label: 'SP / tờ', value: `${result.imposition?.total || 0} sp`, icon: 'solar:layers-bold', color: 'success.main' },
+                                { label: 'Số tờ in', value: `${formatNumber(result.sheets)} tờ`, icon: 'solar:printer-bold', color: 'info.main' },
+                                { label: 'Tờ gốc', value: `${formatNumber(result.baseSheets)} tờ`, icon: 'solar:document-bold', color: 'warning.main' },
+                                { label: 'Bù hao', value: `${result.waste} tờ`, icon: 'solar:danger-triangle-bold', color: 'error.main' },
                                 { label: 'Khoảng cách', value: `${spacing} mm`, icon: 'solar:ruler-bold', color: 'text.secondary' },
                                 { label: 'Lề ngang', value: `${marginH} mm`, icon: 'solar:align-horizontal-spacing-bold', color: 'text.secondary' },
                                 { label: 'Lề dọc', value: `${marginV} mm`, icon: 'solar:align-vertical-spacing-bold', color: 'text.secondary' },
-                            ].map((s, i) => (
-                                <Box key={i} sx={{ flex: 1 }}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3 }}>
-                                        {s.label}
+                            ].map((info, i) => (
+                                <Box key={i} sx={{ p: 1.5, borderRadius: 1.5, bgcolor: alpha(theme.palette.grey[500], 0.04) }}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.3, fontSize: 10.5 }}>
+                                        {info.label}
                                     </Typography>
                                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                                        <Iconify icon={s.icon} width={14} sx={{ color: s.color }} />
-                                        <Typography variant="body2" fontWeight={700}>{s.value}</Typography>
+                                        <Iconify icon={info.icon} width={14} sx={{ color: info.color, flexShrink: 0 }} />
+                                        <Typography variant="body2" fontWeight={700} sx={{ fontSize: 12.5 }}>{info.value}</Typography>
                                     </Stack>
                                 </Box>
                             ))}
-                        </Stack>
+                        </Box>
                     </Box>
                 </Box>
 
-                <Collapse in={showDetail}>
-                    {/* Cost breakdown */}
-                    <Box sx={{
-                        borderRadius: 2, p: 2.5, mb: 2.5,
-                        bgcolor: alpha(theme.palette.grey[500], 0.04),
-                        border: `1px solid ${theme.palette.divider}`,
-                    }}>
-                        <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>
-                            💰 Chi tiết chi phí
-                        </Typography>
-                        <Stack spacing={1.5}>
-                            {(() => {
-                                const lamName = (settings.laminations.find(l => l.id === lamId)?.name || 'Không cán') + (lamId !== 1 ? (lamDoubleSide ? ' (2 mặt)' : ' (1 mặt)') : '');
-                                const rows = [
-                                    {
-                                        icon: '📄', label: result.paperName || 'Giấy', color: 'primary',
-                                        value: result.paperCost,
-                                        lines: [
-                                            `${formatNumber(result.sheets)} tờ × ${formatNumber(result.paperPricePerSheet)}đ/tờ = ${formatMoney(result.paperCost)}`,
-                                        ],
-                                    },
-                                    {
-                                        icon: '🖨️', label: result.printName, color: 'info',
-                                        value: result.printCost,
-                                        lines: result.printSides === 2 ? [
-                                            `Mặt in: ${formatNumber(result.sheets)} tờ × ${result.printSides} mặt = ${formatNumber(result.totalPrintSides)} mặt in`,
-                                            `Mốc ${formatNumber(result.totalPrintSides)} mặt → ${formatNumber(result.printPricePerSide)}đ/mặt`,
-                                            `${formatNumber(result.totalPrintSides)} mặt × ${formatNumber(result.printPricePerSide)}đ = ${formatMoney(result.printCost)}`,
-                                        ] : [
-                                            `Mốc ${formatNumber(result.sheets)} tờ → ${formatNumber(result.printPricePerSheet)}đ/tờ`,
-                                            `${formatNumber(result.sheets)} tờ × ${formatNumber(result.printPricePerSheet)}đ = ${formatMoney(result.printCost)}`,
-                                        ],
-                                    },
-                                    {
-                                        icon: '✨', label: `Cán màng — ${lamName}`, color: 'warning',
-                                        value: result.lamCost,
-                                        lines: (() => {
-                                            if (result.lamCost <= 0) return ['Không cán'];
-                                            const d = result.lamDetail;
-                                            const maxLabel = d.tierMax === 999999 ? '∞' : formatNumber(d.tierMax);
-                                            const lines = [];
-                                            // Hiện quy đổi mặt cán nếu 2 mặt
-                                            if (lamDoubleSide) {
-                                                lines.push(`Mặt cán: ${formatNumber(result.sheets)} tờ × 2 mặt = ${formatNumber(d.totalSides)} mặt`);
-                                            }
-                                            lines.push(`Mốc ${formatNumber(d.tierMin)}→${maxLabel}`);
-                                            if (d.unit === 'per_m2') {
-                                                lines.push(`S = ${(d.area).toFixed(4)} m²`);
-                                                lines.push(`${formatNumber(d.totalSides)} mặt × ${(d.area).toFixed(4)} m² × ${formatNumber(d.tierPrice)}đ/m² = ${formatMoney(result.lamCost)}`);
-                                            } else if (d.unit === 'per_lot') {
-                                                lines.push(`Giá trọn lô: ${formatMoney(d.tierPrice)}`);
-                                            } else {
-                                                lines.push(`${formatNumber(d.totalSides)} mặt × ${formatNumber(d.tierPrice)}đ/mặt = ${formatMoney(result.lamCost)}`);
-                                            }
-                                            return lines;
-                                        })(),
-                                    },
-                                    ...(result.procDetails.length > 0 ? result.procDetails.map(p => ({
-                                        icon: '✂️', label: p.name, color: 'error',
-                                        value: p.cost,
-                                        lines: [`${formatMoney(p.cost)}`],
-                                    })) : [{ icon: '✂️', label: 'Gia công', color: 'error', value: 0, lines: ['Không chọn'] }]),
-                                    ...(result.extraCosts > 0 ? [{
-                                        icon: '💰', label: 'Chi phí khác', color: 'secondary',
-                                        value: result.extraCosts,
-                                        lines: [`${formatMoney(result.extraCosts)}`],
-                                    }] : []),
-                                ];
-                                return rows.map((row, i) => (
-                                    <Stack key={i} direction="row" alignItems="flex-start" justifyContent="space-between"
-                                        sx={{
-                                            py: 1.25, px: 1.5, borderRadius: 1.5,
-                                            '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.06) },
-                                            transition: 'background 0.2s ease',
-                                        }}>
-                                        <Stack direction="row" alignItems="flex-start" spacing={1.5} sx={{ flex: 1 }}>
-                                            <Typography sx={{ fontSize: 18, mt: 0.25 }}>{row.icon}</Typography>
-                                            <Stack>
-                                                <Typography variant="body2" fontWeight={700}>{row.label}</Typography>
-                                                {row.lines.map((line, li) => (
-                                                    <Typography key={li} variant="caption" color="text.secondary"
-                                                        sx={{ fontFamily: 'monospace', fontSize: 11.5 }}>
-                                                        {line}
-                                                    </Typography>
-                                                ))}
-                                            </Stack>
-                                        </Stack>
-                                        <Typography variant="body2" fontWeight={700} color={`${row.color}.main`} sx={{ mt: 0.25, whiteSpace: 'nowrap' }}>
-                                            {formatMoney(row.value)}
-                                        </Typography>
-                                    </Stack>
-                                ));
-                            })()}
-                        </Stack>
-
-                        <Divider sx={{ my: 2 }} />
-
-                        {/* Per item cost */}
-                        <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
-                            <Typography variant="body2" fontWeight={700}>Giá vốn / sp</Typography>
-                            <Typography variant="body2" fontWeight={700}>{formatMoney(result.costPerItem)}</Typography>
-                        </Stack>
-                        <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1, bgcolor: alpha(theme.palette.success.main, 0.06), borderRadius: 1 }}>
-                            <Typography variant="body2" fontWeight={700} color="success.main">Giá bán / sp (+{result.profitPercent}%)</Typography>
-                            <Typography variant="body2" fontWeight={700} color="success.main">{formatMoney(result.sellPerItem)}</Typography>
-                        </Stack>
-                    </Box>
-
-                    {/* Total bar - gradient instead of dark */}
-                    <Box sx={{
-                        borderRadius: 2, p: 2.5, color: 'white', position: 'relative', overflow: 'hidden',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 50%, ${theme.palette.info.dark} 100%)`,
-                    }}>
+                {canViewDetail && (
+                    <Collapse in={showDetail}>
+                        {/* Cost breakdown */}
                         <Box sx={{
-                            position: 'absolute', top: -30, right: -30, width: 120, height: 120,
-                            borderRadius: '50%', bgcolor: alpha('#fff', 0.06),
-                        }} />
-                        <Stack direction="row" justifyContent="space-around">
-                            <Box textAlign="center">
-                                <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>Tổng vốn</Typography>
-                                <Typography variant="h5" fontWeight={800}>{formatMoney(result.totalCost)}</Typography>
-                            </Box>
-                            <Divider orientation="vertical" flexItem sx={{ borderColor: alpha('#fff', 0.2) }} />
-                            <Box textAlign="center">
-                                <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>Lợi nhuận</Typography>
-                                <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.success.light }}>
-                                    +{formatMoney(result.profit)}
-                                </Typography>
-                            </Box>
-                            <Divider orientation="vertical" flexItem sx={{ borderColor: alpha('#fff', 0.2) }} />
-                            <Box textAlign="center">
-                                <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>% Lãi</Typography>
-                                <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.warning.light }}>
-                                    {result.profitPercent}%
-                                </Typography>
-                            </Box>
-                        </Stack>
-                    </Box>
-                </Collapse>
+                            borderRadius: 2, p: 2.5, mb: 2.5,
+                            bgcolor: alpha(theme.palette.grey[500], 0.04),
+                            border: `1px solid ${theme.palette.divider}`,
+                        }}>
+                            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>
+                                💰 Chi tiết chi phí
+                            </Typography>
+                            <Stack spacing={1.5}>
+                                {(() => {
+                                    const lamName = (settings.laminations.find(l => l.id === lamId)?.name || 'Không cán') + (lamId !== 1 ? (lamDoubleSide ? ' (2 mặt)' : ' (1 mặt)') : '');
+                                    const rows = [
+                                        {
+                                            icon: '📄', label: result.paperName || 'Giấy', color: 'primary',
+                                            value: result.paperCost,
+                                            lines: [
+                                                `${formatNumber(result.sheets)} tờ × ${formatNumber(result.paperPricePerSheet)}đ/tờ = ${formatMoney(result.paperCost)}`,
+                                            ],
+                                        },
+                                        {
+                                            icon: '🖨️', label: result.printName, color: 'info',
+                                            value: result.printCost,
+                                            lines: result.printSides === 2 ? [
+                                                `Mặt in: ${formatNumber(result.sheets)} tờ × ${result.printSides} mặt = ${formatNumber(result.totalPrintSides)} mặt in`,
+                                                `Mốc ${formatNumber(result.totalPrintSides)} mặt → ${formatNumber(result.printPricePerSide)}đ/mặt`,
+                                                `${formatNumber(result.totalPrintSides)} mặt × ${formatNumber(result.printPricePerSide)}đ = ${formatMoney(result.printCost)}`,
+                                            ] : [
+                                                `Mốc ${formatNumber(result.sheets)} tờ → ${formatNumber(result.printPricePerSheet)}đ/tờ`,
+                                                `${formatNumber(result.sheets)} tờ × ${formatNumber(result.printPricePerSheet)}đ = ${formatMoney(result.printCost)}`,
+                                            ],
+                                        },
+                                        {
+                                            icon: '✨', label: `Cán màng — ${lamName}`, color: 'warning',
+                                            value: result.lamCost,
+                                            lines: (() => {
+                                                if (result.lamCost <= 0) return ['Không cán'];
+                                                const d = result.lamDetail;
+                                                const maxLabel = d.tierMax === 999999 ? '∞' : formatNumber(d.tierMax);
+                                                const lines = [];
+                                                // Hiện quy đổi mặt cán nếu 2 mặt
+                                                if (lamDoubleSide) {
+                                                    lines.push(`Mặt cán: ${formatNumber(result.sheets)} tờ × 2 mặt = ${formatNumber(d.totalSides)} mặt`);
+                                                }
+                                                lines.push(`Mốc ${formatNumber(d.tierMin)}→${maxLabel}`);
+                                                if (d.unit === 'per_m2') {
+                                                    lines.push(`S = ${(d.area).toFixed(4)} m²`);
+                                                    lines.push(`${formatNumber(d.totalSides)} mặt × ${(d.area).toFixed(4)} m² × ${formatNumber(d.tierPrice)}đ/m² = ${formatMoney(result.lamCost)}`);
+                                                } else if (d.unit === 'per_lot') {
+                                                    lines.push(`Giá trọn lô: ${formatMoney(d.tierPrice)}`);
+                                                } else {
+                                                    lines.push(`${formatNumber(d.totalSides)} mặt × ${formatNumber(d.tierPrice)}đ/mặt = ${formatMoney(result.lamCost)}`);
+                                                }
+                                                return lines;
+                                            })(),
+                                        },
+                                        ...(result.procDetails.length > 0 ? result.procDetails.map(p => ({
+                                            icon: '✂️', label: p.name, color: 'error',
+                                            value: p.cost,
+                                            lines: (() => {
+                                                const maxLabel = p.tierMax === 999999 ? '∞' : formatNumber(p.tierMax);
+                                                const lines = [];
+                                                if (p.unit === 'per_sheet') {
+                                                    lines.push(`Mốc ${formatNumber(p.tierMin)}→${maxLabel}: ${formatNumber(p.tierPrice)}đ/tờ`);
+                                                    lines.push(`${formatNumber(p.calcQty)} tờ × ${formatNumber(p.tierPrice)}đ = ${formatMoney(p.cost)}`);
+                                                } else if (p.unit === 'per_item') {
+                                                    lines.push(`Mốc ${formatNumber(p.tierMin)}→${maxLabel}: ${formatNumber(p.tierPrice)}đ/sp`);
+                                                    lines.push(`${formatNumber(p.calcQty)} sp × ${formatNumber(p.tierPrice)}đ = ${formatMoney(p.cost)}`);
+                                                } else if (p.unit === 'per_lot') {
+                                                    lines.push(`Mốc ${formatNumber(p.tierMin)}→${maxLabel}`);
+                                                    lines.push(`Giá trọn lô: ${formatMoney(p.cost)}`);
+                                                } else {
+                                                    lines.push(`${formatMoney(p.cost)}`);
+                                                }
+                                                return lines;
+                                            })(),
+                                        })) : [{ icon: '✂️', label: 'Gia công', color: 'error', value: 0, lines: ['Không chọn'] }]),
+                                        ...(result.extraCosts > 0 ? [{
+                                            icon: '💰', label: 'Chi phí khác', color: 'secondary',
+                                            value: result.extraCosts,
+                                            lines: [`${formatMoney(result.extraCosts)}`],
+                                        }] : []),
+                                    ];
+                                    return rows.map((row, i) => (
+                                        <Stack key={i} direction="row" alignItems="flex-start" justifyContent="space-between"
+                                            sx={{
+                                                py: 1.25, px: 1.5, borderRadius: 1.5,
+                                                '&:hover': { bgcolor: alpha(theme.palette.grey[500], 0.06) },
+                                                transition: 'background 0.2s ease',
+                                            }}>
+                                            <Stack direction="row" alignItems="flex-start" spacing={1.5} sx={{ flex: 1 }}>
+                                                <Typography sx={{ fontSize: 18, mt: 0.25 }}>{row.icon}</Typography>
+                                                <Stack>
+                                                    <Typography variant="body2" fontWeight={700}>{row.label}</Typography>
+                                                    {row.lines.map((line, li) => (
+                                                        <Typography key={li} variant="caption" color="text.secondary"
+                                                            sx={{ fontFamily: 'monospace', fontSize: 11.5 }}>
+                                                            {line}
+                                                        </Typography>
+                                                    ))}
+                                                </Stack>
+                                            </Stack>
+                                            <Typography variant="body2" fontWeight={700} color={`${row.color}.main`} sx={{ mt: 0.25, whiteSpace: 'nowrap' }}>
+                                                {formatMoney(row.value)}
+                                            </Typography>
+                                        </Stack>
+                                    ));
+                                })()}
+                            </Stack>
+
+                            {/* Per item cost */}
+                            <>
+                                <Divider sx={{ my: 2 }} />
+
+                                <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1 }}>
+                                    <Typography variant="body2" fontWeight={700}>Giá vốn / sp</Typography>
+                                    <Typography variant="body2" fontWeight={700}>{formatMoney(result.costPerItem)}</Typography>
+                                </Stack>
+                                <Stack direction="row" justifyContent="space-between" sx={{ px: 1.5, py: 1, bgcolor: alpha(theme.palette.success.main, 0.06), borderRadius: 1 }}>
+                                    <Typography variant="body2" fontWeight={700} color="success.main">Giá bán / sp (+{result.profitPercent}%)</Typography>
+                                    <Typography variant="body2" fontWeight={700} color="success.main">{formatMoney(result.sellPerItem)}</Typography>
+                                </Stack>
+                            </>
+                        </Box>
+
+                        {/* Total bar - chỉ hiện cho user có quyền xem chi tiết */}
+                        <Box sx={{
+                            borderRadius: 2, p: 2.5, color: 'white', position: 'relative', overflow: 'hidden',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 50%, ${theme.palette.info.dark} 100%)`,
+                        }}>
+                            <Box sx={{
+                                position: 'absolute', top: -30, right: -30, width: 120, height: 120,
+                                borderRadius: '50%', bgcolor: alpha('#fff', 0.06),
+                            }} />
+                            <Stack direction="row" justifyContent="space-around">
+                                <Box textAlign="center">
+                                    <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>Tổng vốn</Typography>
+                                    <Typography variant="h5" fontWeight={800}>{formatMoney(result.totalCost)}</Typography>
+                                </Box>
+                                <Divider orientation="vertical" flexItem sx={{ borderColor: alpha('#fff', 0.2) }} />
+                                <Box textAlign="center">
+                                    <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>Lợi nhuận</Typography>
+                                    <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.success.light }}>
+                                        +{formatMoney(result.profit)}
+                                    </Typography>
+                                </Box>
+                                <Divider orientation="vertical" flexItem sx={{ borderColor: alpha('#fff', 0.2) }} />
+                                <Box textAlign="center">
+                                    <Typography variant="overline" sx={{ opacity: 0.7, letterSpacing: 1.5 }}>% Lãi</Typography>
+                                    <Typography variant="h5" fontWeight={800} sx={{ color: theme.palette.warning.light }}>
+                                        {result.profitPercent}%
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    </Collapse>
+                )}
             </CardContent>
         </Card>
     );
@@ -1214,22 +1216,61 @@ export function PricingCalculatorView() {
     };
 
     // ===== HISTORY DRAWER =====
-    const filteredHistory = priceHistory.filter(h => {
-        if (!historySearch) return true;
-        const q = historySearch.toLowerCase();
-        return (
-            `${h.prodW}x${h.prodH}`.includes(q) ||
-            (h.paperName || '').toLowerCase().includes(q) ||
-            String(h.qty).includes(q)
-        );
-    });
+    const [historyTab, setHistoryTab] = useState('mine'); // 'mine' | 'all'
+    const [serverHistory, setServerHistory] = useState([]);
+    const [serverLoading, setServerLoading] = useState(false);
+    const [filterUser, setFilterUser] = useState('all');
+
+    // Load server history khi mở tab "Tất cả"
+    useEffect(() => {
+        if (!historyOpen || historyTab !== 'all' || !canViewAllHistory) return;
+        setServerLoading(true);
+        fetch('/api/history')
+            .then(res => {
+                const ct = res.headers?.get('content-type') || '';
+                if (!ct.includes('application/json')) return [];
+                return res.json();
+            })
+            .then(data => { if (Array.isArray(data)) setServerHistory(data); })
+            .catch(() => {})
+            .finally(() => setServerLoading(false));
+    }, [historyOpen, historyTab, canViewAllHistory]);
+
+    // Danh sách NV unique từ server history
+    const historyUsers = useMemo(() => {
+        const map = new Map();
+        serverHistory.forEach(h => {
+            if (h.userId && h.userName && !map.has(h.userId)) {
+                map.set(h.userId, h.userName);
+            }
+        });
+        return Array.from(map, ([id, name]) => ({ id, name }));
+    }, [serverHistory]);
+
+    // Data hiển thị tùy tab
+    const displayHistory = useMemo(() => {
+        let data = historyTab === 'all' ? serverHistory : priceHistory;
+        if (historyTab === 'all' && filterUser !== 'all') {
+            data = data.filter(h => h.userId === filterUser);
+        }
+        if (historySearch) {
+            const q = historySearch.toLowerCase();
+            data = data.filter(h =>
+                `${h.prodW}x${h.prodH}`.includes(q) ||
+                (h.paperName || '').toLowerCase().includes(q) ||
+                (h.userName || '').toLowerCase().includes(q) ||
+                String(h.qty).includes(q)
+            );
+        }
+        return data;
+    }, [historyTab, serverHistory, priceHistory, filterUser, historySearch]);
 
     const renderHistoryDrawer = (
         <Drawer
             anchor="right"
             open={historyOpen}
             onClose={() => setHistoryOpen(false)}
-            PaperProps={{ sx: { width: { xs: '100%', sm: 480 }, p: 0 } }}
+            PaperProps={{ sx: { width: { xs: '100%', sm: 520 }, p: 0 } }}
         >
             {/* Drawer Header */}
             <Box sx={{
@@ -1242,12 +1283,14 @@ export function PricingCalculatorView() {
                         <Iconify icon="solar:history-bold" width={24} />
                         <Box>
                             <Typography variant="h6" fontWeight={800} color="white">Lịch sử tính giá</Typography>
-                            <Typography variant="caption" sx={{ opacity: 0.8, color: 'white' }}>{priceHistory.length} lần tính gần nhất</Typography>
+                            <Typography variant="caption" sx={{ opacity: 0.8, color: 'white' }}>
+                                {displayHistory.length} kết quả
+                            </Typography>
                         </Box>
                     </Stack>
                     <Stack direction="row" spacing={1}>
-                        {priceHistory.length > 0 && (
-                            <Tooltip title="Xoá toàn bộ lịch sử">
+                        {historyTab === 'mine' && priceHistory.length > 0 && (
+                            <Tooltip title="Xoá toàn bộ lịch sử của tôi">
                                 <IconButton size="small" sx={{ color: 'white', opacity: 0.7 }}
                                     onClick={() => { setPriceHistory([]); localStorage.removeItem('netprint_price_history'); }}>
                                     <Iconify icon="solar:trash-bin-trash-bold" width={18} />
@@ -1260,9 +1303,47 @@ export function PricingCalculatorView() {
                     </Stack>
                 </Stack>
 
+                {/* Tabs: Của tôi / Tất cả */}
+                {canViewAllHistory && (
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                        {['mine', 'all'].map(tab => (
+                            <Button key={tab} size="small" variant={historyTab === tab ? 'contained' : 'text'}
+                                onClick={() => { setHistoryTab(tab); setFilterUser('all'); }}
+                                sx={{
+                                    color: 'white', fontWeight: 700, fontSize: 12,
+                                    bgcolor: historyTab === tab ? alpha('#fff', 0.25) : 'transparent',
+                                    '&:hover': { bgcolor: alpha('#fff', 0.15) },
+                                    borderRadius: 1.5, px: 2,
+                                }}>
+                                {tab === 'mine' ? `🙋 Của tôi (${priceHistory.length})` : '👥 Tất cả NV'}
+                            </Button>
+                        ))}
+                    </Stack>
+                )}
+
+                {/* Bộ lọc nhân viên */}
+                {historyTab === 'all' && canViewAllHistory && historyUsers.length > 0 && (
+                    <Select
+                        size="small" fullWidth
+                        value={filterUser}
+                        onChange={e => setFilterUser(e.target.value)}
+                        sx={{
+                            mt: 1.5, bgcolor: alpha('#fff', 0.15), borderRadius: 1.5,
+                            color: 'white', fontSize: 13,
+                            '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha('#fff', 0.2) },
+                            '& .MuiSvgIcon-root': { color: 'white' },
+                        }}
+                    >
+                        <MenuItem value="all">👥 Tất cả nhân viên</MenuItem>
+                        {historyUsers.map(u => (
+                            <MenuItem key={u.id} value={u.id}>👤 {u.name}</MenuItem>
+                        ))}
+                    </Select>
+                )}
+
                 <TextField
                     size="small" fullWidth
-                    placeholder="Tìm theo kích thước, loại giấy, số lượng..."
+                    placeholder="Tìm theo kích thước, giấy, người tính..."
                     value={historySearch}
                     onChange={e => setHistorySearch(e.target.value)}
                     InputProps={{
@@ -1274,13 +1355,17 @@ export function PricingCalculatorView() {
                             '& fieldset': { borderColor: alpha('#fff', 0.2) },
                         },
                     }}
-                    sx={{ mt: 2 }}
+                    sx={{ mt: 1.5 }}
                 />
             </Box>
 
             {/* History List */}
             <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                {filteredHistory.length === 0 ? (
+                {serverLoading && historyTab === 'all' ? (
+                    <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }} spacing={2}>
+                        <Typography color="text.secondary" variant="body2">Đang tải...</Typography>
+                    </Stack>
+                ) : displayHistory.length === 0 ? (
                     <Stack alignItems="center" justifyContent="center" sx={{ py: 8 }} spacing={2}>
                         <Iconify icon="solar:history-bold" width={56} sx={{ color: 'text.disabled', opacity: 0.3 }} />
                         <Typography color="text.secondary" variant="body2">
@@ -1289,22 +1374,34 @@ export function PricingCalculatorView() {
                     </Stack>
                 ) : (
                     <Stack spacing={1.5}>
-                        {filteredHistory.map((entry, idx) => {
+                        {displayHistory.map((entry, idx) => {
                             const d = new Date(entry.createdAt);
                             const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
                             const timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                            const isMe = entry.userId === currentUser?.id;
                             return (
-                                <Card key={entry.id} variant="outlined" sx={{
+                                <Card key={entry.id || idx} variant="outlined" sx={{
                                     transition: 'all 0.2s ease',
                                     '&:hover': { boxShadow: 3, borderColor: 'primary.main' },
+                                    borderLeft: historyTab === 'all' ? `3px solid ${isMe ? theme.palette.primary.main : theme.palette.grey[300]}` : undefined,
                                 }}>
                                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                                         <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
                                             <Stack spacing={0.5} sx={{ flex: 1 }}>
                                                 {/* Title row */}
-                                                <Stack direction="row" alignItems="center" spacing={1}>
+                                                <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
                                                     <Chip label={`#${idx + 1}`} size="small" color="primary" variant="soft"
                                                         sx={{ height: 20, fontSize: 11, fontWeight: 700, minWidth: 36 }} />
+                                                    {historyTab === 'all' && entry.userName && (
+                                                        <Chip
+                                                            icon={<Iconify icon="solar:user-bold" width={12} />}
+                                                            label={entry.userName}
+                                                            size="small"
+                                                            color={isMe ? 'primary' : 'default'}
+                                                            variant="soft"
+                                                            sx={{ height: 20, fontSize: 11, fontWeight: 600 }}
+                                                        />
+                                                    )}
                                                     <Typography variant="subtitle2" fontWeight={700}>
                                                         {entry.prodW} × {entry.prodH} mm
                                                     </Typography>
@@ -1370,17 +1467,19 @@ export function PricingCalculatorView() {
                                                         <Iconify icon="solar:printer-bold" width={16} />
                                                     </IconButton>
                                                 </Tooltip>
-                                                <Tooltip title="Xoá">
-                                                    <IconButton size="small" color="error"
-                                                        onClick={() => setPriceHistory(prev => {
-                                                            const updated = prev.filter(h => h.id !== entry.id);
-                                                            localStorage.setItem('netprint_price_history', JSON.stringify(updated));
-                                                            return updated;
-                                                        })}
-                                                        sx={{ bgcolor: alpha(theme.palette.error.main, 0.08) }}>
-                                                        <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
-                                                    </IconButton>
-                                                </Tooltip>
+                                                {historyTab === 'mine' && (
+                                                    <Tooltip title="Xoá">
+                                                        <IconButton size="small" color="error"
+                                                            onClick={() => setPriceHistory(prev => {
+                                                                const updated = prev.filter(h => h.id !== entry.id);
+                                                                localStorage.setItem('netprint_price_history', JSON.stringify(updated));
+                                                                return updated;
+                                                            })}
+                                                            sx={{ bgcolor: alpha(theme.palette.error.main, 0.08) }}>
+                                                            <Iconify icon="solar:trash-bin-minimalistic-bold" width={16} />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                )}
                                             </Stack>
                                         </Stack>
                                     </CardContent>

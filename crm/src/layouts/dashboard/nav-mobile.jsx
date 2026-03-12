@@ -8,10 +8,9 @@ import { usePathname } from 'src/routes/hooks';
 
 import { Logo } from 'src/components/logo';
 import { Scrollbar } from 'src/components/scrollbar';
-import { NavSectionVertical } from 'src/components/nav-section';
 
 import { layoutClasses } from '../core';
-import { NavUpgrade } from '../components/nav-upgrade';
+import { NavAppGrid } from './nav-app-grid';
 
 // ----------------------------------------------------------------------
 
@@ -59,11 +58,9 @@ export function NavMobile({
       )}
 
       <Scrollbar fillContent>
-        <NavSectionVertical
+        <NavAppGrid
           data={data}
-          checkPermissions={checkPermissions}
-          sx={{ px: 2, flex: '1 1 auto' }}
-          {...other}
+          sx={{ flex: '1 1 auto' }}
         />
 
 

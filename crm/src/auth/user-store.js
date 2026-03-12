@@ -2,6 +2,7 @@
 // Supports multiple users with roles: admin, staff
 
 import { syncToServer } from './data-seeder';
+import { DEFAULT_PERMISSIONS } from './permissions';
 
 const USERS_STORAGE_KEY = 'netprint_users';
 
@@ -13,8 +14,9 @@ const DEFAULT_USERS = [
         password: 'Netprint@22',
         displayName: 'Admin',
         role: 'admin',
+        permissions: DEFAULT_PERMISSIONS.admin,
         phoneNumber: '',
-        department: 'Quản lý',
+        department: 'Management',
         isActive: true,
         createdAt: new Date().toISOString(),
     },
@@ -28,14 +30,31 @@ function initUsers() {
         return DEFAULT_USERS;
     }
     try {
-        const users = JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        
+        // Kiểm tra data hợp lệ — phải là array
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+            console.warn('[UserStore] Data bị hỏng (không phải array), reset về mặc định');
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+            return DEFAULT_USERS;
+        }
+
+        // Lọc bỏ user không có email (dữ liệu bị corrupt)
+        const validUsers = parsed.filter((u) => u && typeof u === 'object' && u.email);
+        if (validUsers.length === 0) {
+            console.warn('[UserStore] Không có user hợp lệ, reset về mặc định');
+            localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
+            return DEFAULT_USERS;
+        }
+
         // Ensure all users have required fields
-        let needsSave = false;
-        const fixed = users.map((u) => {
+        let needsSave = validUsers.length !== parsed.length;
+        const fixed = validUsers.map((u) => {
             const updated = { ...u };
             if (updated.isActive === undefined) { updated.isActive = true; needsSave = true; }
             if (!updated.role) { updated.role = 'staff'; needsSave = true; }
             if (!updated.id) { updated.id = String(Date.now()); needsSave = true; }
+            if (!updated.permissions) { updated.permissions = DEFAULT_PERMISSIONS[updated.role] || DEFAULT_PERMISSIONS.staff; needsSave = true; }
             return updated;
         });
         if (needsSave) {
@@ -43,7 +62,7 @@ function initUsers() {
         }
         return fixed;
     } catch (e) {
-        console.error('Error parsing users:', e);
+        console.error('[UserStore] Error parsing users, reset về mặc định:', e);
         localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(DEFAULT_USERS));
         return DEFAULT_USERS;
     }
@@ -56,8 +75,9 @@ export function getUsers() {
 
 // Get user by email
 export function getUserByEmail(email) {
+    if (!email) return null;
     const users = getUsers();
-    return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) || null;
+    return users.find((u) => u.email && u.email.toLowerCase() === email.toLowerCase()) || null;
 }
 
 // Get user by ID
@@ -82,7 +102,7 @@ export function authenticateUser(email, password) {
 }
 
 // Create new user (admin only)
-export function createUser({ email, password, displayName, role = 'staff', phoneNumber = '', department = '' }) {
+export function createUser({ email, password, displayName, role = 'staff', phoneNumber = '', department = '', permissions }) {
     const users = getUsers();
 
     // Check duplicate email
@@ -96,6 +116,7 @@ export function createUser({ email, password, displayName, role = 'staff', phone
         password,
         displayName,
         role,
+        permissions: permissions || DEFAULT_PERMISSIONS[role] || DEFAULT_PERMISSIONS.staff,
         phoneNumber,
         department,
         isActive: true,

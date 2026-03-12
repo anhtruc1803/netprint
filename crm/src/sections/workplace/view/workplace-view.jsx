@@ -151,16 +151,17 @@ export function WorkplaceView() {
                 {MOCK_STATS.map((stat) => (
                     <Grid key={stat.title} size={{ xs: 6, md: 3 }}>
                         <Card sx={{ p: 2.5, borderRadius: 2.5, height: '100%', transition: 'all 0.2s', '&:hover': { transform: 'translateY(-2px)', boxShadow: theme.customShadows?.z16 || theme.shadows[16] } }}>
-                            <Stack direction="row" alignItems="center" spacing={2}>
+                            <Stack direction={{ xs: 'column', sm: 'row' }} alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={{ xs: 1.5, sm: 2 }}>
                                 <Box sx={{
-                                    width: 52, height: 52, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    width: { xs: 44, sm: 52 }, height: { xs: 44, sm: 52 }, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     background: `linear-gradient(135deg, ${alpha(theme.palette[stat.color].main, 0.16)}, ${alpha(theme.palette[stat.color].main, 0.08)})`,
+                                    flexShrink: 0
                                 }}>
-                                    <Iconify icon={stat.icon} width={28} sx={{ color: `${stat.color}.main` }} />
+                                    <Iconify icon={stat.icon} width={{ xs: 24, sm: 28 }} sx={{ color: `${stat.color}.main` }} />
                                 </Box>
-                                <Stack spacing={0.25}>
-                                    <Typography variant="h4" fontWeight={800}>{stat.value}</Typography>
-                                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3 }}>{stat.title}</Typography>
+                                <Stack spacing={0.25} sx={{ minWidth: 0, width: '100%' }}>
+                                    <Typography variant="h4" fontWeight={800} sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' }, lineHeight: 1.2 }}>{stat.value}</Typography>
+                                    <Typography variant="caption" color="text.secondary" sx={{ lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{stat.title}</Typography>
                                 </Stack>
                             </Stack>
                             <Typography variant="caption" color={`${stat.color}.main`} sx={{ mt: 1.5, display: 'block', fontWeight: 600 }}>
@@ -186,10 +187,10 @@ export function WorkplaceView() {
                             <CardContent>
                                 <Grid container spacing={2}>
                                     {QUICK_ACTIONS.map((action) => (
-                                        <Grid key={action.title} size={{ xs: 6, sm: 4 }}>
+                                        <Grid key={action.title} size={{ xs: 4, sm: 4 }}>
                                             <Paper variant="outlined" onClick={() => router.push(action.path)}
                                                 sx={{
-                                                    p: 2, borderRadius: 2, cursor: 'pointer', textAlign: 'center',
+                                                    p: { xs: 1.25, sm: 2 }, borderRadius: 2, cursor: 'pointer', textAlign: 'center',
                                                     transition: 'all 0.2s ease',
                                                     '&:hover': {
                                                         borderColor: `${action.color}.main`,
@@ -199,14 +200,23 @@ export function WorkplaceView() {
                                                     },
                                                 }}>
                                                 <Box sx={{
-                                                    width: 48, height: 48, borderRadius: 2, mx: 'auto', mb: 1.5,
+                                                    width: { xs: 38, sm: 48 }, height: { xs: 38, sm: 48 }, borderRadius: 2.5, mx: 'auto', mb: { xs: 1, sm: 1.5 },
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     background: `linear-gradient(135deg, ${theme.palette[action.color].main}, ${theme.palette[action.color].dark})`,
                                                     color: 'white',
                                                 }}>
-                                                    <Iconify icon={action.icon} width={24} />
+                                                    <Iconify icon={action.icon} width={{ xs: 20, sm: 24 }} />
                                                 </Box>
-                                                <Typography variant="body2" fontWeight={600}>{action.title}</Typography>
+                                                <Typography variant="body2" fontWeight={600} sx={{
+                                                    fontSize: { xs: '0.65rem', sm: '0.875rem' },
+                                                    lineHeight: 1.2,
+                                                    display: '-webkit-box',
+                                                    WebkitLineClamp: 2,
+                                                    WebkitBoxOrient: 'vertical',
+                                                    overflow: 'hidden',
+                                                }}>
+                                                    {action.title}
+                                                </Typography>
                                             </Paper>
                                         </Grid>
                                     ))}
@@ -261,12 +271,17 @@ export function WorkplaceView() {
                                         }}>
                                             <Checkbox size="small" checked={task.done} onChange={() => toggleTask(task.id)}
                                                 sx={{ '&.Mui-checked': { color: 'success.main' } }} />
-                                            <Typography variant="body2" sx={{ flex: 1, textDecoration: task.done ? 'line-through' : 'none', fontWeight: task.done ? 400 : 500 }}>
+                                            <Typography variant="body2" sx={{
+                                                flex: 1, textDecoration: task.done ? 'line-through' : 'none', fontWeight: task.done ? 400 : 500,
+                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                                            }}>
                                                 {task.title}
                                             </Typography>
                                             <Chip label={getPriorityLabel(task.priority)} size="small" color={getPriorityColor(task.priority)}
-                                                variant="soft" sx={{ mr: 1, height: 22, fontSize: 11 }} />
-                                            <Typography variant="caption" color="text.disabled">{task.dueDate}</Typography>
+                                                variant="soft" sx={{ mr: { xs: 0, sm: 1 }, mb: { xs: 0.5, sm: 0 }, height: 22, fontSize: 11, display: { xs: 'none', sm: 'inline-flex' } }} />
+                                            <Typography variant="caption" color="text.disabled" sx={{ whiteSpace: 'nowrap', minWidth: 'max-content', ml: 1 }}>
+                                                {task.dueDate}
+                                            </Typography>
                                         </Paper>
                                     ))}
                                 </Stack>

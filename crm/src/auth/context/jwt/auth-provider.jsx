@@ -4,14 +4,10 @@ import { useMemo, useEffect, useCallback } from 'react';
 import { JWT_STORAGE_KEY } from './constant';
 import { AuthContext } from '../auth-context';
 import { setSession, isValidToken } from './utils';
+import { getUserById } from '../../user-store';
+import { hasPermission as checkPerm, getUserPermissions } from '../../permissions';
 
 // ----------------------------------------------------------------------
-
-/**
- * NOTE:
- * We only build demo at basic level.
- * Customer will need to do some extra handling yourself if you want to extend the logic and other features...
- */
 
 export function AuthProvider({ children }) {
   const { state, setState } = useSetState({ user: null, loading: true });
@@ -26,11 +22,17 @@ export function AuthProvider({ children }) {
         // Decode user from local JWT token payload
         const parts = accessToken.split('.');
         const payload = JSON.parse(decodeURIComponent(atob(parts[1]).split('').map((c) => `%${(`00${c.charCodeAt(0).toString(16)}`).slice(-2)}`).join('')));
+
+        // Lấy thông tin mới nhất từ user-store (bao gồm permissions)
+        const storedUser = getUserById(payload.sub);
+
         const user = {
           id: payload.sub,
           email: payload.email,
-          displayName: payload.displayName || 'NetPrint Admin',
-          role: 'admin',
+          displayName: storedUser?.displayName || payload.displayName || 'NetPrint User',
+          role: storedUser?.role || payload.role || 'staff',
+          department: storedUser?.department || payload.department || '',
+          permissions: storedUser?.permissions || [],
         };
 
         setState({ user: { ...user, accessToken }, loading: false });
@@ -54,16 +56,25 @@ export function AuthProvider({ children }) {
 
   const status = state.loading ? 'loading' : checkAuthenticated;
 
+  // Helper: kiểm tra quyền
+  const hasPermission = useCallback(
+    (permission) => checkPerm(state.user, permission),
+    [state.user]
+  );
+
   const memoizedValue = useMemo(
     () => ({
-      user: state.user ? { ...state.user, role: state.user?.role ?? 'admin' } : null,
+      user: state.user ? { ...state.user, role: state.user?.role ?? 'staff' } : null,
       checkUserSession,
+      hasPermission,
+      permissions: state.user ? getUserPermissions(state.user) : [],
       loading: status === 'loading',
       authenticated: status === 'authenticated',
       unauthenticated: status === 'unauthenticated',
     }),
-    [checkUserSession, state.user, status]
+    [checkUserSession, hasPermission, state.user, status]
   );
 
   return <AuthContext value={memoizedValue}>{children}</AuthContext>;
 }
+

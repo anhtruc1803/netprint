@@ -160,34 +160,46 @@ export function findTierWithMin(tiers, qty) {
 /**
  * Tính giá gia công thành phẩm
  * Hỗ trợ 3 loại: per_lot (lô), per_item (sp), per_sheet (tờ)
+ * Trả về object chi tiết { cost, unit, tierPrice, tierMin, tierMax, calcQty }
  */
 export function calculateProcessingCost(proc, qty, sheets) {
-    if (!proc) return 0;
+    const emptyDetail = { cost: 0, unit: '', tierPrice: 0, tierMin: 0, tierMax: 0, calcQty: 0 };
+    if (!proc) return emptyDetail;
 
     // Legacy: fixedTiers
     if ((!proc.tiers || proc.tiers.length === 0) && proc.fixedTiers && proc.fixedTiers.length > 0) {
         const sorted = [...proc.fixedTiers].sort((a, b) => a.max - b.max);
         const ft = sorted.find(t => qty <= t.max) || sorted[sorted.length - 1];
-        return ft ? ft.fixed : 0;
+        const cost = ft ? ft.fixed : 0;
+        return { cost, unit: 'per_lot', tierPrice: cost, tierMin: 0, tierMax: ft?.max || 0, calcQty: 1 };
     }
 
-    if (!proc.tiers || proc.tiers.length === 0 || !qty || qty <= 0) return 0;
+    if (!proc.tiers || proc.tiers.length === 0 || !qty || qty <= 0) return emptyDetail;
 
     const tiersHaveUnit = proc.tiers.some(t => !!t.unit);
     if (proc.unit === 'per_lot' && !tiersHaveUnit && proc.fixedTiers && proc.fixedTiers.length > 0) {
         const sorted = [...proc.fixedTiers].sort((a, b) => a.max - b.max);
         const ft = sorted.find(t => qty <= t.max) || sorted[sorted.length - 1];
-        return ft ? ft.fixed : 0;
+        const cost = ft ? ft.fixed : 0;
+        return { cost, unit: 'per_lot', tierPrice: cost, tierMin: 0, tierMax: ft?.max || 0, calcQty: 1 };
     }
 
     const selectedTier = findTierWithMin(proc.tiers, qty);
-    if (!selectedTier) return 0;
+    if (!selectedTier) return emptyDetail;
 
     const unit = selectedTier.unit || proc.unit || 'per_item';
 
-    if (unit === 'per_lot') return Math.round(selectedTier.price || 0);
-    if (unit === 'per_sheet') return sheets > 0 ? Math.round(sheets * (selectedTier.price || 0)) : 0;
-    return Math.round(qty * (selectedTier.price || 0)); // per_item
+    if (unit === 'per_lot') {
+        const cost = Math.round(selectedTier.price || 0);
+        return { cost, unit, tierPrice: selectedTier.price, tierMin: selectedTier.min, tierMax: selectedTier.max, calcQty: 1 };
+    }
+    if (unit === 'per_sheet') {
+        const cost = sheets > 0 ? Math.round(sheets * (selectedTier.price || 0)) : 0;
+        return { cost, unit, tierPrice: selectedTier.price, tierMin: selectedTier.min, tierMax: selectedTier.max, calcQty: sheets };
+    }
+    // per_item
+    const cost = Math.round(qty * (selectedTier.price || 0));
+    return { cost, unit, tierPrice: selectedTier.price, tierMin: selectedTier.min, tierMax: selectedTier.max, calcQty: qty };
 }
 
 /**
@@ -423,9 +435,9 @@ export function calculatePaperPricing({
     selectedProcIds.forEach(procId => {
         const proc = settings.processing.find(p => p.id === procId);
         if (proc) {
-            const cost = calculateProcessingCost(proc, qty, sheets);
-            procCost += cost;
-            procDetails.push({ name: proc.name, cost });
+            const detail = calculateProcessingCost(proc, qty, sheets);
+            procCost += detail.cost;
+            procDetails.push({ name: proc.name, cost: detail.cost, unit: detail.unit, tierPrice: detail.tierPrice, tierMin: detail.tierMin, tierMax: detail.tierMax, calcQty: detail.calcQty });
         }
     });
 
